@@ -1,0 +1,110 @@
+import Link from 'next/link'
+import AnimeCard from '../components/AnimeCard'
+import HomeHero from '../components/HomeHero'
+import MangaCard from '../components/MangaCard'
+import CalendarRow from '../components/CalendarRow'
+import HubCard from '../components/HubCard'
+import AdSlot from '../components/AdSlot'
+import AffiliateDisclosure from '../components/AffiliateDisclosure'
+import { fetchJikan, getBestImageUrl, mapJikanList, mapMangaList } from '../lib/jikan'
+
+export const revalidate = 21600
+
+export default async function Home() {
+  const [trendingRes, upcomingRes, mangaRes] = await Promise.allSettled([
+    fetchJikan('/top/anime?limit=6'),
+    fetchJikan('/seasons/upcoming?limit=4'),
+    fetchJikan('/top/manga?limit=4'),
+  ])
+
+  const trending = mapJikanList(trendingRes.status === 'fulfilled' ? trendingRes.value : null)
+  const upcoming = mapJikanList(upcomingRes.status === 'fulfilled' ? upcomingRes.value : null)
+  const mangas = mapMangaList(mangaRes.status === 'fulfilled' ? mangaRes.value : null)
+  const heroImages = trending.map((a) => getBestImageUrl(a.images))
+
+  return (
+    <div className="space-y-12">
+      <HomeHero images={heroImages} />
+
+      <section className="enter-up enter-up-d1">
+        <div className="section-head">
+          <div>
+            <p className="eyebrow mb-1">Descubre</p>
+            <h2 className="font-display text-2xl font-bold text-text">Secciones</h2>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <HubCard variant="calendar" href="/calendario" />
+          <HubCard variant="manga" href="/mangas" />
+          <HubCard variant="collect" href="/coleccionables" />
+          <HubCard variant="tech" href="/tecnologia" />
+        </div>
+      </section>
+
+      <AdSlot slot={process.env.NEXT_PUBLIC_ADS_SLOT_HOME_TOP || ''} className="ad-placeholder" />
+
+      <section className="enter-up enter-up-d2">
+        <div className="section-head">
+          <div>
+            <p className="eyebrow mb-1">Ranking</p>
+            <h2 className="font-display text-2xl font-bold text-text">Tendencias</h2>
+          </div>
+          <Link href="/explorar" className="section-link">Ver todo →</Link>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-5">
+          {trending.map((anime, i) => (
+            <AnimeCard
+              key={anime.mal_id}
+              slug={String(anime.mal_id)}
+              title={anime.title}
+              image={anime.images?.jpg?.image_url}
+              score={anime.score}
+              rank={i + 1}
+            />
+          ))}
+        </div>
+      </section>
+
+      <section className="section-calendar enter-up">
+        <div className="section-head">
+          <div>
+            <p className="eyebrow mb-1" style={{ color: '#A78BFA' }}>Próximos</p>
+            <h2 className="font-display text-xl font-bold text-text">Por estrenar</h2>
+          </div>
+          <Link href="/calendario" className="section-link">Calendario completo →</Link>
+        </div>
+        <div className="space-y-2">
+          {upcoming.map((a) => (
+            <CalendarRow key={a.mal_id} anime={a} label="Próximo" />
+          ))}
+        </div>
+      </section>
+
+      <section className="section-manga enter-up">
+        <div className="section-head">
+          <div>
+            <p className="eyebrow mb-1" style={{ color: '#FB923C' }}>Lectura</p>
+            <h2 className="font-display text-xl font-bold text-text">Top mangas</h2>
+          </div>
+          <Link href="/mangas" className="section-link">Ver mangas →</Link>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {mangas.map((m) => (
+            <MangaCard
+              key={m.mal_id}
+              mal_id={m.mal_id}
+              title={m.title}
+              image={m.images?.jpg?.image_url}
+              score={m.score}
+              chapters={m.chapters}
+            />
+          ))}
+        </div>
+      </section>
+
+      <AdSlot slot={process.env.NEXT_PUBLIC_ADS_SLOT_HOME_BOTTOM || ''} className="ad-placeholder" />
+
+      <AffiliateDisclosure />
+    </div>
+  )
+}

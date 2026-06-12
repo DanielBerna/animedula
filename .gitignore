@@ -1,0 +1,20 @@
+# dependencias y build
+node_modules/
+.next/
+deploy/
+out/
+
+# secretos — NUNCA subir
+.env
+.env.local
+.env.production
+.env.*.local
+
+# logs y sistema
+*.log
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/

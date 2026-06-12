@@ -1,0 +1,32 @@
+{
+  "name": "animedula",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "dev:clean": "node -e \"try{require('fs').rmSync('.next',{recursive:true,force:true})}catch(e){}\" && next dev",
+    "dev:reset": "node scripts/free-ports.mjs && node -e \"try{require('fs').rmSync('.next',{recursive:true,force:true})}catch(e){}\" && next dev",
+    "build": "next build",
+    "build:cpanel": "npm run build && node scripts/prepare-cpanel.mjs",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.x",
+    "@tailwindcss/postcss": "^4.3.0",
+    "@upstash/ratelimit": "1.x",
+    "@upstash/redis": "1.x",
+    "autoprefixer": "10.x",
+    "next": "15.x",
+    "postcss": "8.x",
+    "react": "18.x",
+    "react-dom": "18.x",
+    "replicate": "1.x",
+    "tailwindcss": "4.x",
+    "typescript": "5.x"
+  },
+  "devDependencies": {
+    "@types/node": "20.17.6",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7"
+  }
+}
