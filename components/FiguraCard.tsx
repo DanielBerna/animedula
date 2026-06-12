@@ -17,7 +17,7 @@ export default function FiguraCard(props: Props) {
       descripcion={props.descripcion}
       query={props.query}
       partner={props.partner}
-      icon="🎎"
+      icon="figure"
       badge={props.badge}
     />
   )

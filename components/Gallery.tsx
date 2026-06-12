@@ -1,6 +1,7 @@
 "use client"
 import React, { useState } from 'react'
 import Modal from './Modal'
+import PosterImage from './PosterImage'
 
 export default function Gallery({ images }: { images: string[] }) {
   const [idx, setIdx] = useState(0)
@@ -13,13 +14,15 @@ export default function Gallery({ images }: { images: string[] }) {
   return (
     <div>
       <div
-        className="relative rounded-xl overflow-hidden border border-white/8 shadow-card cursor-pointer group"
+        className="relative rounded-xl overflow-hidden border border-white/8 shadow-card cursor-pointer group h-72 md:h-80"
         onClick={() => setOpen(true)}
       >
-        <img
+        <PosterImage
           src={images[idx]}
-          alt={`slide-${idx}`}
-          className="w-full h-72 md:h-80 object-cover transition-transform duration-700 group-hover:scale-105"
+          alt={`Imagen ${idx + 1}`}
+          fill
+          sizes="(max-width: 768px) 100vw, 800px"
+          className="object-cover transition-transform duration-700 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-surface/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
         {images.length > 1 && (
@@ -31,7 +34,14 @@ export default function Gallery({ images }: { images: string[] }) {
       </div>
 
       <Modal open={open} onClose={() => setOpen(false)}>
-        <img src={images[idx]} alt={`lightbox-${idx}`} className="w-full h-auto rounded-xl" />
+        <PosterImage
+          src={images[idx]}
+          alt={`Imagen ampliada ${idx + 1}`}
+          width={1200}
+          height={800}
+          sizes="100vw"
+          className="w-full h-auto rounded-xl"
+        />
         {images.length > 1 && (
           <div className="mt-4 flex justify-between items-center text-sm text-muted">
             <span>{idx + 1} / {images.length}</span>

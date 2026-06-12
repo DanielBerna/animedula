@@ -157,13 +157,25 @@ body {
   transform: translateY(-8px) scale(1.01);
   box-shadow: 0 28px 56px rgba(0,0,0,0.5), 0 0 48px rgba(139,124,255,0.12);
 }
-.poster-card .poster-img {
+.poster-img-wrap {
+  position: relative;
   aspect-ratio: 2/3;
   width: 100%;
+}
+.manga-cover-wrap {
+  position: relative;
+  aspect-ratio: 3/4;
+  width: 100%;
+  overflow: hidden;
+}
+.poster-card .poster-img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   transition: transform 600ms cubic-bezier(.2,.8,.2,1);
 }
-.poster-card:hover .poster-img { transform: scale(1.06); }
+.poster-card:hover .poster-img { transform: scale(1.04); }
+.manga-card:hover .manga-cover { transform: scale(1.04); }
 .poster-overlay {
   position: absolute;
   inset: 0;
@@ -478,7 +490,12 @@ html:not(.light) { color-scheme: dark; }
   border-color: var(--accent);
   background: var(--accent-dim);
 }
-.theme-toggle-icon { font-size: 0.95rem; line-height: 1; }
+.theme-toggle-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold);
+}
 
 /* ─── Estilos por sección ─── */
 .section-anime     { --sec: #8B7CFF; --sec-dim: rgba(139,124,255,0.14); }
@@ -680,24 +697,94 @@ html.light .hero-btn-ghost {
   overflow: hidden;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
-  padding: 1.5rem;
-  background: var(--surface-2);
+  padding: 1.35rem 1.25rem;
+  background: linear-gradient(160deg, var(--surface-3) 0%, var(--surface-2) 55%);
   transition: transform 300ms ease, box-shadow 300ms ease, border-color 300ms ease;
   display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  min-height: 160px;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+  min-height: 110px;
 }
 .hub-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 16px 40px rgba(0,0,0,0.2);
   border-color: color-mix(in srgb, var(--hub-color) 40%, transparent);
 }
-.hub-card-icon { font-size: 2rem; }
 .hub-card-calendar { --hub-color: #A78BFA; }
 .hub-card-manga    { --hub-color: #FB923C; }
 .hub-card-tech     { --hub-color: #22D3EE; }
 .hub-card-collect  { --hub-color: #F5C842; }
+.hub-card-glow {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: radial-gradient(circle at 30% 20%, color-mix(in srgb, var(--hub-color) 35%, transparent), transparent 55%);
+  transition: opacity 400ms ease;
+  pointer-events: none;
+}
+.hub-card:hover .hub-card-glow { opacity: 1; }
+.hub-card-hint {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--hub-color);
+  margin-bottom: 0.15rem;
+}
+.hub-card-arrow {
+  color: var(--hub-color);
+  opacity: 0.7;
+  transition: transform 280ms ease, opacity 280ms ease;
+}
+.hub-card:hover .hub-card-arrow {
+  opacity: 1;
+  transform: translateX(3px);
+}
+
+/* Icon orbs — iconos espaciales por sección */
+.icon-orb {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 14px;
+  color: var(--orb-color, var(--accent));
+  background: color-mix(in srgb, var(--orb-color, var(--accent)) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--orb-color, var(--accent)) 28%, transparent);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--orb-color, var(--accent)) 18%, transparent);
+}
+.icon-orb-sm { width: 2.5rem; height: 2.5rem; border-radius: 10px; }
+.icon-orb-md { width: 3rem; height: 3rem; }
+.icon-orb-lg { width: 3.5rem; height: 3.5rem; border-radius: 16px; }
+.icon-orb-anime    { --orb-color: #8B7CFF; }
+.icon-orb-calendar { --orb-color: #A78BFA; }
+.icon-orb-manga    { --orb-color: #FB923C; }
+.icon-orb-tech     { --orb-color: #22D3EE; }
+.icon-orb-collect  { --orb-color: #F5C842; }
+.icon-orb-default  { --orb-color: #8B7CFF; }
+
+.nav-link-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: 10px;
+  transition: background 200ms ease, color 200ms ease;
+}
+.nav-link-icon:hover {
+  background: rgba(255,255,255,0.05);
+}
+.nav-link-svg { opacity: 0.75; }
+.nav-link-icon:hover .nav-link-svg { opacity: 1; color: var(--accent); }
+.stat-pill-mx {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.tech-card-cta {
+  background: linear-gradient(135deg, #22D3EE, #0891B2) !important;
+}
 
 /* Calendario timeline */
 .season-block { margin-bottom: 2.5rem; }
@@ -830,6 +917,34 @@ html.light .hero-btn-ghost {
 html.light .editorial-block {
   background: rgba(255,255,255,0.7);
 }
+
+/* Páginas legales */
+.legal-prose h2 {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-top: 1.75rem;
+  margin-bottom: 0.75rem;
+}
+.legal-prose p,
+.legal-prose li {
+  font-size: 0.9375rem;
+  line-height: 1.75;
+  color: var(--muted);
+}
+.legal-prose ul {
+  list-style: disc;
+  padding-left: 1.25rem;
+  margin: 0.75rem 0;
+}
+.legal-prose li { margin: 0.35rem 0; }
+.legal-prose a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.legal-prose a:hover { color: var(--text); }
 
 @media (max-width: 640px) {
   .container { padding-left: 1rem; padding-right: 1rem; }

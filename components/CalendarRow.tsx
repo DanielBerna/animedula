@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { JikanAnime } from '../lib/jikan'
+import { getBestImageUrl, JikanAnime } from '../lib/jikan'
+import PosterImage from './PosterImage'
 
 type Props = {
   anime: JikanAnime
@@ -7,25 +8,27 @@ type Props = {
 }
 
 export default function CalendarRow({ anime, label }: Props) {
-  const img = anime.images?.jpg?.image_url
+  const img = getBestImageUrl(anime.images)
   const date = anime.aired?.from
     ? new Date(anime.aired.from).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })
-    : 'TBA'
+    : 'Por confirmar'
 
   return (
     <Link href={`/anime/${anime.mal_id}`} className="calendar-row group">
       <div className="calendar-date">
         <span>{date}</span>
       </div>
-      {img && (
-        <img src={img} alt="" className="w-12 h-16 object-cover rounded-md flex-shrink-0 border border-white/8" />
-      )}
+      {img ? (
+        <div className="relative w-12 h-16 flex-shrink-0 rounded-md overflow-hidden border border-white/8">
+          <PosterImage src={img} alt="" fill className="object-cover" sizes="48px" />
+        </div>
+      ) : null}
       <div className="flex-1 min-w-0">
         <h4 className="font-display font-semibold text-sm text-text truncate group-hover:text-[var(--sec,var(--accent))] transition">
           {anime.title}
         </h4>
         <p className="text-xs text-muted mt-0.5">
-          {label || anime.status || 'Próximo'}
+          {label || anime.status || 'Próximo estreno'}
           {typeof anime.score === 'number' && ` · ★ ${anime.score}`}
         </p>
       </div>

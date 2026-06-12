@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { UI } from '../lib/copy'
 
 type Props = {
   slot: string
@@ -19,7 +20,7 @@ function isValidSlot(slot: string) {
   return /^\d{8,12}$/.test(slot.trim())
 }
 
-export default function AdSlot({ slot, format = 'auto', className = '', label = 'Publicidad' }: Props) {
+export default function AdSlot({ slot, format = 'auto', className = '', label = UI.adLabel }: Props) {
   const enabled = process.env.NEXT_PUBLIC_ADS_ENABLED === 'true'
   const client = process.env.NEXT_PUBLIC_ADSENSE_CLIENT
   const ready = enabled && client && isValidSlot(slot)
@@ -39,7 +40,7 @@ export default function AdSlot({ slot, format = 'auto', className = '', label = 
     return (
       <div className={`ad-placeholder px-6 py-10 text-center ${className}`} aria-hidden>
         <span className="eyebrow text-faint">{label}</span>
-        <p className="mt-2 text-sm text-faint">Espacio reservado — activa AdSense en .env</p>
+        <p className="mt-2 text-sm text-faint">{UI.adPending}</p>
       </div>
     )
   }

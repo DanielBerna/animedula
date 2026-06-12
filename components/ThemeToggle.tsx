@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from 'react'
+import SectionIcon from './icons/SectionIcon'
 
 export default function ThemeToggle() {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
@@ -27,7 +28,7 @@ export default function ThemeToggle() {
       onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
     >
       <span className="theme-toggle-icon" aria-hidden>
-        {theme === 'dark' ? '☀️' : '🌙'}
+        <SectionIcon name={theme === 'dark' ? 'sun' : 'moon'} size={18} />
       </span>
       <span className="hidden sm:inline text-xs font-medium">
         {theme === 'dark' ? 'Día' : 'Noche'}

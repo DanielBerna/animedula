@@ -2,7 +2,7 @@ import { EditorialReview, ReviewInput } from './types'
 
 export function buildFallbackReview(input: ReviewInput): EditorialReview {
   const { title, kind, score, genres = [] } = input
-  const g = genres[0] || (kind === 'manga' ? 'seinen/shōnen' : 'shōnen')
+  const g = genres[0] || (kind === 'manga' ? 'seinen' : 'shōnen')
   const high = typeof score === 'number' && score >= 8
   const mid = typeof score === 'number' && score >= 7 && score < 8
 
@@ -14,26 +14,26 @@ export function buildFallbackReview(input: ReviewInput): EditorialReview {
 
   const gancho =
     kind === 'manga'
-      ? `${title} no es solo leer — es invertir tiempo en un mundo que ${high ? 'recompensa' : 'exige'} paciencia.`
-      : `${title} entra en conversación cuando buscas ${g} con personalidad propia, no solo hype de temporada.`
+      ? `${title} pide tiempo, pero ${high ? 'compensa' : 'no es para leer a medias'}.`
+      : `${title} destaca si buscas ${g} con personalidad, no solo ruido de temporada.`
 
   const por_que = high
-    ? `Animédula lo sube porque combina identidad de género (${g}) con ejecución que se sostiene más allá del primer arco. No lo recomendamos por el score de MAL, sino porque deja huella si te gusta ese tipo de narrativa.`
-    : `Lo incluimos con criterio: tiene momentos fuertes para fans de ${g}, aunque no es la puerta de entrada perfecta si vienes de blockbusters más accesibles.`
+    ? `Funciona porque el género (${g}) y la ejecución se sostienen más allá del primer arco. No lo subimos por el número de MAL, sino porque deja marca.`
+    : `Tiene tramos fuertes para fans de ${g}, aunque no es la puerta de entrada más fácil del año.`
 
   const para_quien =
     kind === 'manga'
-      ? `Lectores que disfrutan ${g} y no les asusta un ritmo que pide constancia.`
-      : `Fans de ${g} que prefieren maratón con propósito, no solo episodio de fondo.`
+      ? `Quien lee ${g} con calma y no le molesta un ritmo exigente.`
+      : `Fans de ${g} que quieren un maratón con sentido, no solo ruido de fondo.`
 
   const no_para = high
-    ? `Quien busque algo ultraligero o sin compromiso emocional.`
-    : `Quien espere el anime/manga más fácil del año sin curva de entrada.`
+    ? `Si buscas algo ligero o sin compromiso emocional.`
+    : `Si esperas la entrada más accesible del género.`
 
   const contexto_mx =
     kind === 'manga'
-      ? `En México conviene combinar tomo físico (Amazon/ML) o app legal si está disponible — ideal para lectura nocturna o viajes del metro.`
-      : `Para México: planea maratón nocturna o fin de semana; verifica streaming antes de suscribirte a una plataforma nueva.`
+      ? `Busca tomos en Amazon o Mercado Libre, o apps legales si están disponibles. Ideal para leer de noche o en el transporte.`
+      : `Arma un maratón de fin de semana y revisa en qué app está antes de pagar una suscripción nueva.`
 
   return {
     gancho,

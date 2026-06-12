@@ -4,12 +4,11 @@ import DetailPoster from '../../../components/DetailPoster'
 import ReportButton from '../../../components/ReportButton'
 import ContentSection from '../../../components/ContentSection'
 import MerchSection from '../../../components/MerchSection'
-import MexicoBadge from '../../../components/MexicoBadge'
 import MetaItem from '../../../components/MetaItem'
 import Badge from '../../../components/Badge'
 import { buildGoUrl } from '../../../lib/affiliates'
 import { getEditorialReview } from '../../../lib/editorial'
-import { fetchJikan } from '../../../lib/jikan'
+import { fetchJikan, getBestImageUrl } from '../../../lib/jikan'
 
 type Props = { params: Promise<{ id: string }> }
 
@@ -19,9 +18,9 @@ export default async function MangaDetailPage({ params }: Props) {
   const m = data?.data
 
   const title = m?.title || `Manga ${id}`
-  const image = m?.images?.jpg?.image_url
+  const image = getBestImageUrl(m?.images)
   const synopsis = m?.synopsis || 'Sinopsis no disponible.'
-  const genres = m?.genres?.map((g: any) => g.name) || []
+  const genres = m?.genres?.map((g: { name: string }) => g.name) || []
   const amazonUrl = buildGoUrl('amazon', { query: `${title} manga tomo` })
   const mlUrl = buildGoUrl('mercadolibre', { query: `${title} manga` })
 
@@ -38,15 +37,12 @@ export default async function MangaDetailPage({ params }: Props) {
 
   return (
     <div className="section-manga space-y-8 enter-up">
-      <div className="section-hero section-hero-manga">
-        <MexicoBadge />
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
         <div className="lg:col-span-4 xl:col-span-3">
           <DetailPoster
             title={title}
             image={image}
+            images={m?.images}
             kind="manga"
             badges={
               <>
@@ -65,7 +61,7 @@ export default async function MangaDetailPage({ params }: Props) {
             <p className="text-sm text-muted leading-[1.8]">{synopsis}</p>
           </ContentSection>
 
-          <ContentSection eyebrow="Metadata" title="Ficha">
+          <ContentSection eyebrow="Ficha" title="Datos del manga">
             <dl className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {m?.chapters && <MetaItem label="Capítulos" value={m.chapters} />}
               {m?.volumes && <MetaItem label="Volúmenes" value={m.volumes} />}
@@ -76,10 +72,10 @@ export default async function MangaDetailPage({ params }: Props) {
           <ContentSection eyebrow="Comprar" title="Dónde conseguirlo">
             <div className="flex flex-wrap gap-3">
               <a href={amazonUrl} target="_blank" rel="noopener noreferrer sponsored" className="btn-primary text-sm">
-                Amazon México
+                Ver en Amazon
               </a>
               <a href={mlUrl} target="_blank" rel="noopener noreferrer sponsored" className="btn-ghost text-sm">
-                Mercado Libre
+                Buscar en Mercado Libre
               </a>
               <Link href="/mangas" className="btn-ghost text-sm">← Volver al listado</Link>
             </div>

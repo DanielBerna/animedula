@@ -1,11 +1,13 @@
 import { buildGoUrl } from '../lib/affiliates'
+import IconOrb from './icons/IconOrb'
+import { IconName } from './icons/SectionIcon'
 
 type Props = {
   nombre: string
   descripcion: string
   query: string
   partner: 'amazon' | 'mercadolibre'
-  icon: string
+  icon: IconName
   badge?: string
 }
 
@@ -15,7 +17,7 @@ export default function CollectibleCard({ nombre, descripcion, query, partner, i
   return (
     <article className="collect-card enter-up h-full">
       <div className="flex items-center gap-3">
-        <span className="text-3xl">{icon}</span>
+        <IconOrb name={icon} variant="collect" size="md" />
         <div>
           {badge && <span className="tag tag-gold text-[10px] mb-1">{badge}</span>}
           <h4 className="font-display font-semibold text-text">{nombre}</h4>

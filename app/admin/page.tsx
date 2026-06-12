@@ -30,12 +30,12 @@ export default async function AdminPage() {
 
   return (
     <div className="section-anime space-y-8">
-      <PageHeader variant="default" eyebrow="Backoffice" title="Panel" />
+      <PageHeader variant="default" eyebrow="Admin" title="Panel" />
 
       <section>
         <div className="section-head">
           <h2 className="font-display text-lg font-semibold text-text">Borradores</h2>
-          <span className="tag tag-accent">{drafts.length} items</span>
+          <span className="tag tag-accent">{drafts.length} borradores</span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {drafts.map((d) => (

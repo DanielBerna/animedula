@@ -1,9 +1,11 @@
+import type { IconName } from '../components/icons/SectionIcon'
+
 export type Coleccionable = {
   nombre: string
   descripcion: string
   query: string
   partner: 'amazon' | 'mercadolibre'
-  icon: string
+  icon: IconName
   tipo: 'figura' | 'tcg' | 'peluche' | 'poster' | 'blu-ray'
   badge?: string
 }
@@ -14,7 +16,7 @@ export const COLECCIONABLES: Coleccionable[] = [
     descripcion: 'Nendoroid, Figma y escalas para coleccionistas.',
     query: 'nendoroid figura anime',
     partner: 'amazon',
-    icon: '🎎',
+    icon: 'figure',
     tipo: 'figura',
     badge: 'Premium',
   },
@@ -23,7 +25,7 @@ export const COLECCIONABLES: Coleccionable[] = [
     descripcion: 'Pokémon, Weiss Schwarz y trading cards de anime.',
     query: 'cartas anime tcg',
     partner: 'mercadolibre',
-    icon: '🃏',
+    icon: 'tcg',
     tipo: 'tcg',
     badge: 'TCG',
   },
@@ -32,7 +34,7 @@ export const COLECCIONABLES: Coleccionable[] = [
     descripcion: 'Regalos kawaii que no fallan.',
     query: 'peluche anime kawaii',
     partner: 'amazon',
-    icon: '🧸',
+    icon: 'plush',
     tipo: 'peluche',
     badge: 'Regalo',
   },
@@ -41,16 +43,16 @@ export const COLECCIONABLES: Coleccionable[] = [
     descripcion: 'Decora tu cuarto con arte oficial.',
     query: 'poster anime wall scroll',
     partner: 'mercadolibre',
-    icon: '🖼️',
+    icon: 'poster',
     tipo: 'poster',
-    badge: 'Decor',
+    badge: 'Decoración',
   },
   {
     nombre: 'Blu-ray & ediciones',
     descripcion: 'Colección física para los que aman rewatch.',
     query: 'anime blu ray coleccion',
     partner: 'amazon',
-    icon: '💿',
+    icon: 'bluray',
     tipo: 'blu-ray',
     badge: 'Físico',
   },
@@ -59,8 +61,8 @@ export const COLECCIONABLES: Coleccionable[] = [
     descripcion: 'Opciones económicas sin sacrificar estética.',
     query: 'figura anime barata',
     partner: 'mercadolibre',
-    icon: '⭐',
+    icon: 'sparkle',
     tipo: 'figura',
-    badge: 'LATAM',
+    badge: 'Económico',
   },
 ]

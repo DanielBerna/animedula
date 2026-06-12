@@ -2,38 +2,54 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import { NAV, SITE } from '../lib/copy'
 import Logo from './Logo'
+import SectionIcon, { IconName } from './icons/SectionIcon'
 import ThemeToggle from './ThemeToggle'
 
-const NAV = [
-  { href: '/', label: 'Inicio' },
-  { href: '/explorar', label: 'Explorar' },
-  { href: '/calendario', label: 'Calendario' },
-  { href: '/mangas', label: 'Mangas' },
-  { href: '/coleccionables', label: 'Colección' },
-  { href: '/tecnologia', label: 'Tech' },
+const NAV_ITEMS: { href: string; label: string; icon: IconName }[] = [
+  { href: '/', label: NAV.home, icon: 'home' },
+  { href: '/explorar', label: NAV.explore, icon: 'explore' },
+  { href: '/calendario', label: NAV.calendar, icon: 'calendar' },
+  { href: '/mangas', label: NAV.manga, icon: 'manga' },
+  { href: '/coleccionables', label: NAV.collect, icon: 'collect' },
+  { href: '/tecnologia', label: NAV.tech, icon: 'tech' },
 ]
+
+function NavLink({ href, label, icon, onClick, mobile }: { href: string; label: string; icon: IconName; onClick?: () => void; mobile?: boolean }) {
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className={`nav-link nav-link-icon whitespace-nowrap ${mobile ? 'py-3 px-3 rounded-lg hover:bg-white/5 w-full' : ''}`}
+    >
+      <SectionIcon name={icon} size={16} className="nav-link-svg" />
+      {label}
+    </Link>
+  )
+}
 
 function MobileNav({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
     <>
       {open && <div className="offcanvas-backdrop" onClick={onClose} />}
-      <div className={`offcanvas ${open ? 'open' : ''}`} role="dialog" aria-hidden={!open}>
-        <button className="absolute left-4 top-4 text-muted hover:text-text transition" onClick={onClose} aria-label="Cerrar menú">✕</button>
-        <div className="mt-12 mb-6">
-          <p className="eyebrow">Navegación</p>
+      <aside className={`offcanvas ${open ? 'open' : ''}`} role="dialog" aria-label="Menú" aria-hidden={!open}>
+        <button className="absolute left-4 top-4 text-muted hover:text-text transition" onClick={onClose} aria-label="Cerrar menú">
+          <SectionIcon name="close" size={20} />
+        </button>
+        <div className="mt-12 mb-6 flex items-center gap-3">
+          <Logo size={36} className="logo-mark-svg" />
+          <p className="font-display font-bold text-text">{SITE.name}</p>
         </div>
         <nav className="flex flex-col gap-1">
-          {NAV.map((item) => (
-            <Link key={item.href} href={item.href} onClick={onClose} className="nav-link py-3 px-3 rounded-lg hover:bg-white/5">
-              {item.label}
-            </Link>
+          {NAV_ITEMS.map((item) => (
+            <NavLink key={item.href} {...item} onClick={onClose} mobile />
           ))}
         </nav>
         <div className="mt-8 pt-6 border-t border-white/8">
           <ThemeToggle />
         </div>
-      </div>
+      </aside>
     </>
   )
 }
@@ -47,15 +63,13 @@ export default function Header() {
         <Link href="/" className="flex items-center gap-3 group flex-shrink-0">
           <Logo size={44} className="logo-mark-svg" />
           <div className="hidden sm:block">
-            <p className="font-display text-base font-bold tracking-tight text-text group-hover:text-white transition">Animédula</p>
+            <p className="font-display text-base font-bold tracking-tight text-text group-hover:text-white transition">{SITE.name}</p>
           </div>
         </Link>
 
-        <nav className="hidden lg:flex items-center gap-5 xl:gap-6">
-          {NAV.map((item) => (
-            <Link key={item.href} href={item.href} className="nav-link whitespace-nowrap">
-              {item.label}
-            </Link>
+        <nav className="hidden lg:flex items-center gap-1 xl:gap-2" aria-label="Principal">
+          {NAV_ITEMS.map((item) => (
+            <NavLink key={item.href} {...item} />
           ))}
         </nav>
 

@@ -15,7 +15,7 @@ const adsClient = process.env.NEXT_PUBLIC_ADSENSE_CLIENT
 
 export const metadata = {
   title: 'Animédula',
-  description: 'Anime con criterio — reseñas y curaciones para México',
+  description: 'Reseñas, listados y guías de anime y manga en español',
   ...(adsClient
     ? { other: { 'google-adsense-account': adsClient } }
     : {}),

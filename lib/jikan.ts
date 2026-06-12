@@ -1,4 +1,4 @@
-const JIKAN_UA = 'Animedula/1.0 (curacion-anime-mx; +https://github.com/animedula)'
+const JIKAN_UA = 'Animedula/1.0 (anime-manga-es; +https://github.com/animedula)'
 
 function buildJikanUrl(path: string) {
   const normalized = path.startsWith('/') ? path : `/${path}`

@@ -1,8 +1,10 @@
+import type { IconName } from '../components/icons/SectionIcon'
+
 export type TechProduct = {
   nombre: string
   descripcion: string
   query: string
-  icon: string
+  icon: IconName
   badge?: string
   categoria: 'audio' | 'pantalla' | 'setup' | 'mobile'
 }
@@ -12,7 +14,7 @@ export const TECH_PRODUCTS: TechProduct[] = [
     nombre: 'Audífonos ANC',
     descripcion: 'Inmersión total para maratones nocturnas sin molestar a nadie.',
     query: 'audifonos cancelacion ruido anime',
-    icon: '🎧',
+    icon: 'headphones',
     badge: 'Maratón',
     categoria: 'audio',
   },
@@ -20,15 +22,15 @@ export const TECH_PRODUCTS: TechProduct[] = [
     nombre: 'Monitor 144Hz+',
     descripcion: 'Fluido para acción, deportes y sakuga bien animado.',
     query: 'monitor 144hz gaming',
-    icon: '🖥️',
-    badge: 'Setup',
+    icon: 'monitor',
+    badge: 'Equipo',
     categoria: 'pantalla',
   },
   {
     nombre: 'Tablet lectura',
     descripcion: 'Ideal para manga digital y novelas ligeras en cama.',
     query: 'tablet lectura manga',
-    icon: '📱',
+    icon: 'tablet',
     badge: 'Manga',
     categoria: 'mobile',
   },
@@ -36,7 +38,7 @@ export const TECH_PRODUCTS: TechProduct[] = [
     nombre: 'Barra de luz RGB',
     descripcion: 'Ambiente otaku para tu escritorio o vitrina de figuras.',
     query: 'luz led rgb escritorio',
-    icon: '💡',
+    icon: 'light',
     badge: 'Ambiente',
     categoria: 'setup',
   },
@@ -44,15 +46,15 @@ export const TECH_PRODUCTS: TechProduct[] = [
     nombre: 'Silla ergonómica',
     descripcion: 'Para seasons de 24 eps seguidos sin destruir tu espalda.',
     query: 'silla ergonomica gaming',
-    icon: '🪑',
-    badge: 'Comfort',
+    icon: 'chair',
+    badge: 'Confort',
     categoria: 'setup',
   },
   {
     nombre: 'Proyector portátil',
     descripcion: 'Anime en la pared — cine en casa estilo sala de fans.',
     query: 'proyector portatil hd',
-    icon: '📽️',
+    icon: 'projector',
     badge: 'Cine',
     categoria: 'pantalla',
   },

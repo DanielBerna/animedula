@@ -6,11 +6,10 @@ import ContentSection from '../../../components/ContentSection'
 import Gallery from '../../../components/Gallery'
 import WhereToWatch from '../../../components/WhereToWatch'
 import MerchSection from '../../../components/MerchSection'
-import MexicoBadge from '../../../components/MexicoBadge'
 import MetaItem from '../../../components/MetaItem'
 import Badge from '../../../components/Badge'
 import { getEditorialReview } from '../../../lib/editorial'
-import { fetchJikan } from '../../../lib/jikan'
+import { fetchJikan, getBestImageUrl } from '../../../lib/jikan'
 
 type Props = { params: Promise<{ slug: string }> }
 
@@ -20,11 +19,11 @@ export default async function Page({ params }: Props) {
   const anime = data?.data
 
   const title = anime?.title || `Anime ${slug}`
-  const image = anime?.images?.jpg?.image_url || null
+  const image = getBestImageUrl(anime?.images)
   const synopsis = anime?.synopsis || 'Sinopsis no disponible.'
   const malId = anime?.mal_id ?? (Number.isFinite(Number(slug)) ? Number(slug) : slug)
-  const genres = anime?.genres?.map((g: any) => g.name) || []
-  const streaming = anime?.streaming?.map((s: any) => ({ name: s.name, url: s.url }))
+  const genres = anime?.genres?.map((g: { name: string }) => g.name) || []
+  const streaming = anime?.streaming?.map((s: { name: string; url: string }) => ({ name: s.name, url: s.url }))
 
   const review = await getEditorialReview({
     kind: 'anime',
@@ -38,15 +37,12 @@ export default async function Page({ params }: Props) {
 
   return (
     <div className="section-anime space-y-8 enter-up">
-      <div className="section-hero section-hero-anime">
-        <MexicoBadge />
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
         <div className="lg:col-span-4 xl:col-span-3">
           <DetailPoster
             title={title}
             image={image}
+            images={anime?.images}
             kind="anime"
             badges={
               <>
@@ -66,11 +62,11 @@ export default async function Page({ params }: Props) {
           </ContentSection>
 
           {(anime?.episodes || anime?.status || anime?.year) && (
-            <ContentSection eyebrow="Metadata" title="Ficha técnica">
+            <ContentSection eyebrow="Ficha" title="Datos técnicos">
               <dl className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {anime?.episodes && <MetaItem label="Episodios" value={anime.episodes} />}
                 {anime?.status && <MetaItem label="Estado" value={anime.status} />}
-                {anime?.score && <MetaItem label="Score MAL" value={anime.score} />}
+                {anime?.score && <MetaItem label="Puntuación MAL" value={anime.score} />}
                 {anime?.year && <MetaItem label="Año" value={anime.year} />}
               </dl>
             </ContentSection>
@@ -82,8 +78,8 @@ export default async function Page({ params }: Props) {
             </ContentSection>
           )}
 
-          <WhereToWatch animeTitle={title} malId={malId} sources={streaming} />
-          <MerchSection animeTitle={title} malId={malId} />
+          <WhereToWatch animeTitle={title} malId={Number(malId)} sources={streaming} />
+          <MerchSection animeTitle={title} malId={Number(malId)} />
         </div>
       </div>
 

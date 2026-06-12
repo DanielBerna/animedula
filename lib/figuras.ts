@@ -7,8 +7,8 @@ export type FiguraCurada = {
   imagen?: string
 }
 
-/** Picks editoriales iniciales — reemplazar con curación admin más adelante */
-export const FIGURAS_CURADAS: FiguraCurada[] = [
+/** Picks editoriales iniciales — reemplazar con selección admin más adelante */
+export const FIGURAS_DESTACADAS: FiguraCurada[] = [
   {
     nombre: 'Figuras premium',
     descripcion: 'Nendoroid, Figma y escalas para coleccionistas exigentes.',
@@ -21,7 +21,7 @@ export const FIGURAS_CURADAS: FiguraCurada[] = [
     descripcion: 'Opciones económicas sin sacrificar estética en tu estante.',
     query: 'figura anime barata coleccion',
     partner: 'mercadolibre',
-    badge: 'México',
+    badge: 'Oferta',
   },
   {
     nombre: 'Attack on Titan',
@@ -42,7 +42,7 @@ export const FIGURAS_CURADAS: FiguraCurada[] = [
     descripcion: 'Gojo y Sukuna — piezas con mucha presencia en estantería.',
     query: 'jujutsu kaisen figura',
     partner: 'mercadolibre',
-    badge: 'Trending',
+    badge: 'Tendencia',
   },
   {
     nombre: 'One Piece',

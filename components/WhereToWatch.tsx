@@ -31,7 +31,7 @@ export default function WhereToWatch({ animeTitle, malId, sources }: Props) {
       const meta = matchPlatform(s.name)
       return {
         name: s.name,
-        price: 'Streaming',
+        price: 'En streaming',
         partner: meta.partner,
         cta: meta.cta,
         affiliate: meta.affiliate,

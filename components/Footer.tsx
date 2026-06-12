@@ -1,13 +1,14 @@
 import Link from 'next/link'
+import { NAV, SITE, UI } from '../lib/copy'
 import Logo from './Logo'
 
 const LINKS = [
-  { href: '/explorar', label: 'Explorar' },
-  { href: '/calendario', label: 'Calendario' },
-  { href: '/mangas', label: 'Mangas' },
-  { href: '/coleccionables', label: 'Coleccionables' },
-  { href: '/tecnologia', label: 'Tecnología' },
-  { href: '/anime', label: 'En emisión' },
+  { href: '/explorar', label: NAV.explore },
+  { href: '/calendario', label: NAV.calendar },
+  { href: '/mangas', label: NAV.manga },
+  { href: '/coleccionables', label: NAV.collect },
+  { href: '/tecnologia', label: NAV.tech },
+  { href: '/anime', label: NAV.airing },
 ]
 
 export default function Footer() {
@@ -18,7 +19,10 @@ export default function Footer() {
           <div>
             <div className="flex items-center gap-3">
               <Logo size={36} className="logo-mark-svg" />
-              <p className="font-display font-bold text-lg text-text">Animédula</p>
+              <div>
+                <p className="font-display font-bold text-lg text-text">{SITE.name}</p>
+                <p className="text-sm text-muted mt-1">{SITE.tagline}</p>
+              </div>
             </div>
           </div>
           <div>
@@ -33,12 +37,19 @@ export default function Footer() {
           </div>
           <div>
             <p className="eyebrow mb-3">Legal</p>
-            <p className="text-sm text-muted">Enlaces de afiliado.</p>
+            <ul className="space-y-2 text-sm text-muted mb-4">
+              <li>
+                <Link href="/privacidad" className="hover:text-accent transition">Política de privacidad</Link>
+              </li>
+              <li>
+                <Link href="/terminos" className="hover:text-accent transition">Términos de uso</Link>
+              </li>
+            </ul>
+            <p className="text-sm text-muted leading-relaxed">{UI.affiliateShort}</p>
           </div>
         </div>
-        <div className="pt-6 border-t border-white/6 flex flex-wrap items-center justify-between gap-3 text-xs text-faint">
-          <span>© {new Date().getFullYear()} Animédula</span>
-          <span className="tag tag-sakura">🇲🇽 Hecho en México</span>
+        <div className="pt-6 border-t border-white/6 text-xs text-faint">
+          <span>© {new Date().getFullYear()} {SITE.name}</span>
         </div>
       </div>
     </footer>

@@ -1,7 +1,6 @@
 import AnimeCard from '../../components/AnimeCard'
 import AdSlot from '../../components/AdSlot'
 import PageHeader from '../../components/PageHeader'
-import MexicoBadge from '../../components/MexicoBadge'
 import { fetchJikan, getBestImageUrl, mapJikanList } from '../../lib/jikan'
 import Link from 'next/link'
 
@@ -14,29 +13,23 @@ export default async function AnimeListPage() {
 
   return (
     <div className="section-anime space-y-8">
-      <PageHeader variant="anime" images={heroImages} eyebrow="Temporada actual" title="Anime en emisión">
-        <div className="flex flex-wrap items-center gap-3 mt-2">
-          <MexicoBadge />
-          <Link href="/calendario" className="section-link hero-link">Ver calendario →</Link>
-        </div>
+      <PageHeader variant="anime" images={heroImages} eyebrow="Temporada" title="En emisión">
+        <Link href="/calendario" className="section-link hero-link">Ver calendario →</Link>
       </PageHeader>
 
       <AdSlot slot={process.env.NEXT_PUBLIC_ADS_SLOT_ANIME_TOP || ''} className="ad-placeholder" />
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 md:gap-5">
-        {items.length > 0 ? (
-          items.map((anime) => (
-            <AnimeCard
-              key={anime.mal_id}
-              slug={String(anime.mal_id)}
-              title={anime.title}
-              image={anime.images?.jpg?.image_url}
-              score={anime.score}
-            />
-          ))
-        ) : (
-          <p className="text-muted col-span-full py-12 text-center">No se pudo cargar el listado.</p>
-        )}
+        {items.map((anime, i) => (
+          <AnimeCard
+            key={anime.mal_id}
+            slug={String(anime.mal_id)}
+            title={anime.title}
+            image={getBestImageUrl(anime.images)}
+            score={anime.score}
+            rank={i + 1}
+          />
+        ))}
       </div>
     </div>
   )

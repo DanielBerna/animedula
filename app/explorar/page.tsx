@@ -2,7 +2,6 @@ import React from 'react'
 import AnimeCard from '../../components/AnimeCard'
 import AdSlot from '../../components/AdSlot'
 import PageHeader from '../../components/PageHeader'
-import MexicoBadge from '../../components/MexicoBadge'
 import { fetchJikan, getBestImageUrl, mapJikanList } from '../../lib/jikan'
 
 export const revalidate = 21600
@@ -14,14 +13,7 @@ export default async function ExplorarPage() {
 
   return (
     <div className="section-anime space-y-8">
-      <PageHeader
-        variant="anime"
-        images={heroImages}
-        eyebrow="Descubrimiento"
-        title="Explorar anime"
-      >
-        <MexicoBadge />
-      </PageHeader>
+      <PageHeader variant="anime" images={heroImages} eyebrow="Anime" title="Explorar" />
 
       <AdSlot slot={process.env.NEXT_PUBLIC_ADS_SLOT_EXPLORE_TOP || ''} className="ad-placeholder" />
 
@@ -37,7 +29,7 @@ export default async function ExplorarPage() {
               <AnimeCard
                 slug={String(anime.mal_id)}
                 title={anime.title}
-                image={anime.images?.jpg?.image_url}
+                image={getBestImageUrl(anime.images)}
                 score={anime.score}
                 rank={i + 1}
               />
@@ -46,7 +38,7 @@ export default async function ExplorarPage() {
         ) : (
           Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="poster-card">
-              <div className="poster-img bg-surface-4 animate-pulse" />
+              <div className="poster-img-wrap bg-surface-4 animate-pulse" />
             </div>
           ))
         )}

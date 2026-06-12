@@ -64,14 +64,14 @@ export type MerchItem = {
   badge?: string
 }
 
-export function getCuratedMerch(animeTitle: string): MerchItem[] {
+export function getSuggestedMerch(animeTitle: string): MerchItem[] {
   return [
     {
       id: 'figura',
       label: 'Figura destacada',
-      description: `Picks de colección para fans de ${animeTitle}.`,
+      description: `Piezas de colección para fans de ${animeTitle}.`,
       partner: 'amazon',
-      cta: 'Ver en Amazon México',
+      cta: 'Ver en Amazon',
       query: `figura ${animeTitle} anime`,
       badge: 'Colección',
     },
@@ -80,21 +80,24 @@ export function getCuratedMerch(animeTitle: string): MerchItem[] {
       label: 'Manga / Blu-ray',
       description: 'Ediciones para maratón o biblioteca.',
       partner: 'amazon',
-      cta: 'Ver en Amazon México',
+      cta: 'Ver en Amazon',
       query: `${animeTitle} manga`,
       badge: 'Lectura',
     },
     {
       id: 'ml',
       label: 'Mercado Libre',
-      description: 'Alternativa con envío en México.',
+      description: 'Busca ofertas y envíos locales.',
       partner: 'mercadolibre',
       cta: 'Buscar en Mercado Libre',
       query: `${animeTitle} figura anime`,
-      badge: 'México',
+      badge: 'Oferta',
     },
   ]
 }
+
+/** @deprecated Usar getSuggestedMerch */
+export const getCuratedMerch = getSuggestedMerch
 
 export function resolveAffiliateUrl(
   partner: AffiliatePartner,

@@ -1,5 +1,6 @@
 import AffiliateDisclosure from './AffiliateDisclosure'
-import { buildGoUrl, getCuratedMerch } from '../lib/affiliates'
+import { buildGoUrl, getSuggestedMerch } from '../lib/affiliates'
+import { UI } from '../lib/copy'
 
 type Props = {
   animeTitle: string
@@ -7,13 +8,13 @@ type Props = {
 }
 
 export default function MerchSection({ animeTitle, malId }: Props) {
-  const items = getCuratedMerch(animeTitle)
+  const items = getSuggestedMerch(animeTitle)
 
   return (
     <section className="card-glass p-5 md:p-6">
       <div className="flex items-start justify-between gap-4 flex-wrap mb-5">
         <div>
-          <h3 className="font-display text-lg font-semibold text-text">Merch</h3>
+          <h3 className="font-display text-lg font-semibold text-text">{UI.merchTitle}</h3>
         </div>
       </div>
 

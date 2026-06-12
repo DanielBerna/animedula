@@ -6,6 +6,7 @@ import CalendarRow from '../components/CalendarRow'
 import HubCard from '../components/HubCard'
 import AdSlot from '../components/AdSlot'
 import AffiliateDisclosure from '../components/AffiliateDisclosure'
+import { UI } from '../lib/copy'
 import { fetchJikan, getBestImageUrl, mapJikanList, mapMangaList } from '../lib/jikan'
 
 export const revalidate = 21600
@@ -49,7 +50,7 @@ export default async function Home() {
             <p className="eyebrow mb-1">Ranking</p>
             <h2 className="font-display text-2xl font-bold text-text">Tendencias</h2>
           </div>
-          <Link href="/explorar" className="section-link">Ver todo →</Link>
+          <Link href="/explorar" className="section-link">{UI.seeAll} →</Link>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-5">
           {trending.map((anime, i) => (
@@ -57,7 +58,7 @@ export default async function Home() {
               key={anime.mal_id}
               slug={String(anime.mal_id)}
               title={anime.title}
-              image={anime.images?.jpg?.image_url}
+              image={getBestImageUrl(anime.images)}
               score={anime.score}
               rank={i + 1}
             />
@@ -75,7 +76,7 @@ export default async function Home() {
         </div>
         <div className="space-y-2">
           {upcoming.map((a) => (
-            <CalendarRow key={a.mal_id} anime={a} label="Próximo" />
+            <CalendarRow key={a.mal_id} anime={a} label="Próximo estreno" />
           ))}
         </div>
       </section>
@@ -94,7 +95,7 @@ export default async function Home() {
               key={m.mal_id}
               mal_id={m.mal_id}
               title={m.title}
-              image={m.images?.jpg?.image_url}
+              image={getBestImageUrl(m.images)}
               score={m.score}
               chapters={m.chapters}
             />
