@@ -1,6 +1,8 @@
 import AffiliateDisclosure from './AffiliateDisclosure'
-import { buildGoUrl, getSuggestedMerch } from '../lib/affiliates'
+import ProductCard from './ProductCard'
+import { getSuggestedMerch } from '../lib/affiliates'
 import { UI } from '../lib/copy'
+import type { ProductoAfiliado } from '../lib/productos/types'
 
 type Props = {
   animeTitle: string
@@ -10,34 +12,26 @@ type Props = {
 export default function MerchSection({ animeTitle, malId }: Props) {
   const items = getSuggestedMerch(animeTitle)
 
+  const productos: ProductoAfiliado[] = items.map((item) => ({
+    id: item.id,
+    nombre: item.label,
+    descripcion: item.description,
+    imagen: item.imagen || 'https://images.unsplash.com/photo-1601811833011-2039bfee4c4e?auto=format&fit=crop&w=800&q=80',
+    partner: item.partner,
+    query: item.query,
+    badge: item.badge,
+    precioDesde: 'Ver ofertas',
+    anime: animeTitle,
+    malId,
+  }))
+
   return (
     <section className="card-glass p-5 md:p-6">
-      <div className="flex items-start justify-between gap-4 flex-wrap mb-5">
-        <div>
-          <h3 className="font-display text-lg font-semibold text-text">{UI.merchTitle}</h3>
-        </div>
-      </div>
+      <h3 className="font-display text-lg font-semibold text-text mb-5">{UI.merchTitle}</h3>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {items.map((item) => (
-          <article
-            key={item.id}
-            className="rounded-xl border border-white/6 bg-surface-3/40 p-4 flex flex-col justify-between hover:border-accent/30 hover:bg-surface-3/70 transition duration-300"
-          >
-            <div>
-              {item.badge && <span className="tag tag-accent text-[10px] mb-2">{item.badge}</span>}
-              <h4 className="font-display font-semibold text-text">{item.label}</h4>
-              <p className="text-sm text-muted mt-1.5 leading-relaxed">{item.description}</p>
-            </div>
-            <a
-              href={buildGoUrl(item.partner, { query: item.query, anime: animeTitle, malId })}
-              target="_blank"
-              rel="noopener noreferrer sponsored"
-              className="mt-4 btn-primary text-sm text-center py-2.5 focus-ring"
-            >
-              {item.cta}
-            </a>
-          </article>
+        {productos.map((p) => (
+          <ProductCard key={p.id} producto={p} />
         ))}
       </div>
 

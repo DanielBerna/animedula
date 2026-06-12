@@ -8,15 +8,22 @@ import WhereToWatch from '../../../components/WhereToWatch'
 import MerchSection from '../../../components/MerchSection'
 import MetaItem from '../../../components/MetaItem'
 import Badge from '../../../components/Badge'
+import CommentSection from '../../../components/CommentSection'
+import SubmissionForm from '../../../components/SubmissionForm'
+import { getAuthUser } from '../../../lib/auth'
 import { getEditorialReview } from '../../../lib/editorial'
-import { fetchJikan, getBestImageUrl } from '../../../lib/jikan'
+import { fetchJikan, getBestImageUrl, mapRecommendations } from '../../../lib/jikan'
 
 type Props = { params: Promise<{ slug: string }> }
 
 export default async function Page({ params }: Props) {
   const { slug } = await params
-  const data = await fetchJikan(`/anime/${slug}`, 0)
+  const [data, recRes] = await Promise.all([
+    fetchJikan(`/anime/${slug}`, 0),
+    fetchJikan(`/anime/${slug}/recommendations?limit=6`, 21600),
+  ])
   const anime = data?.data
+  const related = mapRecommendations(recRes).filter((a) => String(a.mal_id) !== String(slug)).slice(0, 3)
 
   const title = anime?.title || `Anime ${slug}`
   const image = getBestImageUrl(anime?.images)
@@ -24,6 +31,9 @@ export default async function Page({ params }: Props) {
   const malId = anime?.mal_id ?? (Number.isFinite(Number(slug)) ? Number(slug) : slug)
   const genres = anime?.genres?.map((g: { name: string }) => g.name) || []
   const streaming = anime?.streaming?.map((s: { name: string; url: string }) => ({ name: s.name, url: s.url }))
+
+  const user = await getAuthUser()
+  const returnTo = `/anime/${slug}`
 
   const review = await getEditorialReview({
     kind: 'anime',
@@ -80,19 +90,33 @@ export default async function Page({ params }: Props) {
 
           <WhereToWatch animeTitle={title} malId={Number(malId)} sources={streaming} />
           <MerchSection animeTitle={title} malId={Number(malId)} />
+
+          <ContentSection eyebrow="Colabora" title="Mejorar la reseña">
+            <SubmissionForm kind="anime" malId={Number(malId)} loggedIn={Boolean(user)} />
+          </ContentSection>
+
+          <CommentSection kind="anime" malId={Number(malId)} loggedIn={Boolean(user)} returnTo={returnTo} />
         </div>
       </div>
 
-      <section className="pt-2">
-        <div className="section-head">
-          <h2 className="font-display text-xl font-bold text-text">También te puede gustar</h2>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <AnimeCard key={i} title={`Próximamente ${i + 1}`} image={null} score={null} />
-          ))}
-        </div>
-      </section>
+      {related.length > 0 && (
+        <section className="pt-2">
+          <div className="section-head">
+            <h2 className="font-display text-xl font-bold text-text">También te puede gustar</h2>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {related.map((a) => (
+              <AnimeCard
+                key={a.mal_id}
+                slug={String(a.mal_id)}
+                title={a.title}
+                image={getBestImageUrl(a.images)}
+                score={a.score}
+              />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   )
 }

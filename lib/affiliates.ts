@@ -62,6 +62,7 @@ export type MerchItem = {
   cta: string
   query: string
   badge?: string
+  imagen?: string
 }
 
 export function getSuggestedMerch(animeTitle: string): MerchItem[] {
@@ -74,6 +75,7 @@ export function getSuggestedMerch(animeTitle: string): MerchItem[] {
       cta: 'Ver en Amazon',
       query: `figura ${animeTitle} anime`,
       badge: 'Colección',
+      imagen: 'https://images.unsplash.com/photo-1601811833011-2039bfee4c4e?auto=format&fit=crop&w=800&q=80',
     },
     {
       id: 'manga',
@@ -83,6 +85,7 @@ export function getSuggestedMerch(animeTitle: string): MerchItem[] {
       cta: 'Ver en Amazon',
       query: `${animeTitle} manga`,
       badge: 'Lectura',
+      imagen: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=800&q=80',
     },
     {
       id: 'ml',
@@ -92,6 +95,7 @@ export function getSuggestedMerch(animeTitle: string): MerchItem[] {
       cta: 'Buscar en Mercado Libre',
       query: `${animeTitle} figura anime`,
       badge: 'Oferta',
+      imagen: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=800&q=80',
     },
   ]
 }

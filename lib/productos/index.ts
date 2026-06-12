@@ -1,0 +1,5 @@
+export type { ProductoAfiliado } from './types'
+export { COLECTIBLE_PRODUCTOS } from './coleccionables'
+export { TECH_PRODUCTOS } from './tecnologia'
+export { MANGA_PRODUCTOS, mangaProductosParaTitulo } from './mangas'
+export { enrichProductosConMal } from './enrich'

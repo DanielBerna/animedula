@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import SectionIcon from './icons/SectionIcon'
 
-export default function ThemeToggle() {
+export default function ThemeToggle({ showLabel = false }: { showLabel?: boolean }) {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
   const [ready, setReady] = useState(false)
 
@@ -30,7 +30,7 @@ export default function ThemeToggle() {
       <span className="theme-toggle-icon" aria-hidden>
         <SectionIcon name={theme === 'dark' ? 'sun' : 'moon'} size={18} />
       </span>
-      <span className="hidden sm:inline text-xs font-medium">
+      <span className={`text-xs font-medium ${showLabel ? 'inline' : 'hidden sm:inline'}`}>
         {theme === 'dark' ? 'Día' : 'Noche'}
       </span>
     </button>

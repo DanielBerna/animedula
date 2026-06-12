@@ -66,9 +66,18 @@ export type JikanManga = {
   volumes?: number
 }
 
+function dedupeByMalId<T extends { mal_id: number }>(items: T[]): T[] {
+  const seen = new Set<number>()
+  return items.filter((item) => {
+    if (!item.mal_id || seen.has(item.mal_id)) return false
+    seen.add(item.mal_id)
+    return true
+  })
+}
+
 export function mapJikanList(data: any): JikanAnime[] {
   if (!data?.data) return []
-  return data.data.map((it: any) => ({
+  const items = data.data.map((it: any) => ({
     mal_id: it.mal_id,
     title: it.title,
     synopsis: it.synopsis,
@@ -79,11 +88,23 @@ export function mapJikanList(data: any): JikanAnime[] {
     season: it.season,
     year: it.year,
   }))
+  return dedupeByMalId(items)
+}
+
+export function mapRecommendations(data: any): JikanAnime[] {
+  if (!data?.data) return []
+  const items = data.data.map((rec: any) => ({
+    mal_id: rec.entry?.mal_id,
+    title: rec.entry?.title,
+    images: rec.entry?.images,
+    score: undefined,
+  })).filter((a: JikanAnime) => a.mal_id && a.title)
+  return dedupeByMalId(items).slice(0, 6)
 }
 
 export function mapMangaList(data: any): JikanManga[] {
   if (!data?.data) return []
-  return data.data.map((it: any) => ({
+  const items = data.data.map((it: any) => ({
     mal_id: it.mal_id,
     title: it.title,
     synopsis: it.synopsis,
@@ -92,6 +113,7 @@ export function mapMangaList(data: any): JikanManga[] {
     chapters: it.chapters,
     volumes: it.volumes,
   }))
+  return dedupeByMalId(items)
 }
 
 export function getSeasonLabel(): string {

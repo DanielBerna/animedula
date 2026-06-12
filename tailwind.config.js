@@ -7,17 +7,17 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        surface: '#08080F',
-        'surface-2': '#10101C',
-        'surface-3': '#18182B',
-        'surface-4': '#22223A',
-        accent: '#8B7CFF',
-        'accent-2': '#6C5CE7',
-        sakura: '#FF6B9D',
-        gold: '#F5C842',
-        text: '#F2F2FA',
-        muted: '#A8A8C4',
-        faint: '#6E6E8A',
+        surface: 'var(--surface)',
+        'surface-2': 'var(--surface-2)',
+        'surface-3': 'var(--surface-3)',
+        'surface-4': 'var(--surface-4)',
+        accent: 'var(--accent)',
+        'accent-2': 'var(--accent-2)',
+        sakura: 'var(--sakura)',
+        gold: 'var(--gold)',
+        text: 'var(--text)',
+        muted: 'var(--text-muted)',
+        faint: 'var(--text-faint)',
       },
       fontFamily: {
         display: ['var(--font-display)', 'sans-serif'],

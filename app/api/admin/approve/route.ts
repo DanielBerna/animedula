@@ -1,19 +1,39 @@
 import { NextRequest } from 'next/server'
-import { getSupabaseAdmin, isSupabaseConfigured } from '../../../../lib/supabaseAdmin'
+import { requireEditor } from '../../../../lib/auth'
+import { getEditorialReview } from '../../../../lib/editorial'
+import { publishReview, upsertPublishedReview } from '../../../../lib/editorial/db'
+import { isSupabaseAuthConfigured } from '../../../../lib/supabase/server'
 
 export async function POST(req: NextRequest) {
   try {
-    if (!isSupabaseConfigured()) {
-      return new Response(JSON.stringify({ error: 'Supabase no configurado aún' }), { status: 503 })
+    if (!isSupabaseAuthConfigured()) {
+      return Response.json({ error: 'Supabase no configurado' }, { status: 503 })
     }
 
-    const { mal_id } = await req.json()
-    if (!mal_id) return new Response(JSON.stringify({ error: 'missing_id' }), { status: 400 })
+    const editor = await requireEditor()
+    if (!editor) return Response.json({ error: 'No autorizado' }, { status: 403 })
 
-    const { error } = await getSupabaseAdmin().from('anime_cache').update({ estado: 'publicado' }).eq('mal_id', mal_id)
-    if (error) throw error
-    return new Response(JSON.stringify({ ok: true }), { status: 200 })
-  } catch (err: any) {
-    return new Response(JSON.stringify({ error: err.message || 'unknown' }), { status: 500 })
+    const body = await req.json()
+    const { review_id, kind, mal_id, title } = body
+
+    if (review_id) {
+      await publishReview(review_id, editor.id)
+      return Response.json({ ok: true, review_id })
+    }
+
+    if (kind && mal_id) {
+      const review = await getEditorialReview({
+        kind,
+        id: mal_id,
+        title: title || `${kind} ${mal_id}`,
+      })
+      const id = await upsertPublishedReview(kind, Number(mal_id), review, editor.id, 'human')
+      return Response.json({ ok: true, review_id: id })
+    }
+
+    return Response.json({ error: 'Faltan review_id o kind+mal_id' }, { status: 400 })
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'unknown'
+    return Response.json({ error: message }, { status: 500 })
   }
 }

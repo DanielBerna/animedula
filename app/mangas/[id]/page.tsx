@@ -3,10 +3,14 @@ import EditorialReviewBlock from '../../../components/EditorialReview'
 import DetailPoster from '../../../components/DetailPoster'
 import ReportButton from '../../../components/ReportButton'
 import ContentSection from '../../../components/ContentSection'
+import MangaProductSection from '../../../components/MangaProductSection'
 import MerchSection from '../../../components/MerchSection'
 import MetaItem from '../../../components/MetaItem'
 import Badge from '../../../components/Badge'
 import { buildGoUrl } from '../../../lib/affiliates'
+import CommentSection from '../../../components/CommentSection'
+import SubmissionForm from '../../../components/SubmissionForm'
+import { getAuthUser } from '../../../lib/auth'
 import { getEditorialReview } from '../../../lib/editorial'
 import { fetchJikan, getBestImageUrl } from '../../../lib/jikan'
 
@@ -23,6 +27,9 @@ export default async function MangaDetailPage({ params }: Props) {
   const genres = m?.genres?.map((g: { name: string }) => g.name) || []
   const amazonUrl = buildGoUrl('amazon', { query: `${title} manga tomo` })
   const mlUrl = buildGoUrl('mercadolibre', { query: `${title} manga` })
+
+  const user = await getAuthUser()
+  const returnTo = `/mangas/${id}`
 
   const review = await getEditorialReview({
     kind: 'manga',
@@ -69,7 +76,9 @@ export default async function MangaDetailPage({ params }: Props) {
             </dl>
           </ContentSection>
 
-          <ContentSection eyebrow="Comprar" title="Dónde conseguirlo">
+          <MangaProductSection title={title} coverImage={image} />
+
+          <ContentSection eyebrow="Enlaces" title="Búsqueda rápida">
             <div className="flex flex-wrap gap-3">
               <a href={amazonUrl} target="_blank" rel="noopener noreferrer sponsored" className="btn-primary text-sm">
                 Ver en Amazon
@@ -82,6 +91,12 @@ export default async function MangaDetailPage({ params }: Props) {
           </ContentSection>
 
           <MerchSection animeTitle={title} malId={Number(id)} />
+
+          <ContentSection eyebrow="Colabora" title="Mejorar la reseña">
+            <SubmissionForm kind="manga" malId={Number(id)} loggedIn={Boolean(user)} />
+          </ContentSection>
+
+          <CommentSection kind="manga" malId={Number(id)} loggedIn={Boolean(user)} returnTo={returnTo} />
         </div>
       </div>
     </div>

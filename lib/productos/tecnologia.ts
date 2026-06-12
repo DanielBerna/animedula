@@ -1,0 +1,66 @@
+import type { ProductoAfiliado } from './types'
+
+const U = (id: string) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=800&q=80`
+
+export const TECH_PRODUCTOS: ProductoAfiliado[] = [
+  {
+    id: 'tech-anc',
+    nombre: 'Audífonos con cancelación de ruido',
+    descripcion: 'Maratones nocturnas sin despertar a nadie.',
+    imagen: U('photo-1505740420928-5e560c06d30e'),
+    partner: 'amazon',
+    query: 'audifonos cancelacion ruido inalambricos',
+    precioDesde: 'Desde $1,499',
+    badge: 'Audio',
+  },
+  {
+    id: 'tech-monitor',
+    nombre: 'Monitor 144Hz o más',
+    descripcion: 'Fluido para acción, deportes y sakuga bien animado.',
+    imagen: U('photo-1527443157979-24770039a5a3'),
+    partner: 'amazon',
+    query: 'monitor 144hz gaming ips',
+    precioDesde: 'Desde $3,499',
+    badge: 'Pantalla',
+  },
+  {
+    id: 'tech-tablet',
+    nombre: 'Tablet para lectura',
+    descripcion: 'Manga digital y novelas ligeras en la cama.',
+    imagen: U('photo-1544244015-0df4b3ffc6b0'),
+    partner: 'amazon',
+    query: 'tablet lectura manga 10 pulgadas',
+    precioDesde: 'Desde $2,999',
+    badge: 'Manga',
+  },
+  {
+    id: 'tech-rgb',
+    nombre: 'Barra de luz RGB',
+    descripcion: 'Ambiente otaku para escritorio o vitrina.',
+    imagen: U('photo-1558618666-fcd25c85cd64'),
+    partner: 'amazon',
+    query: 'luz led rgb escritorio monitor',
+    precioDesde: 'Desde $399',
+    badge: 'Ambiente',
+  },
+  {
+    id: 'tech-silla',
+    nombre: 'Silla ergonómica',
+    descripcion: 'Temporadas de 24 episodios sin romper la espalda.',
+    imagen: U('photo-1598550470879-326188d11385'),
+    partner: 'amazon',
+    query: 'silla ergonomica gaming oficina',
+    precioDesde: 'Desde $2,499',
+    badge: 'Confort',
+  },
+  {
+    id: 'tech-proyector',
+    nombre: 'Proyector portátil HD',
+    descripcion: 'Anime en la pared — mini cine en casa.',
+    imagen: U('photo-1478720568477-152d9b184e63'),
+    partner: 'amazon',
+    query: 'proyector portatil hd wifi',
+    precioDesde: 'Desde $2,199',
+    badge: 'Cine',
+  },
+]

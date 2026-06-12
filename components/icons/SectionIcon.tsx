@@ -227,8 +227,12 @@ export default function SectionIcon({ name, size = 24, className = '' }: Props) 
       height={size}
       viewBox="0 0 24 24"
       fill="none"
+      stroke="currentColor"
+      strokeWidth={1.75}
+      strokeLinecap="round"
+      strokeLinejoin="round"
       xmlns="http://www.w3.org/2000/svg"
-      className={className}
+      className={`section-icon ${className}`.trim()}
       aria-hidden
     >
       <IconPaths name={name} />

@@ -48,8 +48,12 @@ export default function Footer() {
             <p className="text-sm text-muted leading-relaxed">{UI.affiliateShort}</p>
           </div>
         </div>
-        <div className="pt-6 border-t border-white/6 text-xs text-faint">
+        <div className="pt-6 border-t border-white/6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs text-faint">
           <span>© {new Date().getFullYear()} {SITE.name}</span>
+          <div className="flex gap-4">
+            <Link href="/privacidad" className="hover:text-accent transition">Privacidad</Link>
+            <Link href="/terminos" className="hover:text-accent transition">Términos</Link>
+          </div>
         </div>
       </div>
     </footer>
