@@ -1,21 +1,35 @@
 import Link from 'next/link'
-import { NAV, SITE, UI } from '../lib/copy'
+import { NAV, NAV_GROUP, SITE, UI } from '../lib/copy'
 import Logo from './Logo'
 
-const LINKS = [
-  { href: '/explorar', label: NAV.explore },
-  { href: '/calendario', label: NAV.seasons },
-  { href: '/mangas', label: NAV.manga },
-  { href: '/coleccionables', label: NAV.collect },
-  { href: '/tecnologia', label: NAV.tech },
-  { href: '/comunidad', label: NAV.community },
+const FOOTER_GROUPS = [
+  {
+    label: NAV_GROUP.animeManga,
+    links: [
+      { href: '/explorar', label: NAV.explore },
+      { href: '/calendario', label: NAV.seasons },
+      { href: '/mangas', label: NAV.manga },
+    ],
+  },
+  {
+    label: NAV_GROUP.otaku,
+    links: [
+      { href: '/videojuegos', label: NAV.gaming },
+      { href: '/coleccionables', label: NAV.collect },
+      { href: '/tecnologia', label: NAV.tech },
+    ],
+  },
+  {
+    label: NAV_GROUP.community,
+    links: [{ href: '/comunidad', label: NAV.community }],
+  },
 ]
 
 export default function Footer() {
   return (
     <footer className="footer-premium mt-12">
       <div className="container mx-auto px-4 py-10">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           <div>
             <div className="flex items-center gap-3">
               <Logo size={36} className="logo-mark-svg" />
@@ -25,16 +39,18 @@ export default function Footer() {
               </div>
             </div>
           </div>
-          <div>
-            <p className="eyebrow mb-3">Secciones</p>
-            <ul className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-muted">
-              {LINKS.map((l) => (
-                <li key={l.href}>
-                  <Link href={l.href} className="hover:text-accent transition">{l.label}</Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {FOOTER_GROUPS.map((group) => (
+            <div key={group.label}>
+              <p className="eyebrow mb-3">{group.label}</p>
+              <ul className="space-y-2 text-sm text-muted">
+                {group.links.map((l) => (
+                  <li key={l.href}>
+                    <Link href={l.href} className="hover:text-accent transition">{l.label}</Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
           <div>
             <p className="eyebrow mb-3">Legal</p>
             <ul className="space-y-2 text-sm text-muted mb-4">

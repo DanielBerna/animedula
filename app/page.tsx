@@ -7,20 +7,18 @@ import HubCard from '../components/HubCard'
 import AdSlot from '../components/AdSlot'
 import AffiliateDisclosure from '../components/AffiliateDisclosure'
 import { UI } from '../lib/copy'
-import { fetchJikan, getBestImageUrl, mapJikanList, mapMangaList } from '../lib/jikan'
+import { fetchJikan, fetchTopAnime, fetchTopManga, getBestImageUrl, mapJikanList } from '../lib/jikan'
 
 export const revalidate = 21600
 
 export default async function Home() {
-  const [trendingRes, upcomingRes, mangaRes] = await Promise.allSettled([
-    fetchJikan('/top/anime?limit=6'),
+  const [trending, upcomingRes, mangas] = await Promise.all([
+    fetchTopAnime(6),
     fetchJikan('/seasons/upcoming?limit=4'),
-    fetchJikan('/top/manga?limit=4'),
+    fetchTopManga(4),
   ])
 
-  const trending = mapJikanList(trendingRes.status === 'fulfilled' ? trendingRes.value : null)
-  const upcoming = mapJikanList(upcomingRes.status === 'fulfilled' ? upcomingRes.value : null)
-  const mangas = mapMangaList(mangaRes.status === 'fulfilled' ? mangaRes.value : null)
+  const upcoming = mapJikanList(upcomingRes)
   const heroImages = trending.map((a) => getBestImageUrl(a.images))
 
   return (
@@ -34,9 +32,10 @@ export default async function Home() {
             <h2 className="font-display text-2xl font-bold text-text">Secciones</h2>
           </div>
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           <HubCard variant="calendar" href="/calendario" />
           <HubCard variant="manga" href="/mangas" />
+          <HubCard variant="gaming" href="/videojuegos" />
           <HubCard variant="collect" href="/coleccionables" />
           <HubCard variant="tech" href="/tecnologia" />
         </div>

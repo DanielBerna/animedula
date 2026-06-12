@@ -1,4 +1,4 @@
-export type HeroVariant = 'anime' | 'manga' | 'calendar' | 'tech' | 'collect' | 'default'
+export type HeroVariant = 'anime' | 'manga' | 'calendar' | 'tech' | 'collect' | 'gaming' | 'default'
 
 export type HeroSlide = {
   url: string
@@ -35,6 +35,11 @@ export const HERO_IMAGES: Record<HeroVariant, string[]> = {
     UNSPLASH('photo-1612036781342-eea35d6be7e5'),
     UNSPLASH('photo-1606107557192-0beaec7a82b8'),
     UNSPLASH('photo-1558618666-fcd25c85cd64'),
+  ],
+  gaming: [
+    UNSPLASH('photo-1542751371-adc38448a05e'),
+    UNSPLASH('photo-1511512578047-dfb367046420'),
+    UNSPLASH('photo-1493711662062-fa541adb3fc8'),
   ],
   default: [
     UNSPLASH('photo-1613376042017-0b4c2a89fcb3'),

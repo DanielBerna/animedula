@@ -1,32 +1,70 @@
+import { FALLBACK_TOP_ANIME, FALLBACK_TOP_MANGA } from './jikanFallback'
+
 const JIKAN_UA = 'Animedula/1.0 (anime-manga-es; +https://github.com/animedula)'
+const MAX_ATTEMPTS = 4
 
 function buildJikanUrl(path: string) {
   const normalized = path.startsWith('/') ? path : `/${path}`
   return `https://api.jikan.moe/v4${normalized}`
 }
 
-export async function fetchJikan(path: string, revalidate = 21600) {
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+function shouldRetry(status: number) {
+  return status === 429 || status === 502 || status === 503 || status === 504
+}
+
+export async function fetchJikan(path: string, revalidate = 3600, attempt = 0): Promise<any> {
+  const useCache = attempt === 0 && revalidate > 0
+
   try {
     const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), 12000)
+    const timer = setTimeout(() => controller.abort(), 15000)
 
     const res = await fetch(buildJikanUrl(path), {
       headers: { 'User-Agent': JIKAN_UA, Accept: 'application/json' },
       signal: controller.signal,
-      next: revalidate > 0 ? { revalidate } : undefined,
-      cache: revalidate === 0 ? 'no-store' : 'default',
+      ...(useCache ? { next: { revalidate } } : { cache: 'no-store' as const }),
     })
 
     clearTimeout(timer)
+
     if (!res.ok) {
-      console.warn(`[jikan] ${res.status} ${path}`)
+      console.warn(`[jikan] ${res.status} ${path} (attempt ${attempt + 1})`)
+      if (shouldRetry(res.status) && attempt < MAX_ATTEMPTS - 1) {
+        await sleep(1200 * (attempt + 1))
+        return fetchJikan(path, revalidate, attempt + 1)
+      }
       return null
     }
+
     return res.json()
   } catch (err) {
-    console.warn(`[jikan] error ${path}`, err)
+    console.warn(`[jikan] error ${path} (attempt ${attempt + 1})`, err)
+    if (attempt < MAX_ATTEMPTS - 1) {
+      await sleep(1200 * (attempt + 1))
+      return fetchJikan(path, revalidate, attempt + 1)
+    }
     return null
   }
+}
+
+export async function fetchTopAnime(limit = 18): Promise<JikanAnime[]> {
+  const data = await fetchJikan(`/top/anime?limit=${limit}`)
+  const items = mapJikanList(data)
+  if (items.length > 0) return items
+  console.warn('[jikan] fallback top anime')
+  return FALLBACK_TOP_ANIME.slice(0, limit)
+}
+
+export async function fetchTopManga(limit = 18): Promise<JikanManga[]> {
+  const data = await fetchJikan(`/top/manga?limit=${limit}`)
+  const items = mapMangaList(data)
+  if (items.length > 0) return items
+  console.warn('[jikan] fallback top manga')
+  return FALLBACK_TOP_MANGA.slice(0, limit)
 }
 
 export type JikanImages = {

@@ -22,6 +22,7 @@ export type IconName =
   | 'mexico'
   | 'sparkle'
   | 'play'
+  | 'game'
   | 'close'
 
 type Props = {
@@ -211,6 +212,16 @@ function IconPaths({ name }: { name: IconName }) {
         <>
           <circle cx="12" cy="12" r="9" />
           <path d="M10 8.5l6 3.5-6 3.5V8.5z" fill="currentColor" stroke="none" />
+        </>
+      )
+    case 'game':
+      return (
+        <>
+          <path d="M6 11h4v4H6z" />
+          <path d="M8 9v6M6 11h4" />
+          <circle cx="15.5" cy="11" r="1" fill="currentColor" stroke="none" />
+          <circle cx="17.5" cy="13" r="1" fill="currentColor" stroke="none" />
+          <path d="M4 8a4 4 0 014-4h8a4 4 0 014 4v8a4 4 0 01-4 4H8a4 4 0 01-4-4V8z" />
         </>
       )
     case 'close':

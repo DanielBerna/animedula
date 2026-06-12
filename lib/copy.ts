@@ -1,4 +1,4 @@
-/** Textos de interfaz — español neutro, sin “curado” ni marketing vacío */
+/** Textos de interfaz — español latino, sin “curado” ni marketing vacío */
 
 export const SITE = {
   name: 'Animédula',
@@ -11,9 +11,52 @@ export const NAV = {
   explore: 'Explorar',
   seasons: 'Temporadas',
   manga: 'Mangas',
+  gaming: 'Videojuegos',
   collect: 'Coleccionables',
   tech: 'Tecnología',
   community: 'Comunidad',
+} as const
+
+export const NAV_GROUP = {
+  animeManga: 'Anime y manga',
+  otaku: 'Cultura otaku',
+  community: 'Comunidad',
+} as const
+
+export const NEWS_COPY = {
+  eyebrow: 'Noticias',
+  readAt: 'Leer nota',
+  empty: 'No pudimos cargar noticias. Intenta de nuevo en unos minutos.',
+  gamingTitle: 'Noticias de videojuegos',
+  gamingEmpty: 'Las fuentes de noticias no respondieron. Vuelve a intentar más tarde.',
+  techTitle: 'Noticias de tecnología',
+  techEmpty: 'No cargamos noticias de tecnología en este momento.',
+  collectTitle: 'Noticias de anime y coleccionables',
+  collectEmpty: 'No cargamos noticias de coleccionables en este momento.',
+} as const
+
+export const SECTION_COPY = {
+  gamingEyebrow: 'Juegos',
+  gamingDesc: 'JRPG, gacha y títulos gratis con estilo anime.',
+  gamingAnime: 'Estilo anime',
+  gamingFeatured: 'Juegos gratis destacados',
+  gamingPopular: 'Los más populares',
+  techDesc: 'Gadgets para maratones, lectura digital y tu equipo otaku.',
+  collectDesc: 'Figuras, TCG, merch y novedades del mundo anime.',
+} as const
+
+export const DETAIL_COPY = {
+  readMore: 'Leer noticia',
+  readOriginal: 'Leer artículo completo',
+  backToGames: 'Volver a videojuegos',
+  backToNews: 'Volver a noticias',
+  aboutGame: 'Acerca del juego',
+  playFree: 'Jugar gratis',
+  moreGames: 'Ver más juegos',
+  moreNews: 'Ver más noticias',
+  developer: 'Desarrollador',
+  publisher: 'Editor',
+  translationNote: 'Texto adaptado al español. El enlace original puede estar en otro idioma.',
 } as const
 
 export const UI = {

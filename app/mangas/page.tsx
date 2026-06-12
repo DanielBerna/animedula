@@ -3,17 +3,14 @@ import ProductGrid from '../../components/ProductGrid'
 import AdSlot from '../../components/AdSlot'
 import PageHeader from '../../components/PageHeader'
 import AffiliateDisclosure from '../../components/AffiliateDisclosure'
-import { fetchJikan, getBestImageUrl, mapMangaList } from '../../lib/jikan'
+import { fetchTopManga, getBestImageUrl } from '../../lib/jikan'
 import { MANGA_PRODUCTOS, enrichProductosConMal } from '../../lib/productos'
 
-export const revalidate = 21600
+export const revalidate = 3600
 
 export default async function MangasPage() {
-  const [data, productos] = await Promise.all([
-    fetchJikan('/top/manga?limit=18'),
-    enrichProductosConMal(MANGA_PRODUCTOS),
-  ])
-  const items = mapMangaList(data)
+  const items = await fetchTopManga(18)
+  const productos = await enrichProductosConMal(MANGA_PRODUCTOS)
   const heroImages = items.map((m) => getBestImageUrl(m.images))
 
   return (

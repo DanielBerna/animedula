@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'cdn.myanimelist.net', pathname: '/images/**' },
+      { protocol: 'https', hostname: 'www.freetogame.com', pathname: '/g/**' },
       { protocol: 'https', hostname: 'images.unsplash.com', pathname: '/**' },
     ],
   },

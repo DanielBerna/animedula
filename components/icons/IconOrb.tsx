@@ -2,7 +2,7 @@ import SectionIcon, { IconName } from './SectionIcon'
 
 type Props = {
   name: IconName
-  variant?: 'calendar' | 'manga' | 'tech' | 'collect' | 'anime' | 'default'
+  variant?: 'calendar' | 'manga' | 'tech' | 'collect' | 'gaming' | 'anime' | 'default'
   size?: 'sm' | 'md' | 'lg'
 }
 

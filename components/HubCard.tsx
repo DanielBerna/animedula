@@ -2,11 +2,12 @@ import Link from 'next/link'
 import IconOrb from './icons/IconOrb'
 import SectionIcon, { IconName } from './icons/SectionIcon'
 
-type Variant = 'calendar' | 'manga' | 'tech' | 'collect'
+type Variant = 'calendar' | 'manga' | 'gaming' | 'tech' | 'collect'
 
 const COPY: Record<Variant, { icon: IconName; title: string; hint: string }> = {
   calendar: { icon: 'calendar', title: 'Temporadas', hint: 'Emisión y estrenos' },
   manga: { icon: 'manga', title: 'Mangas', hint: 'Lectura' },
+  gaming: { icon: 'game', title: 'Videojuegos', hint: 'Juegos otaku' },
   tech: { icon: 'tech', title: 'Tecnología', hint: 'Equipo' },
   collect: { icon: 'collect', title: 'Coleccionables', hint: 'Tienda' },
 }
