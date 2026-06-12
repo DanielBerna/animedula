@@ -8,8 +8,10 @@ Copia estos tres valores a `.env.local` y a Vercel:
 | Variable | Dónde está |
 |----------|------------|
 | `NEXT_PUBLIC_SUPABASE_URL` | Project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | anon public |
-| `SUPABASE_SERVICE_ROLE_KEY` | service_role (secreto) |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Publishable key (`sb_publishable_...`) |
+| `SUPABASE_SECRET_KEY` | Secret key (`sb_secret_...`) — solo servidor |
+| `SUPABASE_SERVICE_ROLE_KEY` | Alternativa legacy (`eyJ...` service_role) |
+| `NEXT_PUBLIC_SITE_URL` | `http://localhost:3000` en dev |
 
 ### Authentication → Providers
 - Activa **Email** (magic link o contraseña).
@@ -35,7 +37,7 @@ where id = (select id from auth.users where email = 'tu@email.com');
 ## 2. En el proyecto Next.js (implementado)
 
 ```bash
-npm install @supabase/ssr
+npm install @supabase/supabase-js @supabase/ssr
 ```
 
 Rutas activas:

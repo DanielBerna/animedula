@@ -9,11 +9,11 @@ export const SITE = {
 export const NAV = {
   home: 'Inicio',
   explore: 'Explorar',
-  calendar: 'Calendario',
+  seasons: 'Temporadas',
   manga: 'Mangas',
   collect: 'Coleccionables',
   tech: 'Tecnología',
-  airing: 'En emisión',
+  community: 'Comunidad',
 } as const
 
 export const UI = {

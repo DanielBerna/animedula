@@ -4,11 +4,11 @@ import Logo from './Logo'
 
 const LINKS = [
   { href: '/explorar', label: NAV.explore },
-  { href: '/calendario', label: NAV.calendar },
+  { href: '/calendario', label: NAV.seasons },
   { href: '/mangas', label: NAV.manga },
   { href: '/coleccionables', label: NAV.collect },
   { href: '/tecnologia', label: NAV.tech },
-  { href: '/anime', label: NAV.airing },
+  { href: '/comunidad', label: NAV.community },
 ]
 
 export default function Footer() {

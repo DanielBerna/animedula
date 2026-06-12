@@ -72,7 +72,7 @@ export default async function Home() {
             <p className="eyebrow mb-1" style={{ color: '#A78BFA' }}>Próximos</p>
             <h2 className="font-display text-xl font-bold text-text">Por estrenar</h2>
           </div>
-          <Link href="/calendario" className="section-link">Calendario completo →</Link>
+          <Link href="/calendario" className="section-link">Ver temporadas →</Link>
         </div>
         <div className="space-y-2">
           {upcoming.map((a) => (

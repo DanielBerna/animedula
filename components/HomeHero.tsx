@@ -23,7 +23,7 @@ export default function HomeHero({ images }: Props) {
               Explorar anime
             </Link>
             <Link href="/calendario" className="btn-ghost hero-btn-ghost">
-              Ver calendario
+              Ver temporadas
             </Link>
           </div>
         </div>

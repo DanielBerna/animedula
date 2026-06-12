@@ -19,7 +19,7 @@ export default function LoginForm({ next = '/', error }: Props) {
     return (
       <p className="text-sm text-muted">
         Configura <code className="text-xs">NEXT_PUBLIC_SUPABASE_URL</code> y{' '}
-        <code className="text-xs">NEXT_PUBLIC_SUPABASE_ANON_KEY</code> en tu entorno.
+        <code className="text-xs">NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY</code> en tu entorno.
       </p>
     )
   }

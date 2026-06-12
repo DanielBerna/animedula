@@ -5,7 +5,7 @@ import SectionIcon, { IconName } from './icons/SectionIcon'
 type Variant = 'calendar' | 'manga' | 'tech' | 'collect'
 
 const COPY: Record<Variant, { icon: IconName; title: string; hint: string }> = {
-  calendar: { icon: 'calendar', title: 'Calendario', hint: 'Estrenos' },
+  calendar: { icon: 'calendar', title: 'Temporadas', hint: 'Emisión y estrenos' },
   manga: { icon: 'manga', title: 'Mangas', hint: 'Lectura' },
   tech: { icon: 'tech', title: 'Tecnología', hint: 'Equipo' },
   collect: { icon: 'collect', title: 'Coleccionables', hint: 'Tienda' },
