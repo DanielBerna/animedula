@@ -93,12 +93,18 @@ export function mapJikanList(data: any): JikanAnime[] {
 
 export function mapRecommendations(data: any): JikanAnime[] {
   if (!data?.data) return []
-  const items = data.data.map((rec: any) => ({
-    mal_id: rec.entry?.mal_id,
-    title: rec.entry?.title,
-    images: rec.entry?.images,
-    score: undefined,
-  })).filter((a: JikanAnime) => a.mal_id && a.title)
+  const items: JikanAnime[] = []
+  for (const rec of data.data) {
+    const mal_id = rec.entry?.mal_id
+    const title = rec.entry?.title
+    if (!mal_id || !title) continue
+    items.push({
+      mal_id,
+      title,
+      images: rec.entry?.images,
+      score: undefined,
+    })
+  }
   return dedupeByMalId(items).slice(0, 6)
 }
 

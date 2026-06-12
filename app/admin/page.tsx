@@ -11,10 +11,21 @@ const SEEDS = [
   { mal_id: 1535, title: 'Death Note', kind: 'anime' as const, score: 8.6 },
 ]
 
+type DraftItem = {
+  key: string
+  review_id?: string
+  mal_id: number
+  title: string
+  kind: 'anime' | 'manga'
+  resumen: string
+  veredicto: string
+  status: string
+}
+
 export default async function AdminPage() {
   const queue = isSupabaseAuthConfigured() ? await listModerationQueue() : []
 
-  const seedDrafts = await Promise.all(
+  const seedDrafts: DraftItem[] = await Promise.all(
     SEEDS.map(async (s) => {
       try {
         const review = await getEditorialReview({
@@ -25,6 +36,7 @@ export default async function AdminPage() {
           genres: ['Drama'],
         })
         return {
+          key: `${s.kind}-${s.mal_id}`,
           mal_id: s.mal_id,
           title: s.title,
           kind: s.kind,
@@ -35,6 +47,7 @@ export default async function AdminPage() {
       } catch {
         const fb = buildFallbackReview({ kind: s.kind, id: s.mal_id, title: s.title, score: s.score })
         return {
+          key: `${s.kind}-${s.mal_id}`,
           mal_id: s.mal_id,
           title: s.title,
           kind: s.kind,
@@ -46,7 +59,8 @@ export default async function AdminPage() {
     })
   )
 
-  const dbItems = queue.map((q) => ({
+  const dbItems: DraftItem[] = queue.map((q) => ({
+    key: q.id,
     review_id: q.id,
     mal_id: q.mal_id,
     title: `${q.kind === 'manga' ? 'Manga' : 'Anime'} #${q.mal_id}`,
@@ -75,9 +89,9 @@ export default async function AdminPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {drafts.map((d) => (
             <AdminDraftCard
-              key={'review_id' in d && d.review_id ? d.review_id : `${d.kind}-${d.mal_id}`}
+              key={d.key}
               title={d.title}
-              review_id={'review_id' in d ? d.review_id : undefined}
+              review_id={d.review_id}
               kind={d.kind}
               mal_id={d.mal_id}
               resumen={d.resumen}
