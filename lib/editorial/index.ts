@@ -1,3 +1,5 @@
 export { getEditorialReview } from './getReview'
 export { generateEditorialReview } from './generate'
+export { batchGenerateReviews, generateReviewForTarget } from './batch'
+export type { BatchReviewTarget, BatchReviewResult } from './batch'
 export type { EditorialReview, ReviewInput, MediaKind } from './types'

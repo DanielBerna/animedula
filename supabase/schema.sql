@@ -1,5 +1,6 @@
--- Animédula — esquema inicial Supabase
--- Ejecutar en: Supabase Dashboard → SQL Editor → New query → Run
+-- Animédula — esquema inicial (LEGACY)
+-- ⚠️ Usa supabase/schema-complete.sql para instalación o migración completa.
+-- Este archivo se conserva como referencia histórica.
 
 -- ─── Perfiles (extiende auth.users) ───
 create table if not exists public.profiles (

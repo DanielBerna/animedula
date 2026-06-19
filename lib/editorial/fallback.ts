@@ -32,7 +32,7 @@ export function buildFallbackReview(input: ReviewInput): EditorialReview {
 
   const contexto_mx =
     kind === 'manga'
-      ? `Busca tomos en Amazon o Mercado Libre, o apps legales si están disponibles. Ideal para leer de noche o en el transporte.`
+      ? `Busca tomos en Mercado Libre o apps legales si están disponibles. Ideal para leer de noche o en el transporte.`
       : `Arma un maratón de fin de semana y revisa en qué app está antes de pagar una suscripción nueva.`
 
   return {

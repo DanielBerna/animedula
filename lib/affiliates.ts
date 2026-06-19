@@ -1,66 +1,19 @@
-export const REGION = 'mx' as const
+import {
+  crunchyrollSearch,
+  mercadoLibreAffiliateUrl,
+  mercadoLibreSearch,
+  netflixSearch,
+  primeVideoSearch,
+} from './shop-links'
 
-export type AffiliatePartner = 'amazon' | 'mercadolibre' | 'crunchyroll' | 'prime'
-
-const AMAZON_DOMAIN = 'amazon.com.mx'
-const ML_DOMAIN = 'mercadolibre.com.mx'
-
-function amazonTag(): string {
-  return process.env.AMAZON_ASSOCIATE_TAG || process.env.NEXT_PUBLIC_AMAZON_ASSOCIATE_TAG || ''
-}
-
-function mlAffiliateId(): string {
-  return process.env.MERCADOLIBRE_AFFILIATE_ID || ''
-}
-
-export function buildAmazonSearchUrl(query: string): string {
-  const params = new URLSearchParams({ k: query })
-  const tag = amazonTag()
-  if (tag) params.set('tag', tag)
-  return `https://www.${AMAZON_DOMAIN}/s?${params.toString()}`
-}
-
-export function buildAmazonProductUrl(asinOrUrl: string): string {
-  if (asinOrUrl.startsWith('http')) {
-    const url = new URL(asinOrUrl)
-    const tag = amazonTag()
-    if (tag) url.searchParams.set('tag', tag)
-    return url.toString()
-  }
-  const tag = amazonTag()
-  const qs = tag ? `?tag=${encodeURIComponent(tag)}` : ''
-  return `https://www.${AMAZON_DOMAIN}/dp/${asinOrUrl}${qs}`
-}
-
-export function buildMercadoLibreSearchUrl(query: string): string {
-  const params = new URLSearchParams({ q: query })
-  const aff = mlAffiliateId()
-  if (aff) params.set('aff_id', aff)
-  const slug = query.replace(/\s+/g, '-')
-  return `https://listado.${ML_DOMAIN}/${slug}?${params.toString()}`
-}
-
-export function buildCrunchyrollUrl(animeTitle?: string): string {
-  const base = process.env.CRUNCHYROLL_AFFILIATE_URL || 'https://www.crunchyroll.com'
-  if (!animeTitle) return base
-  return `${base}/search?q=${encodeURIComponent(animeTitle)}`
-}
-
-export function buildPrimeVideoUrl(animeTitle?: string): string {
-  const tag = amazonTag()
-  const q = animeTitle ? `search?phrase=${encodeURIComponent(animeTitle)}` : ''
-  const base = `https://www.${AMAZON_DOMAIN}/gp/video/${q}`
-  if (!tag) return base
-  return `${base}${base.includes('?') ? '&' : '?'}tag=${encodeURIComponent(tag)}`
-}
+export type StreamingPartner = 'crunchyroll' | 'netflix' | 'prime'
 
 export type MerchItem = {
   id: string
   label: string
   description: string
-  partner: AffiliatePartner
+  url: string
   cta: string
-  query: string
   badge?: string
   imagen?: string
 }
@@ -69,32 +22,29 @@ export function getSuggestedMerch(animeTitle: string): MerchItem[] {
   return [
     {
       id: 'figura',
-      label: 'Figura destacada',
-      description: `Piezas de colección para fans de ${animeTitle}.`,
-      partner: 'amazon',
-      cta: 'Ver en Amazon',
-      query: `figura ${animeTitle} anime`,
+      label: 'Figuras de colección',
+      description: `Piezas relacionadas con ${animeTitle}.`,
+      url: mercadoLibreSearch(`figura ${animeTitle}`),
+      cta: 'Ver en Mercado Libre',
       badge: 'Colección',
       imagen: 'https://images.unsplash.com/photo-1601811833011-2039bfee4c4e?auto=format&fit=crop&w=800&q=80',
     },
     {
       id: 'manga',
       label: 'Manga / Blu-ray',
-      description: 'Ediciones para maratón o biblioteca.',
-      partner: 'amazon',
-      cta: 'Ver en Amazon',
-      query: `${animeTitle} manga`,
+      description: 'Ediciones físicas para maratón o biblioteca.',
+      url: mercadoLibreSearch(`${animeTitle} manga tomo panini`),
+      cta: 'Ver en Mercado Libre',
       badge: 'Lectura',
       imagen: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=800&q=80',
     },
     {
-      id: 'ml',
-      label: 'Mercado Libre',
-      description: 'Busca ofertas y envíos locales.',
-      partner: 'mercadolibre',
-      cta: 'Buscar en Mercado Libre',
-      query: `${animeTitle} figura anime`,
-      badge: 'Oferta',
+      id: 'merch',
+      label: 'Merchandising',
+      description: 'Posters, peluches y más en tiendas locales.',
+      url: mercadoLibreSearch(`${animeTitle} merch anime`),
+      cta: 'Ver opciones',
+      badge: 'Merch',
       imagen: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=800&q=80',
     },
   ]
@@ -103,34 +53,39 @@ export function getSuggestedMerch(animeTitle: string): MerchItem[] {
 /** @deprecated Usar getSuggestedMerch */
 export const getCuratedMerch = getSuggestedMerch
 
-export function resolveAffiliateUrl(
-  partner: AffiliatePartner,
-  opts: { query?: string; dest?: string; anime?: string }
-): string {
+export function resolveStreamingUrl(partner: StreamingPartner, title?: string): string {
   switch (partner) {
-    case 'amazon':
-      if (opts.dest) return buildAmazonProductUrl(opts.dest)
-      return buildAmazonSearchUrl(opts.query || opts.anime || 'anime figura')
-    case 'mercadolibre':
-      return buildMercadoLibreSearchUrl(opts.query || opts.anime || 'figura anime')
     case 'crunchyroll':
-      return buildCrunchyrollUrl(opts.anime || opts.query)
+      return crunchyrollSearch(title || '')
+    case 'netflix':
+      return netflixSearch(title || '')
     case 'prime':
-      return buildPrimeVideoUrl(opts.anime || opts.query)
+      return primeVideoSearch(title || '')
     default:
-      return opts.dest || '/'
+      return '/'
   }
 }
 
+/** Redirección interna opcional (sin tags de afiliado) */
 export function buildGoUrl(
-  partner: AffiliatePartner,
-  opts: { query?: string; dest?: string; anime?: string; malId?: string | number }
+  partner: StreamingPartner | 'mercadolibre',
+  opts: { query?: string; dest?: string; anime?: string }
 ): string {
   const params = new URLSearchParams()
   if (opts.query) params.set('q', opts.query)
   if (opts.dest) params.set('dest', opts.dest)
   if (opts.anime) params.set('anime', opts.anime)
-  if (opts.malId) params.set('mal', String(opts.malId))
   const qs = params.toString()
   return `/go/${partner}${qs ? `?${qs}` : ''}`
+}
+
+export function resolveGoUrl(
+  partner: StreamingPartner | 'mercadolibre',
+  opts: { query?: string; anime?: string; dest?: string }
+): string {
+  if (partner === 'mercadolibre') {
+    if (opts.dest) return mercadoLibreAffiliateUrl(opts.dest)
+    return mercadoLibreSearch(opts.query || opts.anime || 'figura anime')
+  }
+  return resolveStreamingUrl(partner, opts.anime || opts.query)
 }

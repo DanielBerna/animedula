@@ -32,8 +32,10 @@ export default function PrivacidadPage() {
         <li>Preferencias guardadas en tu dispositivo (por ejemplo, tema claro u oscuro).</li>
       </ul>
       <p>
-        No pedimos registro obligatorio para consultar listados, reseñas o guías. Si en el futuro habilitamos
-        formularios o cuentas, te avisaremos antes de solicitar datos personales.
+        Si creas una cuenta opcional (inicio de sesión con correo u otro proveedor), almacenamos en{' '}
+        <strong>Supabase</strong> tu identificador de usuario, nombre para mostrar, comentarios, listas
+        personales, reseñas y actividad de gamificación (XP, insignias). Puedes usar el sitio sin cuenta para
+        consultar listados, reseñas editoriales y guías.
       </p>
 
       <h2>3. Cookies y tecnologías similares</h2>
@@ -72,38 +74,45 @@ export default function PrivacidadPage() {
         </li>
       </ul>
 
-      <h2>5. Enlaces de afiliado</h2>
+      <h2>5. Enlaces externos y afiliados</h2>
       <p>
-        Algunos enlaces hacia Amazon, Mercado Libre u otras tiendas son de afiliado. Si compras a través de
-        ellos, podemos recibir una comisión sin costo adicional para ti. Esas plataformas tienen sus propias
-        políticas de privacidad, independientes de {SITE.name}.
+        Algunos enlaces llevan a plataformas de streaming o tiendas como Mercado Libre. Cuando el programa de
+        afiliados está activo, esos enlaces pueden generar una comisión para {SITE.name} sin costo extra para
+        ti. Esas plataformas tienen políticas propias, independientes de nosotros.
       </p>
 
-      <h2>6. Servicios de terceros</h2>
+      <h2>6. Contenido generado por usuarios</h2>
+      <p>
+        Los comentarios, reseñas, aportes editoriales y publicaciones del foro son responsabilidad de quien los
+        escribe. Moderamos contenido visible según nuestras reglas y podemos ocultar o eliminar material que
+        incumpla los términos (spam, acoso, spoilers no marcados, enlaces maliciosos).
+      </p>
+
+      <h2>7. Servicios de terceros</h2>
       <p>Para mostrar información de anime y manga consultamos APIs públicas (por ejemplo, Jikan / MyAnimeList).
         No compartimos con ellos datos personales tuyos más allá de las peticiones técnicas necesarias para
         cargar el contenido.</p>
 
-      <h2>7. Conservación y seguridad</h2>
+      <h2>8. Conservación y seguridad</h2>
       <p>
         Conservamos los datos el tiempo necesario para operar el sitio, cumplir obligaciones legales y resolver
         incidencias. Aplicamos medidas razonables para proteger la información, aunque ningún sistema en internet
         es 100 % seguro.
       </p>
 
-      <h2>8. Tus derechos</h2>
+      <h2>9. Tus derechos</h2>
       <p>
         Según la legislación aplicable en tu país, puedes solicitar acceso, rectificación o eliminación de datos
         personales que tratemos directamente. Escríbenos a {contactEmail} indicando tu solicitud.
       </p>
 
-      <h2>9. Menores de edad</h2>
+      <h2>10. Menores de edad</h2>
       <p>
         El sitio está dirigido a público general interesado en anime y manga. No recopilamos a sabiendas datos de
         menores de 13 años. Si crees que un menor nos proporcionó información, contáctanos para eliminarla.
       </p>
 
-      <h2>10. Cambios</h2>
+      <h2>11. Cambios</h2>
       <p>
         Podemos actualizar esta política. Publicaremos la fecha de revisión en esta página. El uso continuado del
         sitio después de un cambio implica que aceptas la versión vigente.

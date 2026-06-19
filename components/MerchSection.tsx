@@ -1,33 +1,36 @@
-import AffiliateDisclosure from './AffiliateDisclosure'
 import ProductCard from './ProductCard'
+import AffiliateDisclosure from './AffiliateDisclosure'
 import { getSuggestedMerch } from '../lib/affiliates'
+import { isShopEnabled } from '../lib/shop-config'
 import { UI } from '../lib/copy'
-import type { ProductoAfiliado } from '../lib/productos/types'
+import type { ProductoCatalogo } from '../lib/productos/types'
 
 type Props = {
   animeTitle: string
   malId?: number
 }
 
-export default function MerchSection({ animeTitle, malId }: Props) {
+export default function MerchSection({ animeTitle }: Props) {
+  if (!isShopEnabled()) return null
+
   const items = getSuggestedMerch(animeTitle)
 
-  const productos: ProductoAfiliado[] = items.map((item) => ({
+  const productos: ProductoCatalogo[] = items.map((item) => ({
     id: item.id,
     nombre: item.label,
     descripcion: item.description,
     imagen: item.imagen || 'https://images.unsplash.com/photo-1601811833011-2039bfee4c4e?auto=format&fit=crop&w=800&q=80',
-    partner: item.partner,
-    query: item.query,
+    url: item.url,
+    cta: item.cta,
+    tienda: 'Mercado Libre',
     badge: item.badge,
-    precioDesde: 'Ver ofertas',
-    anime: animeTitle,
-    malId,
+    precioDesde: 'Consultar precio',
   }))
 
   return (
     <section className="card-glass p-5 md:p-6">
-      <h3 className="font-display text-lg font-semibold text-text mb-5">{UI.merchTitle}</h3>
+      <h3 className="font-display text-lg font-semibold text-text mb-1">{UI.merchTitle}</h3>
+      <p className="text-xs text-muted mb-5">{UI.shopAffiliateNote}</p>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {productos.map((p) => (

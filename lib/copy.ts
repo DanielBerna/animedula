@@ -15,6 +15,7 @@ export const NAV = {
   collect: 'Coleccionables',
   tech: 'Tecnología',
   community: 'Comunidad',
+  news: 'Noticias',
 } as const
 
 export const NAV_GROUP = {
@@ -27,6 +28,14 @@ export const NEWS_COPY = {
   eyebrow: 'Noticias',
   readAt: 'Leer nota',
   empty: 'No pudimos cargar noticias. Intenta de nuevo en unos minutos.',
+  featuredTitle: 'Destacadas',
+  latestTitle: 'Lo más reciente',
+  searchPlaceholder: 'Buscar noticias…',
+  searchEmpty: 'Nada coincide con tu búsqueda. Prueba otra palabra o quita el filtro.',
+  filterAll: 'Todas',
+  filterLabel: 'Filtrar por categoría',
+  searchResults: (n: number) => `${n} resultado${n === 1 ? '' : 's'}`,
+  goToSection: (name: string) => `Ir a ${name} →`,
   gamingTitle: 'Noticias de videojuegos',
   gamingEmpty: 'Las fuentes de noticias no respondieron. Vuelve a intentar más tarde.',
   techTitle: 'Noticias de tecnología',
@@ -67,9 +76,12 @@ export const UI = {
   errorBody: 'Prueba recargar la página. Si sigue igual, vuelve en unos minutos.',
   retry: 'Reintentar',
   goHome: 'Ir al inicio',
-  affiliateShort: 'Algunos enlaces son de afiliado.',
+  affiliateShort: 'Publicidad (AdSense) y enlaces a plataformas externas.',
   affiliateLong:
-    'Algunos enlaces son de afiliado (Amazon, Mercado Libre, streaming). Si compras o te suscribes, podemos recibir una comisión sin costo extra para ti.',
+    'Mostramos anuncios de Google AdSense. Algunos enlaces llevan a streaming o tiendas fuera de Animédula; no controlamos sus precios ni disponibilidad.',
+  shopAffiliateNote:
+    'Enlaces de afiliado a Mercado Libre. Si compras, podemos recibir una comisión sin costo extra para ti.',
+  externalLinkNote: 'Enlaces a Mercado Libre. Revisa vendedor, precio y envío antes de comprar.',
   adLabel: 'Publicidad',
   adPending: 'Espacio publicitario',
   merchTitle: 'Tienda relacionada',

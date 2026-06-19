@@ -6,16 +6,19 @@ import CalendarRow from '../components/CalendarRow'
 import HubCard from '../components/HubCard'
 import AdSlot from '../components/AdSlot'
 import AffiliateDisclosure from '../components/AffiliateDisclosure'
+import HomeHybridFeed from '../components/HomeHybridFeed'
 import { UI } from '../lib/copy'
+import { getHybridHomeFeed } from '../lib/community/home-feed'
 import { fetchJikan, fetchTopAnime, fetchTopManga, getBestImageUrl, mapJikanList } from '../lib/jikan'
 
 export const revalidate = 21600
 
 export default async function Home() {
-  const [trending, upcomingRes, mangas] = await Promise.all([
+  const [trending, upcomingRes, mangas, feed] = await Promise.all([
     fetchTopAnime(6),
     fetchJikan('/seasons/upcoming?limit=4'),
     fetchTopManga(4),
+    getHybridHomeFeed(8, 5),
   ])
 
   const upcoming = mapJikanList(upcomingRes)
@@ -33,13 +36,15 @@ export default async function Home() {
           </div>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <HubCard variant="calendar" href="/calendario" />
-          <HubCard variant="manga" href="/mangas" />
-          <HubCard variant="gaming" href="/videojuegos" />
-          <HubCard variant="collect" href="/coleccionables" />
-          <HubCard variant="tech" href="/tecnologia" />
+          <HubCard variant="calendar" href="/calendario" delay={0} />
+          <HubCard variant="manga" href="/mangas" delay={60} />
+          <HubCard variant="gaming" href="/videojuegos" delay={120} />
+          <HubCard variant="collect" href="/coleccionables" delay={180} />
+          <HubCard variant="tech" href="/tecnologia" delay={240} />
         </div>
       </section>
+
+      <HomeHybridFeed items={feed} />
 
       <AdSlot slot={process.env.NEXT_PUBLIC_ADS_SLOT_HOME_TOP || ''} className="ad-placeholder" />
 

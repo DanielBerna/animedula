@@ -98,6 +98,15 @@ export const NAV_MENU: NavEntry[] = [
   {
     type: 'link',
     item: {
+      href: '/noticias',
+      label: NAV.news,
+      icon: 'sparkle',
+      match: (p) => p.startsWith('/noticias'),
+    },
+  },
+  {
+    type: 'link',
+    item: {
       href: '/comunidad',
       label: NAV.community,
       icon: 'sparkle',
@@ -122,6 +131,12 @@ export const MOBILE_NAV: { label?: string; items: NavItem[] }[] = [
   {
     label: NAV_GROUP.community,
     items: [
+      {
+        href: '/noticias',
+        label: NAV.news,
+        icon: 'sparkle',
+        match: (p) => p.startsWith('/noticias'),
+      },
       {
         href: '/comunidad',
         label: NAV.community,

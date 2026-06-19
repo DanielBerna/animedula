@@ -39,11 +39,11 @@ export default function TerminosPage() {
         responsabilidad y sus propios términos.
       </p>
 
-      <h2>4. Afiliados y publicidad</h2>
+      <h2>4. Publicidad y tienda</h2>
       <p>
-        Algunos enlaces son de afiliado (Amazon, Mercado Libre, etc.) y mostramos publicidad (por ejemplo,
-        Google AdSense). Podemos recibir ingresos si haces clic o compras a través de esos enlaces, sin costo
-        extra para ti. Siempre indicamos de forma visible cuando un enlace es de afiliado.
+        Mostramos publicidad (por ejemplo, Google AdSense). La sección de productos y enlaces a Mercado Libre
+        solo aparece cuando el programa de afiliados está configurado; en ese caso podemos recibir ingresos
+        por compras derivadas de esos enlaces. Revisa precio, vendedor y envío en la plataforma de destino.
       </p>
 
       <h2>5. Propiedad intelectual</h2>
@@ -53,7 +53,20 @@ export default function TerminosPage() {
         editores. Usamos material promocional y metadatos conforme a usos informativos y de referencia.
       </p>
 
-      <h2>6. Uso permitido</h2>
+      <h2>6. Cuentas y contenido de usuarios</h2>
+      <p>
+        Puedes registrarte para comentar, guardar listas, publicar reseñas y participar en la comunidad. Eres
+        responsable de la actividad en tu cuenta y de mantener tus credenciales seguras. Al publicar contenido
+        (comentarios, reseñas, hilos del foro) nos concedes una licencia no exclusiva para mostrarlo y moderarlo
+        en {SITE.name}. No publiques material ilegal, difamatorio, spam, spoilers sin aviso ni contenido que
+        infrinja derechos de terceros.
+      </p>
+      <p>
+        Nos reservamos el derecho de ocultar, editar o eliminar contenido de usuario y de suspender cuentas que
+        incumplan estas reglas, sin previo aviso cuando la situación lo requiera.
+      </p>
+
+      <h2>7. Uso permitido</h2>
       <p>Puedes consultar el sitio con fines personales y no comerciales. No está permitido:</p>
       <ul>
         <li>Copiar masivamente contenido sin autorización.</li>
@@ -62,26 +75,26 @@ export default function TerminosPage() {
         <li>Reutilizar nuestras reseñas como si fueran oficiales de otra marca.</li>
       </ul>
 
-      <h2>7. Disponibilidad</h2>
+      <h2>8. Disponibilidad</h2>
       <p>
         Trabajamos para mantener el sitio disponible, pero puede haber interrupciones por mantenimiento, fallos
         técnicos o cambios en APIs de terceros. No garantizamos disponibilidad ininterrumpida.
       </p>
 
-      <h2>8. Limitación de responsabilidad</h2>
+      <h2>9. Limitación de responsabilidad</h2>
       <p>
         {SITE.name} se ofrece &quot;tal cual&quot;. En la medida permitida por la ley, no somos responsables de
         daños indirectos derivados del uso del sitio, de enlaces externos o de decisiones de compra o suscripción
         basadas en nuestro contenido.
       </p>
 
-      <h2>9. Reportes</h2>
+      <h2>10. Reportes</h2>
       <p>
         Si detectas un error en una ficha, un enlace roto o contenido que consideres inapropiado, puedes usar la
         opción de reporte en las fichas o escribir a <a href={`mailto:${contactEmail}`}>{contactEmail}</a>.
       </p>
 
-      <h2>10. Cambios y ley aplicable</h2>
+      <h2>11. Cambios y ley aplicable</h2>
       <p>
         Podemos modificar estos términos en cualquier momento publicando la versión actualizada en esta página.
         Para consultas legales, contáctanos en {contactEmail}. Cuando corresponda, se aplicará la legislación

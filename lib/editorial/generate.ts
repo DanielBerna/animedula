@@ -35,8 +35,8 @@ export async function generateEditorialReview(input: ReviewInput): Promise<Edito
     const output = await replicate.run(model as `${string}/${string}`, {
       input: {
         prompt,
-        max_tokens: 900,
-        temperature: 0.7,
+        max_tokens: 1100,
+        temperature: 0.82,
       },
     })
 

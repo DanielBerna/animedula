@@ -1,18 +1,18 @@
-import { buildGoUrl } from '../lib/affiliates'
 import IconOrb from './icons/IconOrb'
 import { IconName } from './icons/SectionIcon'
+import { productShopHref } from '../lib/product-url'
 
 type Props = {
   nombre: string
   descripcion: string
-  query: string
-  partner: 'amazon' | 'mercadolibre'
+  url: string
+  cta?: string
   icon: IconName
   badge?: string
 }
 
-export default function CollectibleCard({ nombre, descripcion, query, partner, icon, badge }: Props) {
-  const url = buildGoUrl(partner, { query })
+export default function CollectibleCard({ nombre, descripcion, url, cta = 'Ver en Mercado Libre', icon, badge }: Props) {
+  const href = productShopHref(url)
 
   return (
     <article className="collect-card enter-up h-full">
@@ -25,12 +25,12 @@ export default function CollectibleCard({ nombre, descripcion, query, partner, i
       </div>
       <p className="text-sm text-muted leading-relaxed flex-1">{descripcion}</p>
       <a
-        href={url}
+        href={href}
         target="_blank"
         rel="noopener noreferrer sponsored"
         className="btn-primary text-xs text-center py-2.5 focus-ring"
       >
-        {partner === 'mercadolibre' ? 'Buscar en ML' : 'Ver en Amazon'}
+        {cta}
       </a>
     </article>
   )

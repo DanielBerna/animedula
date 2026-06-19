@@ -5,19 +5,19 @@ import PageHeader from '../../components/PageHeader'
 import AffiliateDisclosure from '../../components/AffiliateDisclosure'
 import { fetchTopManga, getBestImageUrl } from '../../lib/jikan'
 import { MANGA_PRODUCTOS, enrichProductosConMal } from '../../lib/productos'
+import { isShopEnabled } from '../../lib/shop-config'
 
 export const revalidate = 3600
 
 export default async function MangasPage() {
+  const shop = isShopEnabled()
   const items = await fetchTopManga(18)
-  const productos = await enrichProductosConMal(MANGA_PRODUCTOS)
+  const productos = shop ? await enrichProductosConMal(MANGA_PRODUCTOS) : []
   const heroImages = items.map((m) => getBestImageUrl(m.images))
 
   return (
     <div className="section-manga space-y-10">
       <PageHeader variant="manga" images={heroImages} eyebrow="Manga" title="Mangas" />
-
-      <AffiliateDisclosure />
 
       <section>
         <div className="section-head">
@@ -42,7 +42,12 @@ export default async function MangasPage() {
 
       <AdSlot slot={process.env.NEXT_PUBLIC_ADS_SLOT_MANGA || ''} className="ad-placeholder" />
 
-      <ProductGrid title="Tomos para comprar" productos={productos} variant="manga" columns="3" />
+      {shop ? (
+        <>
+          <ProductGrid title="Tomos para comprar" productos={productos} variant="manga" columns="3" />
+          <AffiliateDisclosure compact />
+        </>
+      ) : null}
     </div>
   )
 }

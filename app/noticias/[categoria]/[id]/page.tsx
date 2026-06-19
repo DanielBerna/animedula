@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { DETAIL_COPY, NEWS_COPY } from '../../../../lib/copy'
+import { NEWS_CATEGORY_LABELS, NEWS_CATEGORY_CLASS } from '../../../../lib/news/search'
 import { fetchNewsBySlug, isNewsCategory } from '../../../../lib/rss'
 
 export const revalidate = 7200
@@ -38,15 +39,26 @@ export default async function NoticiaDetailPage({ params }: Props) {
 
   return (
     <div className="space-y-8 enter-up max-w-3xl mx-auto">
-      <Link href={CATEGORY_BACK[categoria]} className="section-link text-sm">
+      <Link href="/noticias" className="section-link text-sm">
         ← {DETAIL_COPY.backToNews}
       </Link>
+
+      {item.imageUrl ? (
+        <div className={`news-detail-hero ${NEWS_CATEGORY_CLASS[categoria]}`}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={item.imageUrl} alt="" className="news-detail-hero-img" />
+          <div className="news-detail-hero-overlay" />
+        </div>
+      ) : null}
 
       <article className="card-glass p-6 md:p-8 space-y-5">
         <header className="space-y-3">
           <p className="eyebrow">{NEWS_COPY.eyebrow}</p>
           <h1 className="page-title">{item.title}</h1>
           <div className="flex flex-wrap items-center gap-3 text-sm text-muted">
+            <span className={`tag tag-sec ${NEWS_CATEGORY_CLASS[categoria]}`}>
+              {NEWS_CATEGORY_LABELS[categoria]}
+            </span>
             <span className="tag tag-sec">{item.source}</span>
             {date ? <time dateTime={item.publishedAt}>{date}</time> : null}
           </div>

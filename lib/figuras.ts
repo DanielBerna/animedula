@@ -1,54 +1,50 @@
+import { mercadoLibreSearch } from './shop-links'
+
 export type FiguraCurada = {
   nombre: string
   descripcion: string
-  query: string
-  partner: 'amazon' | 'mercadolibre'
+  url: string
+  cta?: string
   badge?: string
   imagen?: string
 }
 
-/** Picks editoriales iniciales — reemplazar con selección admin más adelante */
 export const FIGURAS_DESTACADAS: FiguraCurada[] = [
   {
     nombre: 'Figuras premium',
     descripcion: 'Nendoroid, Figma y escalas para coleccionistas exigentes.',
-    query: 'nendoroid anime figura',
-    partner: 'amazon',
+    url: 'https://listado.mercadolibre.com.mx/nendoroid-figura-anime',
+    cta: 'Ver en Mercado Libre',
     badge: 'Premium',
   },
   {
     nombre: 'Figuras accesibles',
     descripcion: 'Opciones económicas sin sacrificar estética en tu estante.',
-    query: 'figura anime barata coleccion',
-    partner: 'mercadolibre',
+    url: mercadoLibreSearch('figura anime barata'),
     badge: 'Oferta',
   },
   {
     nombre: 'Attack on Titan',
     descripcion: 'Levi, Eren y Mikasa — los más buscados para regalo.',
-    query: 'attack on titan figura',
-    partner: 'amazon',
+    url: mercadoLibreSearch('attack on titan figura'),
     badge: 'Top ventas',
   },
   {
     nombre: 'Demon Slayer',
     descripcion: 'Tanjiro y Nezuko — ideal para fans nuevos del anime.',
-    query: 'demon slayer kimetsu figura',
-    partner: 'amazon',
+    url: 'https://www.mercadolibre.com.mx/nendoroid-tanjiro-kamado2nd-re-run/p/MLM24247928',
     badge: 'Regalo',
   },
   {
     nombre: 'Jujutsu Kaisen',
     descripcion: 'Gojo y Sukuna — piezas con mucha presencia en estantería.',
-    query: 'jujutsu kaisen figura',
-    partner: 'mercadolibre',
+    url: mercadoLibreSearch('jujutsu kaisen figura'),
     badge: 'Tendencia',
   },
   {
     nombre: 'One Piece',
     descripcion: 'Luffy y Zoro — clásicos que no fallan en colección.',
-    query: 'one piece figura luffy',
-    partner: 'amazon',
+    url: mercadoLibreSearch('one piece figura luffy'),
     badge: 'Clásico',
   },
 ]

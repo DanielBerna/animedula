@@ -1,34 +1,29 @@
 import { NextRequest } from 'next/server'
-import { AffiliatePartner, resolveAffiliateUrl } from '../../../lib/affiliates'
+import { resolveGoUrl, StreamingPartner } from '../../../lib/affiliates'
 
-const VALID: AffiliatePartner[] = ['amazon', 'mercadolibre', 'crunchyroll', 'prime']
+const VALID = ['mercadolibre', 'crunchyroll', 'netflix', 'prime'] as const
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ partner: string }> }
 ) {
   const { partner: raw } = await params
-  const partner = raw as AffiliatePartner
 
-  if (!VALID.includes(partner)) {
-    return new Response('Partner no válido', { status: 400 })
+  if (!VALID.includes(raw as typeof VALID[number])) {
+    return new Response('Destino no válido', { status: 400 })
   }
 
   const url = new URL(req.url)
   const query = url.searchParams.get('q') || undefined
-  const dest = url.searchParams.get('dest') || undefined
   const anime = url.searchParams.get('anime') || undefined
-  const mal = url.searchParams.get('mal') || undefined
+  const dest = url.searchParams.get('dest') || undefined
 
-  const target = resolveAffiliateUrl(partner, { query, dest, anime })
+  const target = resolveGoUrl(raw as StreamingPartner | 'mercadolibre', { query, anime, dest })
 
-  console.info('[affiliate-click]', {
-    partner,
-    country: 'mx',
-    anime,
-    mal,
+  console.info('[external-link]', {
+    partner: raw,
     query,
-    ip: req.headers.get('x-forwarded-for') || 'anon',
+    anime,
     at: new Date().toISOString(),
   })
 

@@ -1,17 +1,16 @@
-import type { AffiliatePartner } from '../affiliates'
-
-export type ProductoAfiliado = {
+export type ProductoCatalogo = {
   id: string
   nombre: string
   descripcion: string
   imagen: string
-  partner: AffiliatePartner
-  query: string
-  asin?: string
+  /** Enlace directo al producto o listado en tienda */
+  url: string
+  cta?: string
+  tienda?: string
   precioDesde?: string
   badge?: string
-  /** Portada desde Jikan o tracking en /go */
   malId?: number
-  /** Título de anime/manga para tracking en /go */
-  anime?: string
 }
+
+/** @deprecated Usar ProductoCatalogo */
+export type ProductoAfiliado = ProductoCatalogo

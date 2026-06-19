@@ -3,13 +3,18 @@ import EditorialReviewBlock from '../../../components/EditorialReview'
 import DetailPoster from '../../../components/DetailPoster'
 import ReportButton from '../../../components/ReportButton'
 import ContentSection from '../../../components/ContentSection'
+import ContentTabs from '../../../components/ContentTabs'
 import Gallery from '../../../components/Gallery'
 import WhereToWatch from '../../../components/WhereToWatch'
 import MerchSection from '../../../components/MerchSection'
 import MetaItem from '../../../components/MetaItem'
 import Badge from '../../../components/Badge'
 import CommentSection from '../../../components/CommentSection'
+import ForumThread from '../../../components/ForumThread'
 import SubmissionForm from '../../../components/SubmissionForm'
+import TrackListButton from '../../../components/TrackListButton'
+import UserReviewSection from '../../../components/UserReviewSection'
+import ScreenshotSection from '../../../components/ScreenshotSection'
 import { getAuthUser } from '../../../lib/auth'
 import { getEditorialReview } from '../../../lib/editorial'
 import { fetchJikan, getBestImageUrl, mapRecommendations } from '../../../lib/jikan'
@@ -45,6 +50,89 @@ export default async function Page({ params }: Props) {
     status: anime?.status,
   })
 
+  const infoTab = (
+    <div className="space-y-5">
+      <ContentSection eyebrow="Referencia" title="Sinopsis oficial (MAL)">
+        <p className="text-sm text-muted leading-[1.8]">{synopsis}</p>
+        <p className="text-xs text-faint mt-3">
+          Metadatos e imágenes © sus respectivos titulares. Uso informativo y de referencia.
+        </p>
+      </ContentSection>
+
+      {(anime?.episodes || anime?.status || anime?.year) && (
+        <ContentSection eyebrow="Ficha" title="Datos técnicos">
+          <dl className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {anime?.episodes && <MetaItem label="Episodios" value={anime.episodes} />}
+            {anime?.status && <MetaItem label="Estado" value={anime.status} />}
+            {anime?.score && <MetaItem label="Puntuación MAL" value={anime.score} />}
+            {anime?.year && <MetaItem label="Año" value={anime.year} />}
+          </dl>
+        </ContentSection>
+      )}
+
+      {image && (
+        <ContentSection eyebrow="Visual" title="Galería">
+          <Gallery images={[image]} />
+        </ContentSection>
+      )}
+
+      <WhereToWatch animeTitle={title} malId={Number(malId)} sources={streaming} />
+      <MerchSection animeTitle={title} malId={Number(malId)} />
+    </div>
+  )
+
+  const reviewsTab = (
+    <div className="space-y-5">
+      <EditorialReviewBlock review={review} />
+      <UserReviewSection
+        contentType="anime"
+        contentId={String(malId)}
+        loggedIn={Boolean(user)}
+        returnTo={returnTo}
+      />
+      <ContentSection eyebrow="Colabora" title="Mejorar la reseña editorial">
+        <SubmissionForm kind="anime" malId={Number(malId)} loggedIn={Boolean(user)} />
+      </ContentSection>
+    </div>
+  )
+
+  const communityTab = (
+    <div className="space-y-5">
+      <div className="card-glass p-5">
+        <TrackListButton
+          contentType="anime"
+          contentId={String(malId)}
+          title={title}
+          imageUrl={image}
+          loggedIn={Boolean(user)}
+          returnTo={returnTo}
+        />
+      </div>
+      <CommentSection kind="anime" malId={Number(malId)} loggedIn={Boolean(user)} returnTo={returnTo} />
+      <div className="card-glass p-5">
+        <h3 className="font-display text-lg font-semibold text-text mb-4">Foro de esta ficha</h3>
+        <ForumThread
+          loggedIn={Boolean(user)}
+          returnTo={returnTo}
+          contentType="anime"
+          contentId={String(malId)}
+          compact
+        />
+      </div>
+    </div>
+  )
+
+  const capturasTab = (
+    <ContentSection eyebrow="Comunidad" title="Capturas de fans">
+      <ScreenshotSection
+        contentType="anime"
+        contentId={String(malId)}
+        loggedIn={Boolean(user)}
+        returnTo={returnTo}
+      />
+    </ContentSection>
+  )
+
   return (
     <div className="section-anime space-y-8 enter-up">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
@@ -64,38 +152,20 @@ export default async function Page({ params }: Props) {
           />
         </div>
 
-        <div className="lg:col-span-8 xl:col-span-9 space-y-5">
-          <EditorialReviewBlock review={review} />
-
-          <ContentSection eyebrow="Referencia" title="Sinopsis oficial (MAL)">
-            <p className="text-sm text-muted leading-[1.8]">{synopsis}</p>
-          </ContentSection>
-
-          {(anime?.episodes || anime?.status || anime?.year) && (
-            <ContentSection eyebrow="Ficha" title="Datos técnicos">
-              <dl className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {anime?.episodes && <MetaItem label="Episodios" value={anime.episodes} />}
-                {anime?.status && <MetaItem label="Estado" value={anime.status} />}
-                {anime?.score && <MetaItem label="Puntuación MAL" value={anime.score} />}
-                {anime?.year && <MetaItem label="Año" value={anime.year} />}
-              </dl>
-            </ContentSection>
-          )}
-
-          {image && (
-            <ContentSection eyebrow="Visual" title="Galería">
-              <Gallery images={[image]} />
-            </ContentSection>
-          )}
-
-          <WhereToWatch animeTitle={title} malId={Number(malId)} sources={streaming} />
-          <MerchSection animeTitle={title} malId={Number(malId)} />
-
-          <ContentSection eyebrow="Colabora" title="Mejorar la reseña">
-            <SubmissionForm kind="anime" malId={Number(malId)} loggedIn={Boolean(user)} />
-          </ContentSection>
-
-          <CommentSection kind="anime" malId={Number(malId)} loggedIn={Boolean(user)} returnTo={returnTo} />
+        <div className="lg:col-span-8 xl:col-span-9">
+          <header className="mb-5">
+            <p className="eyebrow mb-1">Ficha</p>
+            <h1 className="page-title">{title}</h1>
+          </header>
+          <ContentTabs
+            defaultTab="info"
+            tabs={[
+              { id: 'info', label: 'Info', icon: 'ℹ️', content: infoTab },
+              { id: 'resenas', label: 'Reseñas', icon: '★', content: reviewsTab },
+              { id: 'comunidad', label: 'Comunidad', icon: '💬', content: communityTab },
+              { id: 'capturas', label: 'Capturas', icon: '📸', content: capturasTab },
+            ]}
+          />
         </div>
       </div>
 

@@ -1,7 +1,8 @@
 import ProductGrid from './ProductGrid'
 import AffiliateDisclosure from './AffiliateDisclosure'
+import { isShopEnabled } from '../lib/shop-config'
 import { mangaProductosParaTitulo } from '../lib/productos'
-import type { ProductoAfiliado } from '../lib/productos/types'
+import type { ProductoCatalogo } from '../lib/productos/types'
 
 type Props = {
   title: string
@@ -9,7 +10,9 @@ type Props = {
 }
 
 export default function MangaProductSection({ title, coverImage }: Props) {
-  const productos: ProductoAfiliado[] = mangaProductosParaTitulo(title).map((p, i) =>
+  if (!isShopEnabled()) return null
+
+  const productos: ProductoCatalogo[] = mangaProductosParaTitulo(title).map((p, i) =>
     i === 0 && coverImage ? { ...p, imagen: coverImage } : p
   )
 

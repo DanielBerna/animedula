@@ -5,12 +5,14 @@ import PageHeader from '../../components/PageHeader'
 import AffiliateDisclosure from '../../components/AffiliateDisclosure'
 import { NEWS_COPY, SECTION_COPY } from '../../lib/copy'
 import { fetchNews } from '../../lib/rss'
+import { isShopEnabled } from '../../lib/shop-config'
 import { TECH_PRODUCTOS } from '../../lib/productos'
 
 export const revalidate = 7200
 
 export default async function TecnologiaPage() {
   const news = await fetchNews('tech', 8)
+  const shop = isShopEnabled()
 
   return (
     <div className="section-tech space-y-10">
@@ -21,8 +23,6 @@ export default async function TecnologiaPage() {
         description={SECTION_COPY.techDesc}
       />
 
-      <AffiliateDisclosure />
-
       <NewsFeed
         title={NEWS_COPY.techTitle}
         category="tech"
@@ -32,7 +32,12 @@ export default async function TecnologiaPage() {
 
       <AdSlot slot={process.env.NEXT_PUBLIC_ADS_SLOT_TECH || ''} className="ad-placeholder" />
 
-      <ProductGrid title="Equipo recomendado" productos={TECH_PRODUCTOS} />
+      {shop ? (
+        <>
+          <ProductGrid title="Equipo recomendado" productos={TECH_PRODUCTOS} />
+          <AffiliateDisclosure compact />
+        </>
+      ) : null}
     </div>
   )
 }

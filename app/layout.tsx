@@ -24,7 +24,7 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es" className={`${spaceGrotesk.variable} ${inter.variable} ${notoJP.variable}`} suppressHydrationWarning>
-      <body className="antialiased text-text font-body">
+      <body className="antialiased text-text font-body min-h-screen">
         <ThemeScript />
         <div className="site-bg" aria-hidden />
         <div className="site-grid" aria-hidden />
@@ -32,7 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div className="min-h-screen flex flex-col relative">
           <Header />
           <ToastProvider>
-            <main className="flex-1 container mx-auto px-4 py-8 md:py-10">{children}</main>
+            <main className="flex-1 container mx-auto px-4 py-8 md:py-10 page-shell">{children}</main>
           </ToastProvider>
           <Footer />
         </div>

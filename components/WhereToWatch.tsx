@@ -1,5 +1,5 @@
-import AffiliateCard from './AffiliateCard'
-import AffiliateDisclosure from './AffiliateDisclosure'
+import StreamingCard from './StreamingCard'
+import { crunchyrollSearch, netflixSearch, primeVideoSearch } from '../lib/shop-links'
 
 type StreamingEntry = { name: string; url?: string }
 
@@ -9,43 +9,43 @@ type Props = {
   sources?: StreamingEntry[]
 }
 
-const STREAMING_MAP: Record<string, { partner?: 'crunchyroll' | 'prime' | 'amazon'; cta: string; affiliate: boolean }> = {
-  crunchyroll: { partner: 'crunchyroll', cta: 'Ver en Crunchyroll', affiliate: true },
-  netflix: { cta: 'Ver en Netflix', affiliate: false },
-  'amazon prime video': { partner: 'prime', cta: 'Ver en Prime Video', affiliate: true },
-  'prime video': { partner: 'prime', cta: 'Ver en Prime Video', affiliate: true },
-  hidive: { cta: 'Ver en HIDIVE', affiliate: false },
+type StreamItem = {
+  name: string
+  price?: string
+  href: string
+  cta: string
 }
 
-function matchPlatform(name: string) {
+function matchPlatform(name: string, animeTitle: string, fallbackUrl?: string): StreamItem {
   const key = name.toLowerCase()
-  for (const [k, v] of Object.entries(STREAMING_MAP)) {
-    if (key.includes(k)) return v
+  if (key.includes('crunchyroll')) {
+    return { name, price: 'Suscripción', href: crunchyrollSearch(animeTitle), cta: 'Buscar en Crunchyroll' }
   }
-  return { cta: `Ver en ${name}`, affiliate: false }
+  if (key.includes('netflix')) {
+    return { name, price: 'Incluido en plan', href: netflixSearch(animeTitle), cta: 'Buscar en Netflix' }
+  }
+  if (key.includes('prime') || key.includes('amazon')) {
+    return { name: 'Prime Video', price: 'Alquiler / Suscripción', href: primeVideoSearch(animeTitle), cta: 'Buscar en Prime Video' }
+  }
+  if (key.includes('hidive')) {
+    return { name, price: 'Suscripción', href: `https://www.hidive.com/search?q=${encodeURIComponent(animeTitle)}`, cta: 'Buscar en HIDIVE' }
+  }
+  return {
+    name,
+    price: 'En streaming',
+    href: fallbackUrl || `https://www.google.com/search?q=${encodeURIComponent(`${name} ${animeTitle}`)}`,
+    cta: `Ir a ${name}`,
+  }
 }
 
-export default function WhereToWatch({ animeTitle, malId, sources }: Props) {
-  const fromApi =
-    sources?.map((s) => {
-      const meta = matchPlatform(s.name)
-      return {
-        name: s.name,
-        price: 'En streaming',
-        partner: meta.partner,
-        cta: meta.cta,
-        affiliate: meta.affiliate,
-        href: meta.affiliate ? undefined : s.url,
-      }
-    }) || []
-
-  const items =
-    fromApi.length > 0
-      ? fromApi
+export default function WhereToWatch({ animeTitle, sources }: Props) {
+  const items: StreamItem[] =
+    sources && sources.length > 0
+      ? sources.map((s) => matchPlatform(s.name, animeTitle, s.url))
       : [
-          { name: 'Crunchyroll', price: 'Suscripción', partner: 'crunchyroll' as const, cta: 'Ver en Crunchyroll', affiliate: true },
-          { name: 'Prime Video', price: 'Alquiler / Suscripción', partner: 'prime' as const, cta: 'Ver en Prime Video', affiliate: true },
-          { name: 'Netflix', price: 'Incluido en plan', cta: 'Buscar en Netflix', affiliate: false, href: `https://www.netflix.com/search?q=${encodeURIComponent(animeTitle)}` },
+          { name: 'Crunchyroll', price: 'Suscripción', href: crunchyrollSearch(animeTitle), cta: 'Buscar en Crunchyroll' },
+          { name: 'Prime Video', price: 'Alquiler / Suscripción', href: primeVideoSearch(animeTitle), cta: 'Buscar en Prime Video' },
+          { name: 'Netflix', price: 'Incluido en plan', href: netflixSearch(animeTitle), cta: 'Buscar en Netflix' },
         ]
 
   return (
@@ -53,23 +53,9 @@ export default function WhereToWatch({ animeTitle, malId, sources }: Props) {
       <h3 className="font-display text-lg font-semibold text-text mb-5">Dónde verlo</h3>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {items.map((s, i) => (
-          <AffiliateCard
-            key={i}
-            name={s.name}
-            price={s.price}
-            partner={s.partner}
-            anime={animeTitle}
-            malId={malId}
-            href={s.href}
-            cta={s.cta}
-            affiliate={s.affiliate}
-          />
+        {items.map((s) => (
+          <StreamingCard key={s.name} name={s.name} price={s.price} href={s.href} cta={s.cta} />
         ))}
-      </div>
-
-      <div className="mt-4">
-        <AffiliateDisclosure compact />
       </div>
     </div>
   )

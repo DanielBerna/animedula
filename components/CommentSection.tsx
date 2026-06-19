@@ -56,6 +56,11 @@ export default function CommentSection({ kind, malId, loggedIn, returnTo }: Prop
       if (!res.ok) throw new Error(data.error || 'Error')
       setBody('')
       await load()
+      fetch('/api/missions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mission_key: 'comment' }),
+      }).catch(() => {})
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'No se pudo publicar')
     } finally {

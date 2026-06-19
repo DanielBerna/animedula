@@ -10,6 +10,7 @@ export type NewsItem = {
   source: string
   publishedAt?: string
   summary?: string
+  imageUrl?: string
   category: NewsCategory
 }
 
@@ -22,8 +23,9 @@ type FeedConfig = {
 /** Fuentes en español primero; respaldo en inglés con traducción */
 export const RSS_FEEDS: Record<NewsCategory, FeedConfig[]> = {
   gaming: [
-    { name: '3DJuegos', url: 'https://www.3djuegos.com/universo/rss/noticias.xml', lang: 'es' },
-    { name: 'Vida Extra', url: 'https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/section/vidaextra', lang: 'es' },
+    { name: 'Eurogamer ES', url: 'https://www.eurogamer.es/feed', lang: 'es' },
+    { name: 'LevelUp', url: 'https://www.levelup.com/feed/', lang: 'es' },
+    { name: 'Nintenderos', url: 'https://www.nintenderos.com/feed/', lang: 'es' },
     { name: 'Polygon', url: 'https://www.polygon.com/rss/gaming/index.xml', lang: 'en' },
   ],
   tech: [
@@ -59,11 +61,42 @@ function decodeHtml(text: string): string {
     .trim()
 }
 
-function extractTag(block: string, tag: string): string {
+function extractRawTag(block: string, tag: string): string {
   const cdata = block.match(new RegExp(`<${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]></${tag}>`, 'i'))
-  if (cdata?.[1]) return decodeHtml(cdata[1])
+  if (cdata?.[1]) return cdata[1]
   const plain = block.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`, 'i'))
-  return plain?.[1] ? decodeHtml(plain[1]) : ''
+  return plain?.[1] || ''
+}
+
+function normalizeImageUrl(raw: string): string {
+  const url = raw.replace(/&amp;/g, '&').trim()
+  if (url.startsWith('//')) return `https:${url}`
+  return url
+}
+
+function extractImageUrl(block: string): string | undefined {
+  const mediaThumb = block.match(/<media:thumbnail[^>]+url=["']([^"']+)["']/i)
+  if (mediaThumb?.[1]) return normalizeImageUrl(mediaThumb[1])
+
+  const mediaContent = block.match(/<media:content[^>]+url=["']([^"']+)["']/i)
+  if (mediaContent?.[1]) return normalizeImageUrl(mediaContent[1])
+
+  const enclosure = block.match(/<enclosure[^>]+url=["']([^"']+)["'][^>]*\/?>/i)
+  if (enclosure?.[1] && /image|jpg|jpeg|png|webp|gif/i.test(enclosure[0])) {
+    return normalizeImageUrl(enclosure[1])
+  }
+
+  const rawDesc =
+    extractRawTag(block, 'content:encoded') || extractRawTag(block, 'description')
+  const img = rawDesc.match(/<img[^>]+src=["']([^"']+)["']/i)
+  if (img?.[1]) return normalizeImageUrl(img[1])
+
+  return undefined
+}
+
+function extractTag(block: string, tag: string): string {
+  const raw = extractRawTag(block, tag)
+  return raw ? decodeHtml(raw) : ''
 }
 
 function parseRssXml(xml: string, source: string, category: NewsCategory, limit: number): NewsItem[] {
@@ -76,6 +109,7 @@ function parseRssXml(xml: string, source: string, category: NewsCategory, limit:
     if (!title || !link) continue
     const pubDate = extractTag(block, 'pubDate')
     const summary = extractTag(block, 'description').slice(0, 320)
+    const imageUrl = extractImageUrl(block)
     items.push({
       id: `${source}-${link}`,
       slug: newsSlug(link),
@@ -84,6 +118,7 @@ function parseRssXml(xml: string, source: string, category: NewsCategory, limit:
       source,
       publishedAt: pubDate || undefined,
       summary: summary || undefined,
+      imageUrl,
       category,
     })
   }
@@ -172,7 +207,7 @@ export async function fetchNewsBySlug(
   category: NewsCategory,
   slug: string,
 ): Promise<NewsItem | null> {
-  const items = await fetchNews(category, 24)
+  const items = await fetchNews(category, 48)
   return items.find((item) => item.slug === slug) || null
 }
 

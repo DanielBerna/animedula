@@ -31,7 +31,7 @@ export default function AnimeCard({ slug, title, image, score, rank }: Props) {
             <span className="absolute top-3 right-3 z-10 score-badge">★ {score.toFixed(1)}</span>
           )}
           <div className="poster-meta">
-            <h3 className="font-display font-semibold text-[0.95rem] leading-snug text-text line-clamp-2 group-hover:text-white transition">
+            <h3 className="font-display font-semibold text-[0.95rem] leading-snug text-text line-clamp-2 poster-card-title transition">
               {title}
             </h3>
             <p className="text-[11px] text-muted mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">

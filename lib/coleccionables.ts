@@ -1,10 +1,11 @@
 import type { IconName } from '../components/icons/SectionIcon'
+import { mercadoLibreSearch } from './shop-links'
 
 export type Coleccionable = {
   nombre: string
   descripcion: string
-  query: string
-  partner: 'amazon' | 'mercadolibre'
+  url: string
+  cta?: string
   icon: IconName
   tipo: 'figura' | 'tcg' | 'peluche' | 'poster' | 'blu-ray'
   badge?: string
@@ -14,8 +15,8 @@ export const COLECCIONABLES: Coleccionable[] = [
   {
     nombre: 'Figuras premium',
     descripcion: 'Nendoroid, Figma y escalas para coleccionistas.',
-    query: 'nendoroid figura anime',
-    partner: 'amazon',
+    url: 'https://listado.mercadolibre.com.mx/nendoroid-figura-anime',
+    cta: 'Ver en Mercado Libre',
     icon: 'figure',
     tipo: 'figura',
     badge: 'Premium',
@@ -23,8 +24,8 @@ export const COLECCIONABLES: Coleccionable[] = [
   {
     nombre: 'Cartas & TCG',
     descripcion: 'Pokémon, Weiss Schwarz y trading cards de anime.',
-    query: 'cartas anime tcg',
-    partner: 'mercadolibre',
+    url: mercadoLibreSearch('cartas anime tcg booster'),
+    cta: 'Ver opciones',
     icon: 'tcg',
     tipo: 'tcg',
     badge: 'TCG',
@@ -32,8 +33,8 @@ export const COLECCIONABLES: Coleccionable[] = [
   {
     nombre: 'Peluches & plush',
     descripcion: 'Regalos kawaii que no fallan.',
-    query: 'peluche anime kawaii',
-    partner: 'amazon',
+    url: mercadoLibreSearch('peluche anime kawaii'),
+    cta: 'Ver opciones',
     icon: 'plush',
     tipo: 'peluche',
     badge: 'Regalo',
@@ -41,8 +42,8 @@ export const COLECCIONABLES: Coleccionable[] = [
   {
     nombre: 'Posters & wall scroll',
     descripcion: 'Decora tu cuarto con arte oficial.',
-    query: 'poster anime wall scroll',
-    partner: 'mercadolibre',
+    url: mercadoLibreSearch('poster anime wall scroll'),
+    cta: 'Ver opciones',
     icon: 'poster',
     tipo: 'poster',
     badge: 'Decoración',
@@ -50,8 +51,8 @@ export const COLECCIONABLES: Coleccionable[] = [
   {
     nombre: 'Blu-ray & ediciones',
     descripcion: 'Colección física para los que aman rewatch.',
-    query: 'anime blu ray coleccion',
-    partner: 'amazon',
+    url: mercadoLibreSearch('anime blu ray edicion'),
+    cta: 'Ver opciones',
     icon: 'bluray',
     tipo: 'blu-ray',
     badge: 'Físico',
@@ -59,8 +60,8 @@ export const COLECCIONABLES: Coleccionable[] = [
   {
     nombre: 'Figuras accesibles',
     descripcion: 'Opciones económicas sin sacrificar estética.',
-    query: 'figura anime barata',
-    partner: 'mercadolibre',
+    url: mercadoLibreSearch('figura anime economica'),
+    cta: 'Ver opciones',
     icon: 'sparkle',
     tipo: 'figura',
     badge: 'Económico',

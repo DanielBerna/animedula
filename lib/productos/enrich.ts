@@ -1,12 +1,12 @@
 import { fetchJikan, getBestImageUrl } from '../jikan'
-import type { ProductoAfiliado } from './types'
+import type { ProductoCatalogo } from './types'
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-export async function enrichProductosConMal(productos: ProductoAfiliado[]): Promise<ProductoAfiliado[]> {
-  const result: ProductoAfiliado[] = []
+export async function enrichProductosConMal(productos: ProductoCatalogo[]): Promise<ProductoCatalogo[]> {
+  const result: ProductoCatalogo[] = []
 
   for (let i = 0; i < productos.length; i++) {
     const p = productos[i]!

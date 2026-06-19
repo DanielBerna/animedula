@@ -32,7 +32,7 @@ export default function UserMenu({ variant = 'inline' }: Props) {
       }
       const { data } = await supabase
         .from('profiles')
-        .select('id, display_name, avatar_url, role')
+        .select('id, display_name, avatar_url, role, username')
         .eq('id', user.id)
         .maybeSingle()
       setProfile((data as Profile) || null)
@@ -84,12 +84,13 @@ export default function UserMenu({ variant = 'inline' }: Props) {
         </Link>
       )}
       <div className={`user-menu-profile ${isDrawer ? 'user-menu-profile-drawer' : ''}`}>
-        <span
+        <Link
+          href={profile.username ? `/u/${profile.username}` : '/perfil'}
           className="user-avatar"
-          title={profile.display_name || 'Cuenta'}
+          title={profile.display_name || 'Mi perfil'}
         >
           {label}
-        </span>
+        </Link>
         {isDrawer && profile.display_name && (
           <span className="text-sm text-text truncate">{profile.display_name}</span>
         )}

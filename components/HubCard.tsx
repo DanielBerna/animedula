@@ -12,10 +12,20 @@ const COPY: Record<Variant, { icon: IconName; title: string; hint: string }> = {
   collect: { icon: 'collect', title: 'Coleccionables', hint: 'Tienda' },
 }
 
-export default function HubCard({ variant, href }: { variant: Variant; href: string }) {
+type Props = {
+  variant: Variant
+  href: string
+  delay?: number
+}
+
+export default function HubCard({ variant, href, delay = 0 }: Props) {
   const c = COPY[variant]
   return (
-    <Link href={href} className={`hub-card hub-card-${variant} enter-up group`}>
+    <Link
+      href={href}
+      className={`hub-card hub-card-${variant} enter-up group`}
+      style={delay ? { animationDelay: `${delay}ms` } : undefined}
+    >
       <div className="hub-card-glow" aria-hidden />
       <IconOrb name={c.icon} variant={variant} size="lg" />
       <div className="flex-1 min-w-0">

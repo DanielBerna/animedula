@@ -1,18 +1,16 @@
-import { buildGoUrl } from '../lib/affiliates'
 import IconOrb from './icons/IconOrb'
 import { IconName } from './icons/SectionIcon'
 
 type Props = {
   nombre: string
   descripcion: string
-  query: string
+  url: string
+  cta?: string
   icon: IconName
   badge?: string
 }
 
-export default function TechCard({ nombre, descripcion, query, icon, badge }: Props) {
-  const url = buildGoUrl('amazon', { query })
-
+export default function TechCard({ nombre, descripcion, url, cta = 'Ver en Mercado Libre', icon, badge }: Props) {
   return (
     <article className="tech-card enter-up flex flex-col h-full">
       <div className="flex items-start gap-3">
@@ -26,10 +24,10 @@ export default function TechCard({ nombre, descripcion, query, icon, badge }: Pr
       <a
         href={url}
         target="_blank"
-        rel="noopener noreferrer sponsored"
+        rel="noopener noreferrer"
         className="mt-4 btn-primary text-xs text-center py-2.5 focus-ring tech-card-cta"
       >
-        Ver en Amazon
+        {cta}
       </a>
     </article>
   )
