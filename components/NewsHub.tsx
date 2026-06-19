@@ -30,7 +30,8 @@ const FILTERS: { value: NewsFilterCategory; label: string }[] = [
   { value: 'gaming', label: NEWS_CATEGORY_LABELS.gaming },
   { value: 'tech', label: NEWS_CATEGORY_LABELS.tech },
 ]
-({ headlines, sections }: Props) {
+
+export default function NewsHub({ headlines, sections }: Props) {
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState<NewsFilterCategory>('all')
 
