@@ -1,11 +1,16 @@
 import { NextRequest } from 'next/server'
 import { getAuthUser } from '../../../lib/auth'
 import { createClient, isSupabaseAuthConfigured } from '../../../lib/supabase/server'
+import { requireRateLimit } from '../../../lib/security/api'
+import { isAllowedAvatarUrl } from '../../../lib/security/urls'
 
 const VALID_STATUS = ['pending', 'watching', 'completed', 'dropped'] as const
 const VALID_TYPES = ['anime', 'manga', 'game', 'movie'] as const
 
 export async function POST(req: NextRequest) {
+  const limited = await requireRateLimit(req, 'mutation', 'user-lists')
+  if (limited) return limited
+
   if (!isSupabaseAuthConfigured()) {
     return Response.json({ error: 'Listas no disponibles aún' }, { status: 503 })
   }
@@ -18,6 +23,9 @@ export async function POST(req: NextRequest) {
   const content_id = String(body.content_id || '')
   const title = String(body.title || '').slice(0, 200)
   const image_url = body.image_url ? String(body.image_url) : null
+  if (image_url && !isAllowedAvatarUrl(image_url)) {
+    return Response.json({ error: 'URL de imagen no permitida' }, { status: 400 })
+  }
   const status = body.status as string
 
   if (!VALID_TYPES.includes(content_type as typeof VALID_TYPES[number])) {

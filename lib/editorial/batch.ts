@@ -1,6 +1,7 @@
 import { readCachedReview, writeCachedReview } from './cache'
 import { readPublishedReviewFromDb, saveDraftReview } from './db'
 import { generateEditorialReview } from './generate'
+import { currentSeasonKey, suggestPublishDate } from './schedule'
 import { MediaKind, ReviewInput } from './types'
 import { isSupabaseConfigured } from '../supabaseAdmin'
 
@@ -28,7 +29,32 @@ async function hasPublishedReview(kind: MediaKind, malId: number): Promise<boole
   return Boolean(published)
 }
 
-export async function generateReviewForTarget(target: BatchReviewTarget): Promise<BatchReviewResult> {
+export async function batchGenerateReviews(
+  targets: BatchReviewTarget[],
+  delayMs = 1200,
+): Promise<BatchReviewResult[]> {
+  const results: BatchReviewResult[] = []
+  let scheduleSlot = 0
+
+  for (let i = 0; i < targets.length; i++) {
+    const target = targets[i]
+    const result = await generateReviewForTargetWithSchedule(target, scheduleSlot)
+    if (result.status === 'generated' || result.status === 'skipped_cached') {
+      scheduleSlot += 1
+    }
+    results.push(result)
+    if (i < targets.length - 1 && delayMs > 0) {
+      await new Promise((r) => setTimeout(r, delayMs))
+    }
+  }
+
+  return results
+}
+
+async function generateReviewForTargetWithSchedule(
+  target: BatchReviewTarget,
+  slotIndex: number,
+): Promise<BatchReviewResult> {
   const base = {
     kind: target.kind,
     mal_id: target.mal_id,
@@ -41,9 +67,15 @@ export async function generateReviewForTarget(target: BatchReviewTarget): Promis
     }
 
     const cached = await readCachedReview(target.kind, target.mal_id)
+    const meta = {
+      display_title: target.title,
+      season_key: currentSeasonKey(),
+      scheduled_publish_at: suggestPublishDate(slotIndex),
+    }
+
     if (cached) {
       if (isSupabaseConfigured()) {
-        await saveDraftReview(target.kind, target.mal_id, cached, 'ai')
+        await saveDraftReview(target.kind, target.mal_id, cached, 'ai', meta)
       }
       return { ...base, status: 'skipped_cached' }
     }
@@ -63,7 +95,7 @@ export async function generateReviewForTarget(target: BatchReviewTarget): Promis
     await writeCachedReview(target.kind, target.mal_id, review)
 
     if (isSupabaseConfigured()) {
-      await saveDraftReview(target.kind, target.mal_id, review, 'ai')
+      await saveDraftReview(target.kind, target.mal_id, review, 'ai', meta)
     }
 
     return { ...base, status: 'generated' }
@@ -74,20 +106,4 @@ export async function generateReviewForTarget(target: BatchReviewTarget): Promis
       error: err instanceof Error ? err.message : 'unknown',
     }
   }
-}
-
-export async function batchGenerateReviews(
-  targets: BatchReviewTarget[],
-  delayMs = 1200,
-): Promise<BatchReviewResult[]> {
-  const results: BatchReviewResult[] = []
-
-  for (let i = 0; i < targets.length; i++) {
-    results.push(await generateReviewForTarget(targets[i]))
-    if (i < targets.length - 1 && delayMs > 0) {
-      await new Promise((r) => setTimeout(r, delayMs))
-    }
-  }
-
-  return results
 }

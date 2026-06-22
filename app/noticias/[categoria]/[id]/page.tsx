@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import NewsSourceCredit from '../../../../components/NewsSourceCredit'
 import { DETAIL_COPY, NEWS_COPY } from '../../../../lib/copy'
 import { NEWS_CATEGORY_LABELS, NEWS_CATEGORY_CLASS } from '../../../../lib/news/search'
 import { fetchNewsBySlug, isNewsCategory } from '../../../../lib/rss'
@@ -70,14 +71,16 @@ export default async function NoticiaDetailPage({ params }: Props) {
           </div>
         ) : null}
 
-        <div className="pt-4 border-t border-white/8 flex flex-wrap gap-3">
+        <NewsSourceCredit sourceName={item.source} articleUrl={item.link} />
+
+        <div className="pt-2 flex flex-wrap gap-3">
           <a
             href={item.link}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-primary"
+            className="btn-ghost"
           >
-            {DETAIL_COPY.readOriginal} ({item.source})
+            {DETAIL_COPY.readOriginal}
           </a>
           <Link href={CATEGORY_BACK[categoria]} className="btn-ghost">
             {DETAIL_COPY.moreNews}

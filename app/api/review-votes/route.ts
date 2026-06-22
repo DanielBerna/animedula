@@ -1,8 +1,12 @@
 import { NextRequest } from 'next/server'
 import { getAuthUser } from '../../../lib/auth'
 import { createClient, isSupabaseAuthConfigured } from '../../../lib/supabase/server'
+import { requireRateLimit } from '../../../lib/security/api'
 
 export async function POST(req: NextRequest) {
+  const limited = await requireRateLimit(req, 'mutation', 'review-votes')
+  if (limited) return limited
+
   if (!isSupabaseAuthConfigured()) {
     return Response.json({ error: 'Votos no disponibles' }, { status: 503 })
   }

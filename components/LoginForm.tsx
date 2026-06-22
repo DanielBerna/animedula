@@ -2,13 +2,15 @@
 
 import { useState } from 'react'
 import { createClient, isSupabaseBrowserConfigured } from '../lib/supabase/client'
+import { safeRedirectPath } from '../lib/security/redirect'
 
 type Props = {
   next?: string
   error?: string
 }
 
-export default function LoginForm({ next = '/', error }: Props) {
+export default function LoginForm({ next: nextProp = '/', error }: Props) {
+  const next = safeRedirectPath(nextProp, '/')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [mode, setMode] = useState<'magic' | 'password'>('magic')

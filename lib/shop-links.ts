@@ -1,4 +1,5 @@
 import { getMlAffiliateId } from './shop-config'
+import { isMercadoLibreUrl } from './security/urls'
 
 const ML_HOST = 'mercadolibre.com.mx'
 
@@ -33,6 +34,9 @@ export function mercadoLibreSearch(query: string): string {
 
 /** Aplica aff_id a cualquier URL de Mercado Libre (artículo o listado). */
 export function mercadoLibreAffiliateUrl(url: string): string {
+  if (!isMercadoLibreUrl(url)) {
+    return mercadoLibreSearch('figura anime')
+  }
   return withMlAffiliate(url)
 }
 

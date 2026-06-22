@@ -1,5 +1,6 @@
 import PageHeader from '../../components/PageHeader'
 import NewsHub from '../../components/NewsHub'
+import NewsSourcesFooter from '../../components/NewsSourcesFooter'
 import { NEWS_COPY } from '../../lib/copy'
 import { fetchAllNews } from '../../lib/news/home-feed'
 import { fetchNews, type NewsCategory } from '../../lib/rss'
@@ -24,19 +25,23 @@ export default async function NoticiasPage() {
   }))
 
   return (
-    <div className="space-y-10 enter-up">
-      <PageHeader
-        variant="default"
-        eyebrow={NEWS_COPY.eyebrow}
-        title="Noticias otaku"
-        description="Lo último en anime, gaming y tecnología. Fuentes en español latino."
-      />
+    <div className="space-y-10 enter-up news-page-luxe">
+      <div className="news-page-hero">
+        <PageHeader
+          variant="default"
+          eyebrow={NEWS_COPY.eyebrow}
+          title="Noticias otaku"
+          description="Lo último en anime, gaming y tecnología. Fuentes en español latino."
+        />
+      </div>
 
       {headlines.length > 0 ? (
         <NewsHub headlines={headlines} sections={sections} />
       ) : (
         <p className="text-sm text-muted card-glass p-5">{NEWS_COPY.empty}</p>
       )}
+
+      <NewsSourcesFooter />
     </div>
   )
 }

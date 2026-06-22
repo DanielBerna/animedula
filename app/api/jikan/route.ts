@@ -1,18 +1,21 @@
 import { NextRequest } from 'next/server'
 import { checkRateLimit } from '../../../lib/ratelimit'
+import { isAllowedJikanPath } from '../../../lib/security/proxy'
+import { getClientIp } from '../../../lib/security/api'
 
 export async function GET(req: NextRequest) {
-  const ip = req.headers.get('x-forwarded-for') || 'anon'
-  const limit = await checkRateLimit(ip)
+  const ip = getClientIp(req)
+  const limit = await checkRateLimit(`proxy:jikan:${ip}`, 'proxy')
   if (!limit.success) {
-    return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), {
-      status: 429,
-      headers: { 'content-type': 'application/json' },
-    })
+    return Response.json({ error: 'Rate limit exceeded' }, { status: 429 })
   }
 
   const url = new URL(req.url)
   const rawPath = url.searchParams.get('path') || '/top/anime'
+
+  if (!isAllowedJikanPath(rawPath)) {
+    return Response.json({ error: 'Ruta no permitida' }, { status: 400 })
+  }
 
   const [basePath, embeddedQuery] = rawPath.split('?')
   const forwardParams = new URLSearchParams()
@@ -40,9 +43,6 @@ export async function GET(req: NextRequest) {
       headers: { 'content-type': 'application/json' },
     })
   } catch {
-    return new Response(JSON.stringify({ error: 'upstream_error' }), {
-      status: 502,
-      headers: { 'content-type': 'application/json' },
-    })
+    return Response.json({ error: 'upstream_error' }, { status: 502 })
   }
 }

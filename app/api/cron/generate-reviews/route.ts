@@ -1,12 +1,6 @@
 import { NextRequest } from 'next/server'
+import { authorizeCron } from '../../../../lib/security/cron'
 import { batchGenerateReviews, type BatchReviewTarget } from '../../../../lib/editorial/batch'
-
-function authorize(req: NextRequest): boolean {
-  const secret = process.env.CRON_SECRET?.trim()
-  if (!secret) return process.env.NODE_ENV === 'development'
-  const auth = req.headers.get('authorization') || ''
-  return auth === `Bearer ${secret}`
-}
 
 async function fetchTopAnime(limit: number): Promise<BatchReviewTarget[]> {
   const site = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
@@ -52,7 +46,7 @@ async function fetchTopManga(limit: number): Promise<BatchReviewTarget[]> {
 }
 
 export async function POST(req: NextRequest) {
-  if (!authorize(req)) {
+  if (!authorizeCron(req)) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
       headers: { 'content-type': 'application/json' },

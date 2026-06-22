@@ -71,6 +71,34 @@ export type ModerationItem = {
   veredicto: EditorialReview['veredicto']
   status: string
   updated_at: string
+  scheduled_publish_at?: string | null
+  display_title?: string | null
+  season_key?: string | null
+  published_at?: string | null
+}
+
+export type DraftMeta = {
+  display_title?: string
+  scheduled_publish_at?: string
+  season_key?: string
+}
+
+export async function listEditorialCalendar(): Promise<ModerationItem[]> {
+  if (!isSupabaseAuthConfigured()) return []
+
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('editorial_reviews')
+    .select(
+      'id, kind, mal_id, status, gancho, veredicto, updated_at, scheduled_publish_at, display_title, season_key, published_at',
+    )
+    .order('scheduled_publish_at', { ascending: true, nullsFirst: false })
+    .limit(120)
+
+  return (data || []).map((row) => ({
+    ...(row as ModerationItem),
+    title: row.display_title || undefined,
+  }))
 }
 
 export async function listModerationQueue(): Promise<ModerationItem[]> {
@@ -192,12 +220,18 @@ export async function saveDraftReview(
   kind: MediaKind,
   malId: number,
   review: EditorialReview,
-  source: 'ai' | 'human' = 'ai'
+  source: 'ai' | 'human' = 'ai',
+  meta?: DraftMeta,
 ) {
   if (!isSupabaseConfigured()) return null
 
   const admin = getSupabaseAdmin()
   const fields = reviewToRow(review)
+  const extra = {
+    ...(meta?.display_title ? { display_title: meta.display_title } : {}),
+    ...(meta?.scheduled_publish_at ? { scheduled_publish_at: meta.scheduled_publish_at } : {}),
+    ...(meta?.season_key ? { season_key: meta.season_key } : {}),
+  }
 
   const { data: existing } = await admin
     .from('editorial_reviews')
@@ -210,7 +244,7 @@ export async function saveDraftReview(
   if (existing?.id) {
     await admin
       .from('editorial_reviews')
-      .update({ ...fields, updated_at: new Date().toISOString() })
+      .update({ ...fields, ...extra, updated_at: new Date().toISOString() })
       .eq('id', existing.id)
     return existing.id as string
   }
@@ -223,6 +257,7 @@ export async function saveDraftReview(
       status: 'pending',
       source,
       ...fields,
+      ...extra,
     })
     .select('id')
     .single()

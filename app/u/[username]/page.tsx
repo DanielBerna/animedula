@@ -49,8 +49,8 @@ export default async function PublicProfilePage({ params }: Props) {
   const initial = name[0]?.toUpperCase() || '?'
 
   return (
-    <div className="space-y-8 enter-up max-w-2xl mx-auto">
-      <header className="card-glass p-6 md:p-8">
+    <div className="space-y-8 enter-up max-w-2xl mx-auto public-profile-shell">
+      <header className={`card-glass p-6 md:p-8 ${profile.is_premium ? 'premium-public-header' : ''}`}>
         <div className="flex items-start gap-4">
           <span className="user-avatar text-xl w-16 h-16 flex items-center justify-center shrink-0">
             {profile.avatar_url ? (
@@ -65,6 +65,9 @@ export default async function PublicProfilePage({ params }: Props) {
             <h1 className="page-title">{name}</h1>
             <p className="text-sm text-muted">@{profile.username}</p>
             <div className="flex flex-wrap gap-2 mt-3">
+              {profile.is_premium ? (
+                <span className="tag tag-gold">Animédula+</span>
+              ) : null}
               <span className="tag tag-accent">Nivel {profile.level}</span>
               <span className="tag">{profile.xp} XP</span>
               {profile.selected_title ? (

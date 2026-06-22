@@ -1,10 +1,14 @@
 import { NextRequest } from 'next/server'
 import { getAuthUser } from '../../../lib/auth'
 import { createClient, isSupabaseAuthConfigured } from '../../../lib/supabase/server'
+import { requireRateLimit } from '../../../lib/security/api'
 
 const VALID_EMOJI = ['hype', 'sad_otaku', 'gg'] as const
 
 export async function POST(req: NextRequest) {
+  const limited = await requireRateLimit(req, 'mutation', 'forum-reactions')
+  if (limited) return limited
+
   if (!isSupabaseAuthConfigured()) {
     return Response.json({ error: 'Reacciones no disponibles' }, { status: 503 })
   }

@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { getAuthUser } from '../../../lib/auth'
 import { createClient, isSupabaseAuthConfigured } from '../../../lib/supabase/server'
+import { requireRateLimit } from '../../../lib/security/api'
 
 export async function GET() {
   if (!isSupabaseAuthConfigured()) {
@@ -41,6 +42,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const limited = await requireRateLimit(req, 'mutation', 'gamification')
+  if (limited) return limited
+
   if (!isSupabaseAuthConfigured()) {
     return Response.json({ error: 'No disponible' }, { status: 503 })
   }
@@ -70,30 +74,26 @@ export async function POST(req: NextRequest) {
   }
 
   if (body.action === 'buy') {
-    const slug = String(body.slug || '')
-    const { data: item } = await supabase.from('shop_items').select('*').eq('slug', slug).maybeSingle()
-    if (!item) return Response.json({ error: 'Artículo no encontrado' }, { status: 404 })
-
-    const { data: profile } = await supabase.from('profiles').select('coins').eq('id', user.id).maybeSingle()
-    if ((profile?.coins ?? 0) < item.price_coins) {
-      return Response.json({ error: 'Monedas insuficientes' }, { status: 402 })
-    }
-
-    const { error: buyErr } = await supabase.from('user_inventory').insert({
-      user_id: user.id,
-      item_id: item.id,
+    const slug = String(body.slug || '').slice(0, 80)
+    const { data, error: buyErr } = await supabase.rpc('purchase_shop_item', {
+      p_item_slug: slug,
     })
+
     if (buyErr) {
-      if (buyErr.code === '23505') return Response.json({ error: 'Ya lo tienes' }, { status: 409 })
-      return Response.json({ error: buyErr.message }, { status: 500 })
+      const msg = buyErr.message || ''
+      if (msg.includes('item_not_found')) {
+        return Response.json({ error: 'Artículo no encontrado' }, { status: 404 })
+      }
+      if (msg.includes('already_owned')) {
+        return Response.json({ error: 'Ya lo tienes' }, { status: 409 })
+      }
+      if (msg.includes('insufficient_coins')) {
+        return Response.json({ error: 'Monedas insuficientes' }, { status: 402 })
+      }
+      return Response.json({ error: 'No se pudo completar la compra' }, { status: 500 })
     }
 
-    await supabase
-      .from('profiles')
-      .update({ coins: (profile?.coins ?? 0) - item.price_coins })
-      .eq('id', user.id)
-
-    return Response.json({ ok: true })
+    return Response.json({ ok: true, ...((data as object) || {}) })
   }
 
   if (body.action === 'equip') {

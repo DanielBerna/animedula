@@ -12,6 +12,7 @@ export type PublicProfile = {
   current_action: string | null
   is_public: boolean
   list_public: boolean
+  is_premium?: boolean
   created_at: string
 }
 
@@ -63,7 +64,7 @@ export async function getPublicProfileByUsername(
   const { data: profile } = await supabase
     .from('profiles')
     .select(
-      'id, username, display_name, avatar_url, xp, level, selected_title, status_text, current_action, is_public, list_public, created_at',
+      'id, username, display_name, avatar_url, xp, level, selected_title, status_text, current_action, is_public, list_public, is_premium, created_at',
     )
     .eq('username', normalized)
     .maybeSingle()

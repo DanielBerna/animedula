@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { resolveGoUrl, StreamingPartner } from '../../../lib/affiliates'
+import { isSafeHttpsUrl } from '../../../lib/security/urls'
 
 const VALID = ['mercadolibre', 'crunchyroll', 'netflix', 'prime'] as const
 
@@ -20,12 +21,9 @@ export async function GET(
 
   const target = resolveGoUrl(raw as StreamingPartner | 'mercadolibre', { query, anime, dest })
 
-  console.info('[external-link]', {
-    partner: raw,
-    query,
-    anime,
-    at: new Date().toISOString(),
-  })
+  if (!isSafeHttpsUrl(target)) {
+    return new Response('URL de destino no válida', { status: 400 })
+  }
 
   return Response.redirect(target, 302)
 }

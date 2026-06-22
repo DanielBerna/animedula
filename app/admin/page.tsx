@@ -1,4 +1,5 @@
 import AdminDraftCard from '../../components/AdminDraftCard'
+import AdminNav from '../../components/AdminNav'
 import PageHeader from '../../components/PageHeader'
 import { getEditorialReview } from '../../lib/editorial'
 import { buildFallbackReview } from '../../lib/editorial/fallback'
@@ -75,6 +76,8 @@ export default async function AdminPage() {
   return (
     <div className="section-anime space-y-8">
       <PageHeader variant="default" eyebrow="Admin" title="Moderación" />
+
+      <AdminNav active="/admin" />
 
       <section>
         <div className="section-head">

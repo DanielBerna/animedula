@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import { getBestImageUrl } from '../lib/jikan'
+import { fetchHomeFeatured } from '../lib/home/featured'
 import AnimeCard from '../components/AnimeCard'
 import HomeHero from '../components/HomeHero'
 import MangaCard from '../components/MangaCard'
@@ -9,20 +11,13 @@ import AffiliateDisclosure from '../components/AffiliateDisclosure'
 import HomeHybridFeed from '../components/HomeHybridFeed'
 import { UI } from '../lib/copy'
 import { getHybridHomeFeed } from '../lib/community/home-feed'
-import { fetchJikan, fetchTopAnime, fetchTopManga, getBestImageUrl, mapJikanList } from '../lib/jikan'
 
 export const revalidate = 21600
 
 export default async function Home() {
-  const [trending, upcomingRes, mangas, feed] = await Promise.all([
-    fetchTopAnime(6),
-    fetchJikan('/seasons/upcoming?limit=4'),
-    fetchTopManga(4),
-    getHybridHomeFeed(8, 5),
-  ])
+  const [featured, feed] = await Promise.all([fetchHomeFeatured(), getHybridHomeFeed(8, 5)])
 
-  const upcoming = mapJikanList(upcomingRes)
-  const heroImages = trending.map((a) => getBestImageUrl(a.images))
+  const heroImages = featured.trending.map((a) => getBestImageUrl(a.images))
 
   return (
     <div className="space-y-12">
@@ -35,7 +30,7 @@ export default async function Home() {
             <h2 className="font-display text-2xl font-bold text-text">Secciones</h2>
           </div>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 luxe-grid">
           <HubCard variant="calendar" href="/calendario" delay={0} />
           <HubCard variant="manga" href="/mangas" delay={60} />
           <HubCard variant="gaming" href="/videojuegos" delay={120} />
@@ -51,13 +46,18 @@ export default async function Home() {
       <section className="enter-up enter-up-d2">
         <div className="section-head">
           <div>
-            <p className="eyebrow mb-1">Ranking</p>
-            <h2 className="font-display text-2xl font-bold text-text">Tendencias</h2>
+            <p className="eyebrow mb-1">Temporada</p>
+            <h2 className="font-display text-2xl font-bold text-text">
+              Tendencias · {featured.seasonLabel}
+            </h2>
+            <p className="text-xs text-muted mt-1">Selección que rota cada día dentro de la temporada</p>
           </div>
-          <Link href="/explorar" className="section-link">{UI.seeAll} →</Link>
+          <Link href="/explorar" className="section-link">
+            {UI.seeAll} →
+          </Link>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-5">
-          {trending.map((anime, i) => (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-5 luxe-grid">
+          {featured.trending.map((anime, i) => (
             <AnimeCard
               key={anime.mal_id}
               slug={String(anime.mal_id)}
@@ -73,13 +73,17 @@ export default async function Home() {
       <section className="section-calendar enter-up">
         <div className="section-head">
           <div>
-            <p className="eyebrow mb-1" style={{ color: '#A78BFA' }}>Próximos</p>
+            <p className="eyebrow mb-1" style={{ color: '#A78BFA' }}>
+              Próximos
+            </p>
             <h2 className="font-display text-xl font-bold text-text">Por estrenar</h2>
           </div>
-          <Link href="/calendario" className="section-link">Ver temporadas →</Link>
+          <Link href="/calendario" className="section-link">
+            Ver temporadas →
+          </Link>
         </div>
         <div className="space-y-2">
-          {upcoming.map((a) => (
+          {featured.upcoming.map((a) => (
             <CalendarRow key={a.mal_id} anime={a} label="Próximo estreno" />
           ))}
         </div>
@@ -88,13 +92,17 @@ export default async function Home() {
       <section className="section-manga enter-up">
         <div className="section-head">
           <div>
-            <p className="eyebrow mb-1" style={{ color: '#FB923C' }}>Lectura</p>
-            <h2 className="font-display text-xl font-bold text-text">Top mangas</h2>
+            <p className="eyebrow mb-1" style={{ color: '#FB923C' }}>
+              Lectura
+            </p>
+            <h2 className="font-display text-xl font-bold text-text">Mangas destacados</h2>
           </div>
-          <Link href="/mangas" className="section-link">Ver mangas →</Link>
+          <Link href="/mangas" className="section-link">
+            Ver mangas →
+          </Link>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {mangas.map((m) => (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 luxe-grid">
+          {featured.mangas.map((m) => (
             <MangaCard
               key={m.mal_id}
               mal_id={m.mal_id}

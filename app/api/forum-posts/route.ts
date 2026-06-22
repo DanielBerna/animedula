@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { getAuthUser } from '../../../lib/auth'
 import { createClient, isSupabaseAuthConfigured } from '../../../lib/supabase/server'
+import { requireRateLimit } from '../../../lib/security/api'
 
 const VALID_TAGS = ['manga', 'gaming', 'spoilers', 'tecnologia', 'anime'] as const
 
@@ -70,6 +71,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const limited = await requireRateLimit(req, 'mutation', 'forum-posts')
+  if (limited) return limited
+
   if (!isSupabaseAuthConfigured()) {
     return Response.json({ error: 'Foro no disponible' }, { status: 503 })
   }

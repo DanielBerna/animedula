@@ -22,7 +22,7 @@ export default function NewsCard({ item, variant = 'default' }: Props) {
   const catLabel = NEWS_CATEGORY_LABELS[item.category]
 
   return (
-    <article className={`news-card news-card-${variant} enter-up group`}>
+    <article className={`news-card news-card-${variant} news-card-luxe enter-up group`}>
       <Link href={href} className="news-card-link">
         <div className={`news-card-cover ${catClass}`}>
           {item.imageUrl ? (

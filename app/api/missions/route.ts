@@ -2,6 +2,8 @@ import { NextRequest } from 'next/server'
 import { getAuthUser } from '../../../lib/auth'
 import { createClient, isSupabaseAuthConfigured } from '../../../lib/supabase/server'
 import { DAILY_MISSIONS, MissionKey } from '../../../lib/gamification/missions'
+import { verifyMissionCompletion } from '../../../lib/gamification/verify-mission'
+import { requireRateLimit } from '../../../lib/security/api'
 
 const VALID_KEYS = DAILY_MISSIONS.map((m) => m.key)
 
@@ -31,6 +33,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const limited = await requireRateLimit(req, 'mutation', 'missions')
+  if (limited) return limited
+
   if (!isSupabaseAuthConfigured()) {
     return Response.json({ error: 'Misiones no disponibles' }, { status: 503 })
   }
@@ -47,6 +52,14 @@ export async function POST(req: NextRequest) {
   const supabase = await createClient()
   const today = new Date().toISOString().slice(0, 10)
 
+  const verified = await verifyMissionCompletion(supabase, user.id, mission_key as MissionKey)
+  if (!verified) {
+    return Response.json(
+      { error: 'Completa la acción de la misión antes de reclamarla' },
+      { status: 403 },
+    )
+  }
+
   const { error } = await supabase.from('daily_missions').insert({
     user_id: user.id,
     mission_key,
@@ -61,7 +74,13 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: error.message }, { status: 500 })
   }
 
-  await supabase.rpc('award_coins', { p_user_id: user.id, p_amount: mission.coins })
+  const { error: coinErr } = await supabase.rpc('award_coins', {
+    p_user_id: user.id,
+    p_amount: mission.coins,
+  })
+  if (coinErr) {
+    return Response.json({ error: 'No se pudieron acreditar monedas' }, { status: 500 })
+  }
 
   return Response.json({ completed: true, coins: mission.coins })
 }

@@ -1,9 +1,12 @@
 import { NextRequest } from 'next/server'
 import { getAuthUser } from '../../../lib/auth'
 import { createClient, isSupabaseAuthConfigured } from '../../../lib/supabase/server'
+import { validateImageBuffer } from '../../../lib/security/image'
+import { requireRateLimit } from '../../../lib/security/api'
 
 const VALID_TYPES = ['anime', 'manga', 'game', 'movie'] as const
 const MAX_BYTES = 4 * 1024 * 1024
+const DAILY_UPLOAD_LIMIT = 20
 
 export async function GET(req: NextRequest) {
   if (!isSupabaseAuthConfigured()) {
@@ -53,6 +56,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const limited = await requireRateLimit(req, 'upload', 'screenshots')
+  if (limited) return limited
+
   if (!isSupabaseAuthConfigured()) {
     return Response.json({ error: 'Capturas no disponibles' }, { status: 503 })
   }
@@ -76,15 +82,32 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: 'Solo imágenes' }, { status: 400 })
   }
 
-  const ext = file.type.includes('png') ? 'png' : file.type.includes('webp') ? 'webp' : 'jpg'
-  const storage_path = `${user.id}/${content_type}/${content_id}/${Date.now()}.${ext}`
-
   const supabase = await createClient()
+
+  const todayStart = new Date()
+  todayStart.setHours(0, 0, 0, 0)
+  const { count: uploadsToday } = await supabase
+    .from('content_screenshots')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+    .gte('created_at', todayStart.toISOString())
+
+  if ((uploadsToday ?? 0) >= DAILY_UPLOAD_LIMIT) {
+    return Response.json({ error: 'Límite diario de capturas alcanzado' }, { status: 429 })
+  }
+
   const buffer = Buffer.from(await file.arrayBuffer())
+  const validated = validateImageBuffer(buffer, file.type)
+  if (!validated.ok) {
+    return Response.json({ error: 'Archivo de imagen no válido' }, { status: 400 })
+  }
+
+  const ext = validated.mime.includes('png') ? 'png' : validated.mime.includes('webp') ? 'webp' : 'jpg'
+  const storage_path = `${user.id}/${content_type}/${content_id}/${Date.now()}.${ext}`
 
   const { error: uploadErr } = await supabase.storage
     .from('captures')
-    .upload(storage_path, buffer, { contentType: file.type, upsert: false })
+    .upload(storage_path, buffer, { contentType: validated.mime, upsert: false })
 
   if (uploadErr) {
     return Response.json(

@@ -42,6 +42,9 @@ export const NEWS_COPY = {
   techEmpty: 'No cargamos noticias de tecnología en este momento.',
   collectTitle: 'Noticias de anime y coleccionables',
   collectEmpty: 'No cargamos noticias de coleccionables en este momento.',
+  sourcesTitle: 'Fuentes de noticias',
+  sourcesNote:
+    'Los titulares pertenecen a sus autores. Animédula enlaza al artículo original sin reclamar esos contenidos.',
 } as const
 
 export const SECTION_COPY = {
@@ -65,7 +68,9 @@ export const DETAIL_COPY = {
   moreNews: 'Ver más noticias',
   developer: 'Desarrollador',
   publisher: 'Editor',
-  translationNote: 'Texto adaptado al español. El enlace original puede estar en otro idioma.',
+  translationNote:
+    'Resumen adaptado al español. El artículo completo y los derechos pertenecen a la fuente indicada.',
+  sourceCredit: 'Crédito a la fuente original',
 } as const
 
 export const UI = {
