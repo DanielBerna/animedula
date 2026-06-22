@@ -3,6 +3,7 @@ import type { HybridFeedItem } from '../lib/community/home-feed'
 
 type Props = {
   items: HybridFeedItem[]
+  variant?: 'default' | 'column'
 }
 
 function formatDate(value: string) {
@@ -18,8 +19,41 @@ const SOURCE_CLASS: Record<string, string> = {
   review: 'feed-badge-review',
 }
 
-export default function HomeHybridFeed({ items }: Props) {
-  if (items.length === 0) return null
+export default function HomeHybridFeed({ items, variant = 'default' }: Props) {
+  if (items.length === 0) {
+    return (
+      <p className="text-sm text-muted p-4">
+        Aún no hay actividad.{' '}
+        <Link href="/comunidad" className="text-accent hover:underline">
+          Ir al foro
+        </Link>
+      </p>
+    )
+  }
+
+  if (variant === 'column') {
+    return (
+      <ul className="home-feed-column">
+        {items.map((item, i) => (
+          <li key={item.id} className="home-feed-column-item" style={{ animationDelay: `${i * 50}ms` }}>
+            <Link href={item.href} className="home-feed-column-link group">
+              <span className={`feed-badge ${SOURCE_CLASS[item.source] || ''}`}>
+                {item.sourceLabel}
+              </span>
+              <p className="home-feed-column-title">{item.title}</p>
+              {item.excerpt && item.source === 'news' ? (
+                <p className="home-feed-column-excerpt">{item.excerpt}</p>
+              ) : null}
+              <span className="home-feed-column-meta">
+                {item.author ? `${item.author} · ` : ''}
+                {formatDate(item.publishedAt) || ''}
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    )
+  }
 
   return (
     <section className="feed-section enter-up enter-up-d1">
@@ -28,7 +62,9 @@ export default function HomeHybridFeed({ items }: Props) {
           <p className="eyebrow mb-1">Feed en vivo</p>
           <h2 className="font-display text-2xl font-bold text-text">Noticias y comunidad</h2>
         </div>
-        <Link href="/noticias" className="section-link">Ver noticias →</Link>
+        <Link href="/noticias" className="section-link">
+          Ver noticias →
+        </Link>
       </div>
 
       <ul className="feed-list">

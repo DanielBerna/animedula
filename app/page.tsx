@@ -3,6 +3,7 @@ import { getBestImageUrl } from '../lib/jikan'
 import { fetchHomeFeatured } from '../lib/home/featured'
 import AnimeCard from '../components/AnimeCard'
 import HomeHero from '../components/HomeHero'
+import HomeSection from '../components/HomeSection'
 import MangaCard from '../components/MangaCard'
 import CalendarRow from '../components/CalendarRow'
 import HubCard from '../components/HubCard'
@@ -20,100 +21,109 @@ export default async function Home() {
   const heroImages = featured.trending.map((a) => getBestImageUrl(a.images))
 
   return (
-    <div className="space-y-12">
+    <div className="home-page space-y-8">
       <HomeHero images={heroImages} />
 
-      <section className="enter-up enter-up-d1">
-        <div className="section-head">
-          <div>
-            <p className="eyebrow mb-1">Descubre</p>
-            <h2 className="font-display text-2xl font-bold text-text">Secciones</h2>
+      <div className="home-magazine">
+        {/* Columna 1 — Explorar */}
+        <HomeSection
+          eyebrow="Navega"
+          title="Secciones"
+          subtitle="Todo el universo otaku en un clic"
+          accent="default"
+          className="home-col-explore"
+        >
+          <div className="home-hub-stack">
+            <HubCard variant="calendar" href="/calendario" delay={0} />
+            <HubCard variant="manga" href="/mangas" delay={40} />
+            <HubCard variant="gaming" href="/videojuegos" delay={80} />
+            <HubCard variant="collect" href="/coleccionables" delay={120} />
+            <HubCard variant="tech" href="/tecnologia" delay={160} />
           </div>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 luxe-grid">
-          <HubCard variant="calendar" href="/calendario" delay={0} />
-          <HubCard variant="manga" href="/mangas" delay={60} />
-          <HubCard variant="gaming" href="/videojuegos" delay={120} />
-          <HubCard variant="collect" href="/coleccionables" delay={180} />
-          <HubCard variant="tech" href="/tecnologia" delay={240} />
-        </div>
-      </section>
+        </HomeSection>
 
-      <HomeHybridFeed items={feed} />
-
-      <AdSlot slot={process.env.NEXT_PUBLIC_ADS_SLOT_HOME_TOP || ''} className="ad-placeholder" />
-
-      <section className="enter-up enter-up-d2">
-        <div className="section-head">
-          <div>
-            <p className="eyebrow mb-1">Temporada</p>
-            <h2 className="font-display text-2xl font-bold text-text">
-              Tendencias · {featured.seasonLabel}
-            </h2>
-            <p className="text-xs text-muted mt-1">Selección que rota cada día dentro de la temporada</p>
+        {/* Columna 2 — Tendencias (principal) */}
+        <HomeSection
+          eyebrow="Temporada"
+          title={`Tendencias · ${featured.seasonLabel}`}
+          subtitle="Rota cada día dentro de la temporada"
+          href="/explorar"
+          linkLabel={`${UI.seeAll} →`}
+          accent="anime"
+          className="home-col-trending"
+          bodyClassName="home-column-body-pad"
+        >
+          <div className="home-anime-grid">
+            {featured.trending.map((anime, i) => (
+              <AnimeCard
+                key={anime.mal_id}
+                slug={String(anime.mal_id)}
+                title={anime.title}
+                image={getBestImageUrl(anime.images)}
+                score={anime.score}
+                rank={i + 1}
+              />
+            ))}
           </div>
-          <Link href="/explorar" className="section-link">
-            {UI.seeAll} →
-          </Link>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-5 luxe-grid">
-          {featured.trending.map((anime, i) => (
-            <AnimeCard
-              key={anime.mal_id}
-              slug={String(anime.mal_id)}
-              title={anime.title}
-              image={getBestImageUrl(anime.images)}
-              score={anime.score}
-              rank={i + 1}
-            />
-          ))}
-        </div>
-      </section>
+        </HomeSection>
 
-      <section className="section-calendar enter-up">
-        <div className="section-head">
-          <div>
-            <p className="eyebrow mb-1" style={{ color: '#A78BFA' }}>
-              Próximos
-            </p>
-            <h2 className="font-display text-xl font-bold text-text">Por estrenar</h2>
-          </div>
-          <Link href="/calendario" className="section-link">
-            Ver temporadas →
-          </Link>
-        </div>
-        <div className="space-y-2">
-          {featured.upcoming.map((a) => (
-            <CalendarRow key={a.mal_id} anime={a} label="Próximo estreno" />
-          ))}
-        </div>
-      </section>
+        {/* Columna 3 — Actividad */}
+        <HomeSection
+          eyebrow="En vivo"
+          title="Noticias y comunidad"
+          href="/noticias"
+          linkLabel="Ver noticias →"
+          accent="news"
+          className="home-col-feed"
+          bodyClassName="home-column-body-flush"
+        >
+          <HomeHybridFeed items={feed} variant="column" />
+        </HomeSection>
 
-      <section className="section-manga enter-up">
-        <div className="section-head">
-          <div>
-            <p className="eyebrow mb-1" style={{ color: '#FB923C' }}>
-              Lectura
-            </p>
-            <h2 className="font-display text-xl font-bold text-text">Mangas destacados</h2>
+        {/* Fila inferior — Estrenos + Mangas */}
+        <HomeSection
+          eyebrow="Calendario"
+          title="Por estrenar"
+          href="/calendario"
+          linkLabel="Ver temporadas →"
+          accent="calendar"
+          className="home-col-upcoming"
+          bodyClassName="home-column-body-pad-sm"
+        >
+          <div className="home-calendar-stack">
+            {featured.upcoming.map((a) => (
+              <CalendarRow key={a.mal_id} anime={a} label="Próximo estreno" />
+            ))}
           </div>
-          <Link href="/mangas" className="section-link">
-            Ver mangas →
-          </Link>
+        </HomeSection>
+
+        <HomeSection
+          eyebrow="Lectura"
+          title="Mangas destacados"
+          href="/mangas"
+          linkLabel="Ver mangas →"
+          accent="manga"
+          className="home-col-manga"
+          bodyClassName="home-column-body-pad"
+        >
+          <div className="home-manga-grid">
+            {featured.mangas.map((m) => (
+              <MangaCard
+                key={m.mal_id}
+                mal_id={m.mal_id}
+                title={m.title}
+                image={getBestImageUrl(m.images)}
+                score={m.score}
+                chapters={m.chapters}
+              />
+            ))}
+          </div>
+        </HomeSection>
+
+        <div className="home-col-ad home-span-full">
+          <AdSlot slot={process.env.NEXT_PUBLIC_ADS_SLOT_HOME_TOP || ''} className="ad-placeholder" />
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 luxe-grid">
-          {featured.mangas.map((m) => (
-            <MangaCard
-              key={m.mal_id}
-              mal_id={m.mal_id}
-              title={m.title}
-              image={getBestImageUrl(m.images)}
-              score={m.score}
-              chapters={m.chapters}
-            />
-          ))}
-        </div>
-      </section>
+      </div>
 
       <AdSlot slot={process.env.NEXT_PUBLIC_ADS_SLOT_HOME_BOTTOM || ''} className="ad-placeholder" />
 
