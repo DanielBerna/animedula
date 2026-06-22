@@ -1,13 +1,16 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import FollowButton from '../../../components/FollowButton'
 import SpoilerText from '../../../components/SpoilerText'
+import { getAuthUser } from '../../../lib/auth'
 import {
   formatAction,
   getPublicProfileByUsername,
   listHref,
   reviewHref,
 } from '../../../lib/profiles/public'
+import { getFollowStats } from '../../../lib/social/follows'
 
 type Props = {
   params: Promise<{ username: string }>
@@ -41,8 +44,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PublicProfilePage({ params }: Props) {
   const { username } = await params
-  const profile = await getPublicProfileByUsername(username)
+  const [profile, viewer] = await Promise.all([getPublicProfileByUsername(username), getAuthUser()])
   if (!profile) notFound()
+
+  const followStats = await getFollowStats(profile.id, viewer?.id)
+  const canFollow = Boolean(viewer && viewer.id !== profile.id)
 
   const name = profile.display_name || profile.username
   const action = formatAction(profile.current_action)
@@ -78,6 +84,14 @@ export default async function PublicProfilePage({ params }: Props) {
             {profile.status_text ? (
               <p className="text-sm text-muted mt-3 italic">{profile.status_text}</p>
             ) : null}
+            <div className="mt-4">
+              <FollowButton
+                targetUserId={profile.id}
+                initialFollowing={followStats.is_following}
+                initialFollowerCount={followStats.follower_count}
+                canFollow={canFollow}
+              />
+            </div>
           </div>
         </div>
       </header>

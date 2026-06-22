@@ -91,6 +91,7 @@ export async function getPublicProfileByUsername(
       .from('user_reviews')
       .select('id, content_type, content_id, rating_global, comment, is_spoiler, created_at')
       .eq('user_id', profile.id)
+      .eq('status', 'published')
       .order('created_at', { ascending: false })
       .limit(5),
   ])

@@ -12,6 +12,8 @@ Documento maestro: qué hacer tú, qué está hecho en código, y cómo encaja e
 - [ ] Verificar trigger `trg_protect_profile_privileged` en tabla `profiles`
 - [ ] Probar que un usuario **no** puede cambiar `role`, `coins`, `xp`, `level` desde el cliente
 - [ ] Ejecutar [`supabase/schema-v9-premium.sql`](../supabase/schema-v9-premium.sql) (campos premium + planes)
+- [ ] Ejecutar [`supabase/schema-v12-ugc-unique.sql`](../supabase/schema-v12-ugc-unique.sql) si al publicar reseñas o listas ves error de `ON CONFLICT`
+- [ ] Ejecutar [`supabase/schema-v13-social.sql`](../supabase/schema-v13-social.sql) (moderación UGC + seguir usuarios)
 
 ### 2. Vercel — variables de entorno
 

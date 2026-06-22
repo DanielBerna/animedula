@@ -1,7 +1,8 @@
 import Link from 'next/link'
 
 const LINKS = [
-  { href: '/admin', label: 'Moderación reseñas' },
+  { href: '/admin', label: 'Moderación editorial' },
+  { href: '/admin/ugc', label: 'Reseñas usuarios' },
   { href: '/admin/calendario', label: 'Calendario editorial' },
   { href: '/admin/catalogo', label: 'Catálogo premios' },
   { href: '/perfil', label: 'Mi perfil' },

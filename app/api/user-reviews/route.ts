@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
 
   const { data: reviews, error } = await supabase
     .from('user_reviews')
-    .select('id, user_id, rating_global, metrics_json, comment, is_spoiler, created_at, profiles(display_name)')
+    .select('id, user_id, rating_global, metrics_json, comment, is_spoiler, status, created_at, profiles(display_name)')
     .eq('content_type', content_type)
     .eq('content_id', content_id)
     .order('created_at', { ascending: false })
@@ -99,22 +99,39 @@ export async function POST(req: NextRequest) {
   }
 
   const supabase = await createClient()
-  const { data, error } = await supabase
+  const payload = {
+    user_id: user.id,
+    content_type,
+    content_id,
+    rating_global,
+    metrics_json,
+    comment,
+    is_spoiler,
+    status: 'pending' as const,
+  }
+
+  const { data: existing } = await supabase
     .from('user_reviews')
-    .upsert(
-      {
-        user_id: user.id,
-        content_type,
-        content_id,
-        rating_global,
-        metrics_json,
-        comment,
-        is_spoiler,
-      },
-      { onConflict: 'user_id,content_type,content_id' },
-    )
     .select('id')
-    .single()
+    .eq('user_id', user.id)
+    .eq('content_type', content_type)
+    .eq('content_id', content_id)
+    .maybeSingle()
+
+  const { data, error } = existing
+    ? await supabase
+        .from('user_reviews')
+        .update({
+          rating_global,
+          metrics_json,
+          comment,
+          is_spoiler,
+          status: 'pending',
+        })
+        .eq('id', existing.id)
+        .select('id, status')
+        .single()
+    : await supabase.from('user_reviews').insert(payload).select('id, status').single()
 
   if (error) {
     if (error.code === '42P01') {
@@ -123,5 +140,5 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: error.message }, { status: 500 })
   }
 
-  return Response.json({ review: data })
+  return Response.json({ review: data, pending: data?.status === 'pending' })
 }

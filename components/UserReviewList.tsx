@@ -10,6 +10,7 @@ export type UserReview = {
   metrics_json: Record<string, number> | null
   comment: string
   is_spoiler: boolean
+  status?: string
   created_at: string
   user_id: string
   profiles?: { display_name: string | null } | null
@@ -87,13 +88,16 @@ export default function UserReviewList({ contentType, contentId, loggedIn, refre
                 </p>
                 <p className="text-sm font-semibold text-text mt-0.5">
                   ★ {r.rating_global}/10
+                  {r.status === 'pending' ? (
+                    <span className="tag tag-gold ml-2 text-[10px]">En revisión</span>
+                  ) : null}
                   {r.is_spoiler ? <span className="tag tag-gold ml-2 text-[10px]">Spoiler</span> : null}
                 </p>
               </div>
               <div className="flex items-center gap-1">
                 <button
                   type="button"
-                  disabled={!loggedIn || voting === r.id}
+                  disabled={!loggedIn || voting === r.id || r.status === 'pending'}
                   onClick={() => vote(r.id, 'up')}
                   className={`review-vote-btn${r.user_vote === 'up' ? ' is-active' : ''}`}
                   title="Útil"
@@ -102,7 +106,7 @@ export default function UserReviewList({ contentType, contentId, loggedIn, refre
                 </button>
                 <button
                   type="button"
-                  disabled={!loggedIn || voting === r.id}
+                  disabled={!loggedIn || voting === r.id || r.status === 'pending'}
                   onClick={() => vote(r.id, 'down')}
                   className={`review-vote-btn${r.user_vote === 'down' ? ' is-active' : ''}`}
                   title="No útil"

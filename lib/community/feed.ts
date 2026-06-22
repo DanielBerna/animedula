@@ -46,6 +46,7 @@ export async function getCommunityHighlights(limit = 5): Promise<CommunityHighli
       supabase
         .from('user_reviews')
         .select('id, comment, created_at, content_type, content_id, rating_global, profiles(display_name)')
+        .eq('status', 'published')
         .order('created_at', { ascending: false })
         .limit(limit),
     ])

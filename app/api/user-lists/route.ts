@@ -39,22 +39,33 @@ export async function POST(req: NextRequest) {
   }
 
   const supabase = await createClient()
-  const { data, error } = await supabase
+  const now = new Date().toISOString()
+  const payload = {
+    user_id: user.id,
+    content_type,
+    content_id,
+    title,
+    image_url,
+    status,
+    updated_at: now,
+  }
+
+  const { data: existing } = await supabase
     .from('user_lists')
-    .upsert(
-      {
-        user_id: user.id,
-        content_type,
-        content_id,
-        title,
-        image_url,
-        status,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'user_id,content_type,content_id' },
-    )
-    .select('id, status')
-    .single()
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('content_type', content_type)
+    .eq('content_id', content_id)
+    .maybeSingle()
+
+  const { data, error } = existing
+    ? await supabase
+        .from('user_lists')
+        .update({ title, image_url, status, updated_at: now })
+        .eq('id', existing.id)
+        .select('id, status')
+        .single()
+    : await supabase.from('user_lists').insert(payload).select('id, status').single()
 
   if (error) {
     if (error.code === '42P01') {

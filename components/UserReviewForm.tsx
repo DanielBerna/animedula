@@ -81,7 +81,7 @@ export default function UserReviewForm({
   if (success) {
     return (
       <p className="text-sm text-muted">
-        Reseña publicada. Puedes editarla volviendo a enviar el formulario.
+        Reseña enviada a moderación. Te avisaremos cuando esté publicada (suele ser en pocas horas).
       </p>
     )
   }
@@ -156,7 +156,7 @@ export default function UserReviewForm({
       {error && <p className="text-xs text-sakura">{error}</p>}
 
       <button type="submit" disabled={sending} className="btn-primary text-sm">
-        {sending ? 'Publicando…' : 'Publicar reseña'}
+        {sending ? 'Enviando…' : 'Enviar reseña'}
       </button>
     </form>
   )
