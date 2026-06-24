@@ -1,12 +1,14 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import ContentSearchPicker, { defaultListStatus } from './ContentSearchPicker'
+import type { ShowcaseSection } from '../../lib/content-search'
 
 const SECTIONS = [
-  { id: 'anime', label: 'Anime viendo' },
-  { id: 'manga', label: 'Manga leyendo' },
-  { id: 'game', label: 'Juegos' },
-] as const
+  { id: 'anime' as const, label: 'Anime viendo' },
+  { id: 'manga' as const, label: 'Manga leyendo' },
+  { id: 'game' as const, label: 'Juegos' },
+]
 
 type Slot = {
   slot: number
@@ -17,12 +19,19 @@ type Slot = {
   list_status: string
 }
 
-const EMPTY_SLOT = { title: '', content_id: '', image_url: '', list_status: 'watching' }
+type Draft = {
+  title: string
+  content_id: string
+  image_url: string
+  list_status: string
+}
+
+const EMPTY_SLOT: Draft = { title: '', content_id: '', image_url: '', list_status: 'watching' }
 
 export default function ProfileShowcaseEditor() {
-  const [section, setSection] = useState<(typeof SECTIONS)[number]['id']>('anime')
+  const [section, setSection] = useState<ShowcaseSection>('anime')
   const [items, setItems] = useState<Slot[]>([])
-  const [drafts, setDrafts] = useState<Record<number, typeof EMPTY_SLOT>>({})
+  const [drafts, setDrafts] = useState<Record<number, Draft>>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -40,19 +49,20 @@ export default function ProfileShowcaseEditor() {
   }, [])
 
   const sectionItems = items.filter((i) => i.section === section)
-  const getDraft = (slot: number) => {
+
+  const getDraft = (slot: number): Draft => {
     const existing = sectionItems.find((i) => i.slot === slot)
     return (
       drafts[slot] || {
         title: existing?.title || '',
         content_id: existing?.content_id || '',
         image_url: existing?.image_url || '',
-        list_status: existing?.list_status || 'watching',
+        list_status: existing?.list_status || defaultListStatus(section),
       }
     )
   }
 
-  const setDraft = (slot: number, patch: Partial<typeof EMPTY_SLOT>) => {
+  const setDraft = (slot: number, patch: Partial<Draft>) => {
     setDrafts((d) => ({ ...d, [slot]: { ...getDraft(slot), ...patch } }))
   }
 
@@ -100,6 +110,11 @@ export default function ProfileShowcaseEditor() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Error')
+      setDrafts((prev) => {
+        const next = { ...prev }
+        delete next[slot]
+        return next
+      })
       await load()
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'No se pudo borrar')
@@ -124,42 +139,54 @@ export default function ProfileShowcaseEditor() {
           </button>
         ))}
       </div>
-      <p className="text-xs text-muted">Hasta 5 títulos por sección. Aparecen en tu perfil público.</p>
+      <p className="text-xs text-muted">
+        Elige hasta 5 títulos por sección con el buscador. Se guardan nombre e imagen automáticamente.
+      </p>
       {error ? <p className="text-xs text-red-400">{error}</p> : null}
       <div className="space-y-4">
         {[1, 2, 3, 4, 5].map((slot) => {
           const d = getDraft(slot)
           const filled = sectionItems.some((i) => i.slot === slot)
+          const selected =
+            d.title.trim().length > 0
+              ? { title: d.title, content_id: d.content_id, image_url: d.image_url }
+              : null
+
           return (
-            <div key={slot} className="rounded-lg border border-white/8 bg-surface-3/40 p-4 space-y-2">
-              <p className="text-xs font-semibold text-faint">Slot {slot}</p>
-              <input
-                className="input w-full text-sm"
-                placeholder="Título"
-                value={d.title}
-                onChange={(e) => setDraft(slot, { title: e.target.value })}
+            <div key={slot} className="rounded-lg border border-white/8 bg-surface-3/40 p-4 space-y-3">
+              <p className="text-xs font-semibold text-faint">Espacio {slot}</p>
+              <ContentSearchPicker
+                section={section}
+                value={selected}
+                onSelect={(item) =>
+                  setDraft(slot, {
+                    title: item.title,
+                    content_id: item.content_id,
+                    image_url: item.image_url,
+                    list_status: d.list_status || defaultListStatus(section),
+                  })
+                }
+                onClear={() =>
+                  setDraft(slot, {
+                    title: '',
+                    content_id: '',
+                    image_url: '',
+                    list_status: defaultListStatus(section),
+                  })
+                }
               />
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <input
-                  className="input w-full text-sm"
-                  placeholder="ID ficha (opcional)"
-                  value={d.content_id}
-                  onChange={(e) => setDraft(slot, { content_id: e.target.value })}
-                />
-                <input
-                  className="input w-full text-sm"
-                  placeholder="URL imagen (opcional)"
-                  value={d.image_url}
-                  onChange={(e) => setDraft(slot, { image_url: e.target.value })}
-                />
-              </div>
               <select
                 className="input w-full text-sm"
                 value={d.list_status}
                 onChange={(e) => setDraft(slot, { list_status: e.target.value })}
               >
-                <option value="watching">Viendo / Jugando</option>
-                <option value="reading">Leyendo</option>
+                {section === 'manga' ? (
+                  <option value="reading">Leyendo</option>
+                ) : section === 'game' ? (
+                  <option value="watching">Jugando</option>
+                ) : (
+                  <option value="watching">Viendo</option>
+                )}
                 <option value="completed">Completado</option>
                 <option value="pending">Pendiente</option>
                 <option value="dropped">Abandonado</option>
@@ -174,7 +201,12 @@ export default function ProfileShowcaseEditor() {
                   {saving === slot ? 'Guardando…' : 'Guardar'}
                 </button>
                 {filled ? (
-                  <button type="button" className="btn-ghost text-xs" disabled={saving === slot} onClick={() => clear(slot)}>
+                  <button
+                    type="button"
+                    className="btn-ghost text-xs"
+                    disabled={saving === slot}
+                    onClick={() => clear(slot)}
+                  >
                     Vaciar
                   </button>
                 ) : null}

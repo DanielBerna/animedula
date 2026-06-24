@@ -1,6 +1,8 @@
 const JIKAN_PREFIXES = [
   '/top/anime',
   '/top/manga',
+  '/anime',
+  '/manga',
   '/anime/',
   '/manga/',
   '/seasons/',
