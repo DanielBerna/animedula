@@ -15,6 +15,7 @@ Documento maestro: qué hacer tú, qué está hecho en código, y cómo encaja e
 - [ ] Ejecutar [`supabase/schema-v12-ugc-unique.sql`](../supabase/schema-v12-ugc-unique.sql) si al publicar reseñas o listas ves error de `ON CONFLICT`
 - [ ] Ejecutar [`supabase/schema-v13-social.sql`](../supabase/schema-v13-social.sql) (moderación UGC + seguir usuarios)
 - [ ] Ejecutar [`supabase/schema-v14-community-enhancements.sql`](../supabase/schema-v14-community-enhancements.sql) (amistades, mensajes, misión foro)
+- [ ] Ejecutar [`supabase/schema-v15-realtime-social.sql`](../supabase/schema-v15-realtime-social.sql) (realtime mensajes y notificaciones)
 
 ### 2. Vercel — variables de entorno
 

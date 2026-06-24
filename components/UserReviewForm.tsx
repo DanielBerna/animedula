@@ -80,9 +80,19 @@ export default function UserReviewForm({
 
   if (success) {
     return (
-      <p className="text-sm text-muted">
-        Reseña enviada a moderación. Te avisaremos cuando esté publicada (suele ser en pocas horas).
-      </p>
+      <div className="rounded-lg border border-accent/30 bg-accent/5 p-4 enter-up">
+        <p className="text-sm text-text font-medium">Reseña enviada ✓</p>
+        <p className="text-xs text-muted mt-1">
+          En cola de moderación. Aparecerá aquí cuando el equipo la apruebe.
+        </p>
+        <button
+          type="button"
+          className="text-xs text-accent mt-3 hover:underline"
+          onClick={() => setSuccess(false)}
+        >
+          Escribir otra reseña
+        </button>
+      </div>
     )
   }
 

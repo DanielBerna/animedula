@@ -21,9 +21,14 @@ export async function GET(req: NextRequest) {
   let query = supabase
     .from('forum_posts')
     .select('id, title, body, tags, content_id, content_type, reply_count, created_at, user_id, parent_id, profiles(display_name, status_text, current_action, username, selected_title, avatar_url)')
-    .is('parent_id', parent_id ? Number(parent_id) : null)
-    .order('created_at', { ascending: false })
-    .limit(30)
+    .order('created_at', { ascending: parent_id ? true : false })
+    .limit(50)
+
+  if (parent_id) {
+    query = query.eq('parent_id', Number(parent_id))
+  } else {
+    query = query.is('parent_id', null)
+  }
 
   if (content_type && content_id) {
     query = query.eq('content_type', content_type).eq('content_id', content_id)

@@ -2841,6 +2841,155 @@ html.light .home-column-block {
   animation: enterUp 400ms ease both;
 }
 
+.community-comment-card,
+.user-review-card {
+  transition: border-color 200ms, background 200ms;
+}
+.community-comment-card:hover,
+.user-review-card:hover {
+  border-color: color-mix(in srgb, var(--accent) 20%, var(--border));
+}
+.forum-post-card {
+  transition: border-color 200ms, box-shadow 200ms;
+}
+.forum-post-card:hover {
+  border-color: color-mix(in srgb, var(--accent) 15%, var(--border));
+}
+
+/* Campana de notificaciones */
+.notification-bell-wrap {
+  position: relative;
+}
+.notification-bell-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: border-color 200ms, background 200ms;
+}
+.notification-bell-btn:hover {
+  border-color: var(--accent);
+  background: var(--surface-3);
+}
+.notification-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 1.1rem;
+  height: 1.1rem;
+  padding: 0 0.25rem;
+  border-radius: 999px;
+  background: var(--sakura);
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  border: 2px solid var(--surface-1);
+}
+.notification-panel {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  z-index: 80;
+  width: min(20rem, 90vw);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+.notification-panel-drawer {
+  position: static;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+.notification-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.notification-msg-hint {
+  display: block;
+  padding: 0.6rem 1rem;
+  font-size: 0.75rem;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  border-bottom: 1px solid var(--border);
+  text-decoration: none;
+}
+.notification-msg-hint:hover {
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+.notification-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 16rem;
+  overflow-y: auto;
+}
+.notification-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.65rem 1rem;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  cursor: pointer;
+  transition: background 150ms;
+}
+.notification-item:hover {
+  background: var(--surface-3);
+}
+.notification-item.is-unread {
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface-2));
+}
+.notification-item-title {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.notification-item-body {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+  line-clamp: 2;
+  overflow: hidden;
+}
+.notification-item-time {
+  display: block;
+  font-size: 0.62rem;
+  color: var(--text-faint);
+  margin-top: 0.25rem;
+}
+.notification-panel-foot {
+  display: block;
+  padding: 0.65rem 1rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-align: center;
+  border-top: 1px solid var(--border);
+  text-decoration: none;
+}
+.notification-panel-foot:hover {
+  background: var(--surface-3);
+}
+
 /* Admin calendario editorial */
 .admin-nav {
   padding: 0.5rem;

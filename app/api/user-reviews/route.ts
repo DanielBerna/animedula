@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
 
   const { data: reviews, error } = await supabase
     .from('user_reviews')
-    .select('id, user_id, rating_global, metrics_json, comment, is_spoiler, status, created_at, profiles(display_name)')
+    .select('id, user_id, rating_global, metrics_json, comment, is_spoiler, status, created_at, profiles(display_name, username)')
     .eq('content_type', content_type)
     .eq('content_id', content_id)
     .order('created_at', { ascending: false })

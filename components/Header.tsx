@@ -12,6 +12,7 @@ import NavDropdown from './NavDropdown'
 import SectionIcon, { IconName } from './icons/SectionIcon'
 import ThemeToggle from './ThemeToggle'
 import UserMenu from './UserMenu'
+import NotificationBell from './NotificationBell'
 
 function MobileNav({ open, onClose, path }: { open: boolean; onClose: () => void; path: string }) {
   const [mounted, setMounted] = useState(false)
@@ -71,6 +72,7 @@ function MobileNav({ open, onClose, path }: { open: boolean; onClose: () => void
 
         <div className="offcanvas-footer">
           <div className="offcanvas-actions">
+            <NotificationBell variant="drawer" />
             <UserMenu variant="drawer" />
             <ThemeToggle showLabel />
           </div>
@@ -153,6 +155,7 @@ export default function Header() {
         </nav>
 
         <div className="header-actions">
+          <NotificationBell variant="inline" />
           <UserMenu variant="inline" />
           <div className="header-theme-wrap">
             <ThemeToggle />

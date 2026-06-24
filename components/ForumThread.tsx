@@ -35,6 +35,7 @@ export default function ForumThread({
   const [replyTo, setReplyTo] = useState<number | null>(null)
   const [replyBody, setReplyBody] = useState('')
   const [expandedReplies, setExpandedReplies] = useState<Set<number>>(new Set())
+  const [replyVersions, setReplyVersions] = useState<Record<number, number>>({})
 
   const buildUrl = useCallback(() => {
     const params = new URLSearchParams()
@@ -138,6 +139,7 @@ export default function ForumThread({
       setReplyTo(null)
       setReplyBody('')
       setExpandedReplies((prev) => new Set(prev).add(postId))
+      setReplyVersions((v) => ({ ...v, [postId]: (v[postId] || 0) + 1 }))
       await load()
       claimForumMission()
     } catch (err: unknown) {
@@ -149,6 +151,23 @@ export default function ForumThread({
 
   const react = async (postId: number, emoji: string) => {
     if (!loggedIn) return
+    setPosts((prev) =>
+      prev.map((p) => {
+        if (p.id !== postId) return p
+        const had = p.user_reactions?.includes(emoji)
+        const reactions = { ...(p.reactions || {}) }
+        const user_reactions = [...(p.user_reactions || [])]
+        if (had) {
+          reactions[emoji] = Math.max(0, (reactions[emoji] || 1) - 1)
+          const idx = user_reactions.indexOf(emoji)
+          if (idx >= 0) user_reactions.splice(idx, 1)
+        } else {
+          reactions[emoji] = (reactions[emoji] || 0) + 1
+          user_reactions.push(emoji)
+        }
+        return { ...p, reactions, user_reactions }
+      }),
+    )
     await fetch('/api/forum-reactions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -243,10 +262,14 @@ export default function ForumThread({
         <p className="text-sm text-muted">Aún no hay hilos. Abre la conversación.</p>
       ) : (
         <ul className="space-y-4">
-          {posts.map((p) => {
+          {posts.map((p, idx) => {
             const showReplies = expandedReplies.has(p.id)
             return (
-              <li key={p.id} className="forum-post-card rounded-lg border border-white/6 bg-surface-3/50 p-4">
+              <li
+                key={p.id}
+                className="forum-post-card rounded-lg border border-white/6 bg-surface-3/50 p-4 enter-up"
+                style={{ animationDelay: `${idx * 50}ms` }}
+              >
                 <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
                   <ForumAuthor profile={p.profiles} authorBorder={p.author_border} />
                   <time className="text-xs text-faint">
@@ -285,13 +308,15 @@ export default function ForumThread({
                       </button>
                     )
                   })}
-                  {p.reply_count > 0 && (
+                  {(p.reply_count > 0 || showReplies) && (
                     <button
                       type="button"
-                      className="text-xs text-accent hover:underline ml-auto"
+                      className={`text-xs ml-auto transition${showReplies ? ' text-muted' : ' text-accent hover:underline'}`}
                       onClick={() => toggleReplies(p.id)}
                     >
-                      {showReplies ? 'Ocultar' : 'Ver'} {p.reply_count} respuesta{p.reply_count !== 1 ? 's' : ''}
+                      {showReplies
+                        ? '▲ Ocultar respuestas'
+                        : `▼ Ver ${p.reply_count} respuesta${p.reply_count !== 1 ? 's' : ''}`}
                     </button>
                   )}
                   {loggedIn && (
@@ -306,7 +331,15 @@ export default function ForumThread({
                 </div>
 
                 {showReplies && (
-                  <ForumReplyList parentId={p.id} loggedIn={loggedIn} onReact={react} />
+                  <ForumReplyList
+                    parentId={p.id}
+                    expectedCount={p.reply_count}
+                    loggedIn={loggedIn}
+                    refreshKey={replyVersions[p.id] || 0}
+                    contentType={contentType}
+                    contentId={contentId}
+                    onReact={react}
+                  />
                 )}
 
                 {replyTo === p.id && (

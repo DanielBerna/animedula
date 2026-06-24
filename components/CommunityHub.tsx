@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import { createClient, isSupabaseBrowserConfigured } from '../lib/supabase/client'
 
 type Friend = { id: string; username: string | null; display_name: string | null }
 type Message = {
@@ -31,36 +32,98 @@ export default function CommunityHub({ userId }: Props) {
   const [messages, setMessages] = useState<Message[]>([])
   const [draft, setDraft] = useState('')
   const [sending, setSending] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  const loadFriends = () => {
+  const loadFriends = useCallback(() => {
     fetch('/api/social/friends')
       .then((r) => r.json())
       .then((d) => setFriends(d.friends || []))
       .catch(() => {})
-  }
+  }, [])
 
-  const loadNotifications = () => {
+  const loadNotifications = useCallback(() => {
     fetch('/api/social/notifications')
       .then((r) => r.json())
       .then((d) => setNotifications(d.notifications || []))
       .catch(() => {})
-  }
+  }, [])
+
+  const loadMessages = useCallback(async (friendId: string) => {
+    const res = await fetch(`/api/social/messages?with=${encodeURIComponent(friendId)}`)
+    const data = await res.json()
+    setMessages(data.messages || [])
+    loadNotifications()
+  }, [loadNotifications])
 
   useEffect(() => {
     loadFriends()
     loadNotifications()
-  }, [])
+  }, [loadFriends, loadNotifications])
 
   useEffect(() => {
     if (!selectedFriend) {
       setMessages([])
       return
     }
-    fetch(`/api/social/messages?with=${encodeURIComponent(selectedFriend)}`)
-      .then((r) => r.json())
-      .then((d) => setMessages(d.messages || []))
-      .catch(() => setMessages([]))
-  }, [selectedFriend])
+    loadMessages(selectedFriend)
+  }, [selectedFriend, loadMessages])
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
+
+  useEffect(() => {
+    if (!isSupabaseBrowserConfigured()) return
+
+    const supabase = createClient()
+    const channel = supabase
+      .channel(`dm-hub-${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'direct_messages',
+        },
+        (payload) => {
+          const row = payload.new as Message
+          const isMine = row.sender_id === userId || row.recipient_id === userId
+          if (!isMine) return
+
+          const otherId = row.sender_id === userId ? row.recipient_id : row.sender_id
+
+          if (selectedFriend && otherId === selectedFriend) {
+            setMessages((prev) => {
+              if (prev.some((m) => m.id === row.id)) return prev
+              return [...prev, row]
+            })
+            if (row.recipient_id === userId) {
+              loadMessages(selectedFriend)
+            }
+          } else if (row.recipient_id === userId) {
+            loadNotifications()
+          }
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'friend_requests',
+          filter: `addressee_id=eq.${userId}`,
+        },
+        () => {
+          loadFriends()
+          loadNotifications()
+        },
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [userId, selectedFriend, loadNotifications, loadFriends])
 
   const send = async () => {
     if (!selectedFriend || !draft.trim()) return
@@ -74,7 +137,12 @@ export default function CommunityHub({ userId }: Props) {
       if (res.ok) {
         setDraft('')
         const data = await res.json()
-        setMessages((prev) => [...prev, data.message])
+        if (data.message) {
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === data.message.id)) return prev
+            return [...prev, data.message]
+          })
+        }
       }
     } finally {
       setSending(false)
@@ -85,22 +153,25 @@ export default function CommunityHub({ userId }: Props) {
 
   return (
     <div className="community-hub space-y-6">
-      {notifications.length > 0 && (
+      {notifications.filter((n) => !n.read_at).length > 0 && (
         <section>
           <h3 className="font-display text-sm font-semibold text-text mb-2">Notificaciones</h3>
           <ul className="space-y-2 max-h-32 overflow-y-auto">
-            {notifications.slice(0, 5).map((n) => (
-              <li key={n.id} className="text-xs rounded-lg border border-white/6 p-2 bg-surface-3/40">
-                {n.href ? (
-                  <Link href={n.href} className="text-accent hover:underline font-medium">
-                    {n.title}
-                  </Link>
-                ) : (
-                  <span className="font-medium text-text">{n.title}</span>
-                )}
-                {n.body ? <p className="text-muted mt-0.5">{n.body}</p> : null}
-              </li>
-            ))}
+            {notifications
+              .filter((n) => !n.read_at)
+              .slice(0, 5)
+              .map((n) => (
+                <li key={n.id} className="text-xs rounded-lg border border-white/6 p-2 bg-surface-3/40">
+                  {n.href ? (
+                    <Link href={n.href} className="text-accent hover:underline font-medium">
+                      {n.title}
+                    </Link>
+                  ) : (
+                    <span className="font-medium text-text">{n.title}</span>
+                  )}
+                  {n.body ? <p className="text-muted mt-0.5">{n.body}</p> : null}
+                </li>
+              ))}
           </ul>
         </section>
       )}
@@ -128,7 +199,7 @@ export default function CommunityHub({ userId }: Props) {
             {selectedFriend && selected ? (
               <div className="rounded-lg border border-white/6 bg-surface-3/30 p-3">
                 <p className="text-xs text-faint mb-2">
-                  Chat con{' '}
+                  Chat en vivo con{' '}
                   {selected.username ? (
                     <Link href={`/u/${selected.username}`} className="text-accent">
                       @{selected.username}
@@ -137,17 +208,18 @@ export default function CommunityHub({ userId }: Props) {
                     selected.display_name
                   )}
                 </p>
-                <ul className="space-y-2 max-h-40 overflow-y-auto mb-3 text-sm">
+                <ul className="space-y-2 max-h-48 overflow-y-auto mb-3 text-sm">
                   {messages.map((m) => (
                     <li
                       key={m.id}
-                      className={`rounded px-2 py-1 text-xs ${
-                        m.sender_id === userId ? 'bg-accent/15 ml-4' : 'bg-surface-3 mr-4'
+                      className={`rounded px-2 py-1.5 text-xs ${
+                        m.sender_id === userId ? 'bg-accent/15 ml-6 text-right' : 'bg-surface-3 mr-6'
                       }`}
                     >
                       {m.body}
                     </li>
                   ))}
+                  <div ref={messagesEndRef} />
                 </ul>
                 <div className="flex gap-2">
                   <input

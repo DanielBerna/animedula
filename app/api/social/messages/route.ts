@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { getAuthUser } from '../../../../lib/auth'
 import { requireRateLimit } from '../../../../lib/security/api'
-import { listMessages, sendMessage } from '../../../../lib/social/friends'
+import { listMessages, markConversationRead, sendMessage } from '../../../../lib/social/friends'
 import { isSupabaseAuthConfigured } from '../../../../lib/supabase/server'
 
 export async function GET(req: NextRequest) {
@@ -17,6 +17,7 @@ export async function GET(req: NextRequest) {
   if (!withUserId) return Response.json({ error: 'Falta with' }, { status: 400 })
 
   const messages = await listMessages(user.id, withUserId)
+  await markConversationRead(user.id, withUserId)
   return Response.json({ messages })
 }
 
@@ -40,16 +41,8 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    await sendMessage(user.id, recipientId, text)
-    return Response.json({
-      message: {
-        id: Date.now(),
-        sender_id: user.id,
-        recipient_id: recipientId,
-        body: text,
-        created_at: new Date().toISOString(),
-      },
-    })
+    const message = await sendMessage(user.id, recipientId, text)
+    return Response.json({ message })
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'No se pudo enviar'
     return Response.json({ error: message }, { status: 400 })

@@ -141,6 +141,66 @@ export async function listNotifications(userId: string, limit = 20) {
   return data || []
 }
 
+export async function countUnreadNotifications(userId: string): Promise<number> {
+  if (!isSupabaseAuthConfigured()) return 0
+
+  const supabase = await createClient()
+  const { count } = await supabase
+    .from('notifications')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .is('read_at', null)
+
+  return count ?? 0
+}
+
+export async function countUnreadMessages(userId: string): Promise<number> {
+  if (!isSupabaseAuthConfigured()) return 0
+
+  const supabase = await createClient()
+  const { count } = await supabase
+    .from('direct_messages')
+    .select('id', { count: 'exact', head: true })
+    .eq('recipient_id', userId)
+    .is('read_at', null)
+
+  return count ?? 0
+}
+
+export async function markNotificationRead(userId: string, notificationId: number) {
+  if (!isSupabaseAuthConfigured()) return
+
+  const supabase = await createClient()
+  await supabase
+    .from('notifications')
+    .update({ read_at: new Date().toISOString() })
+    .eq('id', notificationId)
+    .eq('user_id', userId)
+}
+
+export async function markAllNotificationsRead(userId: string) {
+  if (!isSupabaseAuthConfigured()) return
+
+  const supabase = await createClient()
+  await supabase
+    .from('notifications')
+    .update({ read_at: new Date().toISOString() })
+    .eq('user_id', userId)
+    .is('read_at', null)
+}
+
+export async function markConversationRead(userId: string, withUserId: string) {
+  if (!isSupabaseAuthConfigured()) return
+
+  const supabase = await createClient()
+  await supabase
+    .from('direct_messages')
+    .update({ read_at: new Date().toISOString() })
+    .eq('recipient_id', userId)
+    .eq('sender_id', withUserId)
+    .is('read_at', null)
+}
+
 export async function listMessages(userId: string, withUserId: string, limit = 50) {
   if (!isSupabaseAuthConfigured()) return []
 
@@ -167,11 +227,15 @@ export async function sendMessage(senderId: string, recipientId: string, body: s
   if (!friends) throw new Error('Solo puedes escribir a tus amigos')
 
   const supabase = await createClient()
-  const { error } = await supabase.from('direct_messages').insert({
-    sender_id: senderId,
-    recipient_id: recipientId,
-    body: body.trim().slice(0, 2000),
-  })
+  const { data, error } = await supabase
+    .from('direct_messages')
+    .insert({
+      sender_id: senderId,
+      recipient_id: recipientId,
+      body: body.trim().slice(0, 2000),
+    })
+    .select('id, sender_id, recipient_id, body, read_at, created_at')
+    .single()
 
   if (error) {
     if (error.code === '42P01') throw new Error('Ejecuta schema-v14-community-enhancements.sql')
@@ -184,4 +248,6 @@ export async function sendMessage(senderId: string, recipientId: string, body: s
     body: body.trim().slice(0, 80),
     href: '/comunidad',
   })
+
+  return data
 }

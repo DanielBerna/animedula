@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('comments')
-    .select('id, body, created_at, parent_id, profiles(display_name, avatar_url)')
+    .select('id, body, created_at, parent_id, profiles(display_name, avatar_url, username)')
     .eq('kind', kind)
     .eq('mal_id', Number(malId))
     .eq('status', 'visible')
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
       body: text,
       parent_id: parent_id || null,
     })
-    .select('id, body, created_at')
+    .select('id, body, created_at, parent_id, profiles(display_name, avatar_url, username)')
     .single()
 
   if (error) return Response.json({ error: error.message }, { status: 500 })
