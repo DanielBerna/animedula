@@ -27,13 +27,18 @@ export default function FriendRequestButton({
   const act = async (action: 'send' | 'accept' | 'reject' | 'cancel') => {
     setLoading(true)
     try {
-      const res = await fetch('/api/social/friends', {
-        method: action === 'cancel' || action === 'reject' ? 'DELETE' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: targetUserId, action }),
-      })
+      const res =
+        action === 'cancel' || action === 'reject'
+          ? await fetch(`/api/social/friends?user_id=${encodeURIComponent(targetUserId)}`, {
+              method: 'DELETE',
+            })
+          : await fetch('/api/social/friends', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ user_id: targetUserId, action }),
+            })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error)
+      if (!res.ok) throw new Error(data.error || 'No se pudo completar')
       setStatus(data.status || 'none')
     } catch {
       // retry silently

@@ -122,6 +122,20 @@ export default function Header() {
   return (
     <header className="header-blur">
       <div className="header-inner">
+        <div className="header-slot-start">
+          <button
+            type="button"
+            className="menu-trigger focus-ring"
+            onClick={() => setOpen(true)}
+            aria-label="Abrir menú"
+            aria-expanded={open}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+              <path d="M4 7h16M4 12h16M4 17h16" />
+            </svg>
+          </button>
+        </div>
+
         <Link href="/" className="header-logo group">
           <Logo size={40} className="logo-mark-svg" />
           <span className="header-logo-text">{SITE.name}</span>
@@ -160,17 +174,6 @@ export default function Header() {
           <div className="header-theme-wrap">
             <ThemeToggle />
           </div>
-          <button
-            type="button"
-            className="menu-trigger focus-ring"
-            onClick={() => setOpen(true)}
-            aria-label="Abrir menú"
-            aria-expanded={open}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-              <path d="M4 7h16M4 12h16M4 17h16" />
-            </svg>
-          </button>
         </div>
       </div>
       <MobileNav open={open} onClose={() => setOpen(false)} path={path} />

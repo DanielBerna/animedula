@@ -31,7 +31,7 @@ export default async function Home() {
           title="Secciones"
           subtitle="Todo el universo otaku en un clic"
           accent="default"
-          className="home-col-explore"
+          className="home-col-explore home-col-explore-desktop"
         >
           <div className="home-hub-stack">
             <HubCard variant="calendar" href="/calendario" delay={0} />

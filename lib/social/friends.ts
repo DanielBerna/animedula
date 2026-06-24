@@ -89,6 +89,37 @@ export async function respondFriendRequest(
   }
 }
 
+export async function listIncomingFriendRequests(addresseeId: string) {
+  if (!isSupabaseAuthConfigured()) return []
+
+  const supabase = await createClient()
+  const { data: rows } = await supabase
+    .from('friend_requests')
+    .select('requester_id, created_at')
+    .eq('addressee_id', addresseeId)
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false })
+
+  if (!rows?.length) return []
+
+  const ids = rows.map((r) => r.requester_id)
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('id, username, display_name')
+    .in('id', ids)
+
+  const byId = new Map((profiles || []).map((p) => [p.id, p]))
+  return rows.map((r) => {
+    const p = byId.get(r.requester_id)
+    return {
+      id: r.requester_id,
+      username: p?.username ?? null,
+      display_name: p?.display_name ?? null,
+      created_at: r.created_at,
+    }
+  })
+}
+
 export async function listFriends(userId: string) {
   if (!isSupabaseAuthConfigured()) return []
 

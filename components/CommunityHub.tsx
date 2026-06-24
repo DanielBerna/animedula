@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { createClient, isSupabaseBrowserConfigured } from '../lib/supabase/client'
 
 type Friend = { id: string; username: string | null; display_name: string | null }
+type PendingRequest = Friend & { created_at: string }
 type Message = {
   id: number
   sender_id: string
@@ -27,17 +28,23 @@ type Props = {
 
 export default function CommunityHub({ userId }: Props) {
   const [friends, setFriends] = useState<Friend[]>([])
+  const [pendingIncoming, setPendingIncoming] = useState<PendingRequest[]>([])
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [selectedFriend, setSelectedFriend] = useState<string | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [draft, setDraft] = useState('')
   const [sending, setSending] = useState(false)
+  const [msgError, setMsgError] = useState<string | null>(null)
+  const [friendAction, setFriendAction] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const loadFriends = useCallback(() => {
     fetch('/api/social/friends')
       .then((r) => r.json())
-      .then((d) => setFriends(d.friends || []))
+      .then((d) => {
+        setFriends(d.friends || [])
+        setPendingIncoming(d.pending_incoming || [])
+      })
       .catch(() => {})
   }, [])
 
@@ -51,6 +58,12 @@ export default function CommunityHub({ userId }: Props) {
   const loadMessages = useCallback(async (friendId: string) => {
     const res = await fetch(`/api/social/messages?with=${encodeURIComponent(friendId)}`)
     const data = await res.json()
+    if (!res.ok) {
+      setMsgError(data.error || 'No se pudieron cargar los mensajes')
+      setMessages([])
+      return
+    }
+    setMsgError(null)
     setMessages(data.messages || [])
     loadNotifications()
   }, [loadNotifications])
@@ -108,7 +121,7 @@ export default function CommunityHub({ userId }: Props) {
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'friend_requests',
           filter: `addressee_id=eq.${userId}`,
@@ -123,27 +136,48 @@ export default function CommunityHub({ userId }: Props) {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [userId, selectedFriend, loadNotifications, loadFriends])
+  }, [userId, selectedFriend, loadNotifications, loadFriends, loadMessages])
+
+  const respondRequest = async (requesterId: string, accept: boolean) => {
+    setFriendAction(requesterId)
+    try {
+      const res = await fetch('/api/social/friends', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: requesterId, action: accept ? 'accept' : 'reject' }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      loadFriends()
+      if (accept) setSelectedFriend(requesterId)
+    } catch {
+      // silent
+    } finally {
+      setFriendAction(null)
+    }
+  }
 
   const send = async () => {
     if (!selectedFriend || !draft.trim()) return
     setSending(true)
+    setMsgError(null)
     try {
       const res = await fetch('/api/social/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ recipient_id: selectedFriend, body: draft.trim() }),
       })
-      if (res.ok) {
-        setDraft('')
-        const data = await res.json()
-        if (data.message) {
-          setMessages((prev) => {
-            if (prev.some((m) => m.id === data.message.id)) return prev
-            return [...prev, data.message]
-          })
-        }
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'No se pudo enviar')
+      setDraft('')
+      if (data.message) {
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === data.message.id)) return prev
+          return [...prev, data.message]
+        })
       }
+    } catch (err: unknown) {
+      setMsgError(err instanceof Error ? err.message : 'No se pudo enviar')
     } finally {
       setSending(false)
     }
@@ -153,6 +187,58 @@ export default function CommunityHub({ userId }: Props) {
 
   return (
     <div className="community-hub space-y-6">
+      <div>
+        <h2 className="font-display font-semibold text-text mb-1">Amistades y mensajes</h2>
+        <p className="text-xs text-muted">
+          Acepta solicitudes aquí o en el perfil del usuario. Solo con amigos aceptados puedes chatear.
+        </p>
+      </div>
+
+      {pendingIncoming.length > 0 && (
+        <section className="rounded-lg border border-accent/25 bg-accent/5 p-3">
+          <h3 className="font-display text-sm font-semibold text-text mb-2">
+            Solicitudes pendientes ({pendingIncoming.length})
+          </h3>
+          <ul className="space-y-2">
+            {pendingIncoming.map((p) => (
+              <li
+                key={p.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-white/8 bg-surface-3/50 p-2"
+              >
+                <div className="min-w-0">
+                  {p.username ? (
+                    <Link href={`/u/${p.username}`} className="text-sm font-semibold text-accent hover:underline">
+                      {p.display_name || p.username}
+                    </Link>
+                  ) : (
+                    <span className="text-sm font-semibold text-text">{p.display_name || 'Fan'}</span>
+                  )}
+                  {p.username ? <p className="text-[10px] text-faint">@{p.username}</p> : null}
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    disabled={friendAction === p.id}
+                    className="btn-primary text-xs px-3 py-1.5"
+                    onClick={() => respondRequest(p.id, true)}
+                  >
+                    Aceptar
+                  </button>
+                  <button
+                    type="button"
+                    disabled={friendAction === p.id}
+                    className="btn-ghost text-xs px-3 py-1.5"
+                    onClick={() => respondRequest(p.id, false)}
+                  >
+                    Rechazar
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {notifications.filter((n) => !n.read_at).length > 0 && (
         <section>
           <h3 className="font-display text-sm font-semibold text-text mb-2">Notificaciones</h3>
@@ -180,7 +266,9 @@ export default function CommunityHub({ userId }: Props) {
         <h3 className="font-display text-sm font-semibold text-text mb-2">Mensajes</h3>
         {friends.length === 0 ? (
           <p className="text-xs text-muted">
-            Acepta solicitudes de amistad para chatear. Envía solicitudes desde perfiles públicos.
+            {pendingIncoming.length > 0
+              ? 'Acepta una solicitud para empezar a chatear.'
+              : 'Envía solicitudes desde perfiles públicos (/u/usuario).'}
           </p>
         ) : (
           <>
@@ -199,7 +287,7 @@ export default function CommunityHub({ userId }: Props) {
             {selectedFriend && selected ? (
               <div className="rounded-lg border border-white/6 bg-surface-3/30 p-3">
                 <p className="text-xs text-faint mb-2">
-                  Chat en vivo con{' '}
+                  Chat con{' '}
                   {selected.username ? (
                     <Link href={`/u/${selected.username}`} className="text-accent">
                       @{selected.username}
@@ -209,16 +297,20 @@ export default function CommunityHub({ userId }: Props) {
                   )}
                 </p>
                 <ul className="space-y-2 max-h-48 overflow-y-auto mb-3 text-sm">
-                  {messages.map((m) => (
-                    <li
-                      key={m.id}
-                      className={`rounded px-2 py-1.5 text-xs ${
-                        m.sender_id === userId ? 'bg-accent/15 ml-6 text-right' : 'bg-surface-3 mr-6'
-                      }`}
-                    >
-                      {m.body}
-                    </li>
-                  ))}
+                  {messages.length === 0 ? (
+                    <li className="text-xs text-faint">Sin mensajes aún. ¡Saluda!</li>
+                  ) : (
+                    messages.map((m) => (
+                      <li
+                        key={m.id}
+                        className={`rounded px-2 py-1.5 text-xs ${
+                          m.sender_id === userId ? 'bg-accent/15 ml-6 text-right' : 'bg-surface-3 mr-6'
+                        }`}
+                      >
+                        {m.body}
+                      </li>
+                    ))
+                  )}
                   <div ref={messagesEndRef} />
                 </ul>
                 <div className="flex gap-2">
@@ -234,6 +326,7 @@ export default function CommunityHub({ userId }: Props) {
                     Enviar
                   </button>
                 </div>
+                {msgError ? <p className="text-xs text-red-400 mt-2">{msgError}</p> : null}
               </div>
             ) : (
               <p className="text-xs text-muted">Elige un amigo para abrir el chat.</p>

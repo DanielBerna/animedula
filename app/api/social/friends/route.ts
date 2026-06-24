@@ -4,6 +4,7 @@ import { requireRateLimit } from '../../../../lib/security/api'
 import {
   getFriendStatus,
   listFriends,
+  listIncomingFriendRequests,
   respondFriendRequest,
   sendFriendRequest,
   type FriendStatus,
@@ -28,7 +29,8 @@ export async function GET(req: NextRequest) {
     return Response.json({ friends, status })
   }
 
-  return Response.json({ friends })
+  const pending_incoming = await listIncomingFriendRequests(user.id)
+  return Response.json({ friends, pending_incoming })
 }
 
 export async function POST(req: NextRequest) {
