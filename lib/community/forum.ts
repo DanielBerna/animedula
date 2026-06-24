@@ -23,7 +23,15 @@ export type ForumPost = {
   created_at: string
   user_id: string
   parent_id: number | null
-  profiles?: { display_name: string | null; status_text?: string | null; current_action?: string | null; username?: string | null } | null
+  profiles?: {
+    display_name: string | null
+    status_text?: string | null
+    current_action?: string | null
+    username?: string | null
+    selected_title?: string | null
+    avatar_url?: string | null
+  } | null
+  author_border?: string | null
   reactions?: Record<string, number>
   user_reactions?: string[]
 }

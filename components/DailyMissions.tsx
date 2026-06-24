@@ -65,7 +65,7 @@ export default function DailyMissions() {
         ))}
       </ul>
       <p className="text-xs text-faint">
-        Comenta, reseña o actualiza tu lista para completar misiones automáticamente al reclamar.
+        Comenta, reseña, participa en el foro o actualiza tu lista. Reclama monedas en /perfil.
       </p>
     </div>
   )

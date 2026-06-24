@@ -37,6 +37,14 @@ export async function verifyMissionCompletion(
         .gte('updated_at', since)
       return (count ?? 0) > 0
     }
+    case 'forum': {
+      const { count } = await supabase
+        .from('forum_posts')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .gte('created_at', since)
+      return (count ?? 0) > 0
+    }
     default:
       return false
   }

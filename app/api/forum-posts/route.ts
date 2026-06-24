@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { getAuthUser } from '../../../lib/auth'
 import { createClient, isSupabaseAuthConfigured } from '../../../lib/supabase/server'
+import { getEquippedBordersForUsers } from '../../../lib/gamification/cosmetics'
 import { requireRateLimit } from '../../../lib/security/api'
 
 const VALID_TAGS = ['manga', 'gaming', 'spoilers', 'tecnologia', 'anime'] as const
@@ -19,7 +20,7 @@ export async function GET(req: NextRequest) {
   const supabase = await createClient()
   let query = supabase
     .from('forum_posts')
-    .select('id, title, body, tags, content_id, content_type, reply_count, created_at, user_id, parent_id, profiles(display_name, status_text, current_action, username)')
+    .select('id, title, body, tags, content_id, content_type, reply_count, created_at, user_id, parent_id, profiles(display_name, status_text, current_action, username, selected_title, avatar_url)')
     .is('parent_id', parent_id ? Number(parent_id) : null)
     .order('created_at', { ascending: false })
     .limit(30)
@@ -44,8 +45,10 @@ export async function GET(req: NextRequest) {
   }
 
   const ids = (posts || []).map((p) => p.id)
+  const userIds = [...new Set((posts || []).map((p) => p.user_id))]
   let reactions: { post_id: number; emoji: string; user_id: string }[] = []
   const user = await getAuthUser()
+  const borders = await getEquippedBordersForUsers(userIds)
 
   if (ids.length > 0) {
     const { data: rx } = await supabase
@@ -64,7 +67,7 @@ export async function GET(req: NextRequest) {
     const user_reactions = user
       ? pr.filter((r) => r.user_id === user.id).map((r) => r.emoji)
       : []
-    return { ...p, reactions: reactionMap, user_reactions }
+    return { ...p, reactions: reactionMap, user_reactions, author_border: borders[p.user_id] || null }
   })
 
   return Response.json({ posts: enriched })

@@ -4,6 +4,10 @@ import Link from 'next/link'
 import { useCallback, useEffect, useState } from 'react'
 import { createClient, isSupabaseBrowserConfigured } from '../lib/supabase/client'
 import { FORUM_TAGS, REACTION_EMOJI, type ForumPost } from '../lib/community/forum'
+import ForumAuthor from './ForumAuthor'
+import ForumPostBody from './ForumPostBody'
+import ForumReplyList from './ForumReplyList'
+import StickerPicker from './StickerPicker'
 
 type Props = {
   loggedIn: boolean
@@ -11,13 +15,6 @@ type Props = {
   contentType?: string
   contentId?: string
   compact?: boolean
-}
-
-const ACTION_LABELS: Record<string, string> = {
-  idle: 'En línea',
-  watching: 'Viendo',
-  reading: 'Leyendo',
-  playing: 'Jugando',
 }
 
 export default function ForumThread({
@@ -37,6 +34,7 @@ export default function ForumThread({
   const [error, setError] = useState<string | null>(null)
   const [replyTo, setReplyTo] = useState<number | null>(null)
   const [replyBody, setReplyBody] = useState('')
+  const [expandedReplies, setExpandedReplies] = useState<Set<number>>(new Set())
 
   const buildUrl = useCallback(() => {
     const params = new URLSearchParams()
@@ -71,26 +69,22 @@ export default function ForumThread({
     const supabase = createClient()
     const channel = supabase
       .channel(`forum-${contentType || 'global'}-${contentId || 'all'}`)
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'forum_posts' },
-        () => {
-          load()
-        },
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'post_reactions' },
-        () => {
-          load()
-        },
-      )
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'forum_posts' }, () => load())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'post_reactions' }, () => load())
       .subscribe()
 
     return () => {
       supabase.removeChannel(channel)
     }
   }, [contentType, contentId, load])
+
+  const claimForumMission = () => {
+    fetch('/api/missions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mission_key: 'forum' }),
+    }).catch(() => {})
+  }
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -114,6 +108,7 @@ export default function ForumThread({
       setBody('')
       setSelectedTags([])
       await load()
+      claimForumMission()
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'No se pudo publicar')
     } finally {
@@ -142,7 +137,9 @@ export default function ForumThread({
       }
       setReplyTo(null)
       setReplyBody('')
+      setExpandedReplies((prev) => new Set(prev).add(postId))
       await load()
+      claimForumMission()
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Error')
     } finally {
@@ -158,6 +155,15 @@ export default function ForumThread({
       body: JSON.stringify({ post_id: postId, emoji }),
     })
     await load()
+  }
+
+  const toggleReplies = (postId: number) => {
+    setExpandedReplies((prev) => {
+      const next = new Set(prev)
+      if (next.has(postId)) next.delete(postId)
+      else next.add(postId)
+      return next
+    })
   }
 
   const toggleTag = (id: string) => {
@@ -202,6 +208,7 @@ export default function ForumThread({
             className="w-full p-3 bg-surface-3 border border-white/8 rounded-lg text-sm text-text min-h-[88px]"
             maxLength={8000}
           />
+          <StickerPicker value={body} onChange={setBody} disabled={sending} />
           {!compact && (
             <div className="flex flex-wrap gap-2">
               {FORUM_TAGS.map((t) => (
@@ -236,93 +243,94 @@ export default function ForumThread({
         <p className="text-sm text-muted">Aún no hay hilos. Abre la conversación.</p>
       ) : (
         <ul className="space-y-4">
-          {posts.map((p) => (
-            <li key={p.id} className="forum-post-card rounded-lg border border-white/6 bg-surface-3/50 p-4">
-              <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
-                <div>
-                  <p className="text-xs text-faint">
-                    {p.profiles?.username ? (
-                      <Link href={`/u/${p.profiles.username}`} className="text-accent hover:underline">
-                        {p.profiles.display_name || p.profiles.username}
-                      </Link>
-                    ) : (
-                      p.profiles?.display_name || 'Fan'
-                    )}
-                    {p.profiles?.current_action && p.profiles.current_action !== 'idle' && (
-                      <span className="ml-1">· {ACTION_LABELS[p.profiles.current_action] || p.profiles.current_action}</span>
-                    )}
-                    {p.profiles?.status_text && (
-                      <span className="block text-[11px] text-muted mt-0.5">{p.profiles.status_text}</span>
-                    )}
-                  </p>
-                  {!compact && <h4 className="font-display font-semibold text-text mt-1">{p.title}</h4>}
+          {posts.map((p) => {
+            const showReplies = expandedReplies.has(p.id)
+            return (
+              <li key={p.id} className="forum-post-card rounded-lg border border-white/6 bg-surface-3/50 p-4">
+                <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
+                  <ForumAuthor profile={p.profiles} authorBorder={p.author_border} />
+                  <time className="text-xs text-faint">
+                    {new Date(p.created_at).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}
+                  </time>
                 </div>
-                <time className="text-xs text-faint">
-                  {new Date(p.created_at).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}
-                </time>
-              </div>
 
-              {p.tags?.length > 0 && (
-                <div className="flex flex-wrap gap-1 mb-2">
-                  {p.tags.map((t) => (
-                    <span key={t} className="tag text-[10px]">#{t}</span>
-                  ))}
-                </div>
-              )}
+                {!compact && <h4 className="font-display font-semibold text-text mb-2">{p.title}</h4>}
 
-              <p className="text-sm text-text leading-relaxed whitespace-pre-line">{p.body}</p>
+                {p.tags?.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mb-2">
+                    {p.tags.map((t) => (
+                      <span key={t} className="tag text-[10px]">
+                        #{t}
+                      </span>
+                    ))}
+                  </div>
+                )}
 
-              <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-white/6">
-                {REACTION_EMOJI.map((rx) => {
-                  const count = p.reactions?.[rx.id] || 0
-                  const active = p.user_reactions?.includes(rx.id)
-                  return (
+                <ForumPostBody body={p.body} />
+
+                <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-white/6">
+                  {REACTION_EMOJI.map((rx) => {
+                    const count = p.reactions?.[rx.id] || 0
+                    const active = p.user_reactions?.includes(rx.id)
+                    return (
+                      <button
+                        key={rx.id}
+                        type="button"
+                        disabled={!loggedIn}
+                        onClick={() => react(p.id, rx.id)}
+                        className={`review-vote-btn${active ? ' is-active' : ''}`}
+                        title={rx.label}
+                      >
+                        {rx.icon} {count > 0 ? count : ''}
+                      </button>
+                    )
+                  })}
+                  {p.reply_count > 0 && (
                     <button
-                      key={rx.id}
                       type="button"
-                      disabled={!loggedIn}
-                      onClick={() => react(p.id, rx.id)}
-                      className={`review-vote-btn${active ? ' is-active' : ''}`}
-                      title={rx.label}
+                      className="text-xs text-accent hover:underline ml-auto"
+                      onClick={() => toggleReplies(p.id)}
                     >
-                      {rx.icon} {count > 0 ? count : ''}
+                      {showReplies ? 'Ocultar' : 'Ver'} {p.reply_count} respuesta{p.reply_count !== 1 ? 's' : ''}
                     </button>
-                  )
-                })}
-                {p.reply_count > 0 && (
-                  <span className="text-xs text-faint ml-auto">{p.reply_count} respuestas</span>
-                )}
-                {loggedIn && (
-                  <button
-                    type="button"
-                    className="text-xs text-accent hover:underline ml-auto"
-                    onClick={() => setReplyTo(replyTo === p.id ? null : p.id)}
-                  >
-                    Responder
-                  </button>
-                )}
-              </div>
-
-              {replyTo === p.id && (
-                <div className="mt-3 space-y-2">
-                  <textarea
-                    value={replyBody}
-                    onChange={(e) => setReplyBody(e.target.value)}
-                    placeholder="Tu respuesta…"
-                    className="w-full p-2 bg-surface-3 border border-white/8 rounded-lg text-sm text-text min-h-[64px]"
-                  />
-                  <button
-                    type="button"
-                    disabled={sending}
-                    className="btn-ghost text-xs"
-                    onClick={() => submitReply(p.id, p.title)}
-                  >
-                    Enviar respuesta
-                  </button>
+                  )}
+                  {loggedIn && (
+                    <button
+                      type="button"
+                      className="text-xs text-muted hover:text-accent ml-1"
+                      onClick={() => setReplyTo(replyTo === p.id ? null : p.id)}
+                    >
+                      Responder
+                    </button>
+                  )}
                 </div>
-              )}
-            </li>
-          ))}
+
+                {showReplies && (
+                  <ForumReplyList parentId={p.id} loggedIn={loggedIn} onReact={react} />
+                )}
+
+                {replyTo === p.id && (
+                  <div className="mt-3 space-y-2">
+                    <textarea
+                      value={replyBody}
+                      onChange={(e) => setReplyBody(e.target.value)}
+                      placeholder="Tu respuesta…"
+                      className="w-full p-2 bg-surface-3 border border-white/8 rounded-lg text-sm text-text min-h-[64px]"
+                    />
+                    <StickerPicker value={replyBody} onChange={setReplyBody} disabled={sending} />
+                    <button
+                      type="button"
+                      disabled={sending}
+                      className="btn-ghost text-xs"
+                      onClick={() => submitReply(p.id, p.title)}
+                    >
+                      Enviar respuesta
+                    </button>
+                  </div>
+                )}
+              </li>
+            )
+          })}
         </ul>
       )}
     </section>

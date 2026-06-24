@@ -3,6 +3,7 @@ export const DAILY_MISSIONS = [
   { key: 'comment', label: 'Comentar en una ficha', coins: 10 },
   { key: 'review', label: 'Publicar o editar una reseña', coins: 15 },
   { key: 'list', label: 'Actualizar tu lista', coins: 10 },
+  { key: 'forum', label: 'Participar en el foro', coins: 10 },
 ] as const
 
 export type MissionKey = typeof DAILY_MISSIONS[number]['key']

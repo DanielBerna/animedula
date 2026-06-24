@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import FollowButton from '../../../components/FollowButton'
+import FriendRequestButton from '../../../components/FriendRequestButton'
 import SpoilerText from '../../../components/SpoilerText'
 import { getAuthUser } from '../../../lib/auth'
 import {
@@ -11,6 +12,7 @@ import {
   reviewHref,
 } from '../../../lib/profiles/public'
 import { getFollowStats } from '../../../lib/social/follows'
+import { getFriendStatus } from '../../../lib/social/friends'
 
 type Props = {
   params: Promise<{ username: string }>
@@ -48,7 +50,9 @@ export default async function PublicProfilePage({ params }: Props) {
   if (!profile) notFound()
 
   const followStats = await getFollowStats(profile.id, viewer?.id)
+  const friendStatus = viewer ? await getFriendStatus(viewer.id, profile.id) : 'none'
   const canFollow = Boolean(viewer && viewer.id !== profile.id)
+  const canFriend = canFollow
 
   const name = profile.display_name || profile.username
   const action = formatAction(profile.current_action)
@@ -84,12 +88,17 @@ export default async function PublicProfilePage({ params }: Props) {
             {profile.status_text ? (
               <p className="text-sm text-muted mt-3 italic">{profile.status_text}</p>
             ) : null}
-            <div className="mt-4">
+            <div className="mt-4 flex flex-wrap items-center gap-3">
               <FollowButton
                 targetUserId={profile.id}
                 initialFollowing={followStats.is_following}
                 initialFollowerCount={followStats.follower_count}
                 canFollow={canFollow}
+              />
+              <FriendRequestButton
+                targetUserId={profile.id}
+                initialStatus={friendStatus}
+                canInteract={canFriend}
               />
             </div>
           </div>

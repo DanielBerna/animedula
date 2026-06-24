@@ -30,6 +30,12 @@ export async function GET() {
   const level = profile?.level ?? 1
   const availableTitles = (titles || []).filter((t) => t.min_level <= level)
 
+  const equipped = (inventory || []).find((i) => i.equipped)
+  const equippedSlug =
+    equipped && equipped.shop_items && !Array.isArray(equipped.shop_items)
+      ? (equipped.shop_items as { slug?: string }).slug ?? null
+      : null
+
   return Response.json({
     level,
     coins: profile?.coins ?? 0,
@@ -38,6 +44,7 @@ export async function GET() {
     badges: badges || [],
     inventory: inventory || [],
     shop: shop || [],
+    equipped_slug: equippedSlug,
   })
 }
 
@@ -107,7 +114,23 @@ export async function POST(req: NextRequest) {
 
     if (!owned) return Response.json({ error: 'No posees este artículo' }, { status: 404 })
 
-    await supabase.from('user_inventory').update({ equipped: false }).eq('user_id', user.id)
+    const itemType = (owned.shop_items as { item_type?: string })?.item_type
+    if (itemType === 'avatar_border') {
+      const { data: allBorders } = await supabase
+        .from('user_inventory')
+        .select('id, shop_items!inner(item_type)')
+        .eq('user_id', user.id)
+        .eq('equipped', true)
+
+      const borderIds = (allBorders || [])
+        .filter((r) => (r.shop_items as { item_type?: string })?.item_type === 'avatar_border')
+        .map((r) => r.id)
+
+      if (borderIds.length > 0) {
+        await supabase.from('user_inventory').update({ equipped: false }).in('id', borderIds)
+      }
+    }
+
     await supabase.from('user_inventory').update({ equipped: true }).eq('id', owned.id)
     return Response.json({ ok: true })
   }

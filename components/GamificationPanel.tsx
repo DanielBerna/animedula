@@ -17,14 +17,20 @@ type ShopItem = {
   css_class: string | null
 }
 
+type InventoryRow = {
+  equipped: boolean
+  shop_items: { slug: string; name: string; item_type: string; css_class: string | null } | null
+}
+
 type Title = { slug: string; name: string; min_level: number }
 
 export default function GamificationPanel() {
   const [badges, setBadges] = useState<Badge[]>([])
   const [titles, setTitles] = useState<Title[]>([])
   const [shop, setShop] = useState<ShopItem[]>([])
-  const [inventory, setInventory] = useState<string[]>([])
+  const [inventory, setInventory] = useState<InventoryRow[]>([])
   const [selectedTitle, setSelectedTitle] = useState('')
+  const [equippedSlug, setEquippedSlug] = useState<string | null>(null)
   const [level, setLevel] = useState(1)
   const [coins, setCoins] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -35,14 +41,11 @@ export default function GamificationPanel() {
     setBadges(data.badges || [])
     setTitles(data.titles || [])
     setShop(data.shop || [])
+    setInventory(data.inventory || [])
+    setEquippedSlug(data.equipped_slug || null)
     setSelectedTitle(data.selected_title || 'Novato')
     setLevel(data.level ?? 1)
     setCoins(data.coins ?? 0)
-    setInventory(
-      (data.inventory || [])
-        .map((i: { shop_items?: { slug: string } | null }) => i.shop_items?.slug)
-        .filter(Boolean) as string[],
-    )
     setLoading(false)
   }
 
@@ -70,19 +73,32 @@ export default function GamificationPanel() {
     await load()
   }
 
+  const equip = async (slug: string) => {
+    await fetch('/api/gamification', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'equip', slug }),
+    })
+    await load()
+  }
+
+  const ownedSlugs = new Set(inventory.map((i) => i.shop_items?.slug).filter(Boolean))
+  const borders = shop.filter((s) => s.item_type === 'avatar_border')
+  const stickerPacks = shop.filter((s) => s.item_type === 'sticker_pack')
+
   if (loading) return <p className="text-sm text-muted">Cargando…</p>
 
   return (
     <div className="space-y-8">
       <section>
-        <h3 className="font-display font-semibold text-text mb-3">Insignias</h3>
+        <h3 className="font-display font-semibold text-text mb-3">Insignias y logros</h3>
         {badges.length === 0 ? (
-          <p className="text-sm text-muted">Aún no tienes insignias. Participa para desbloquearlas.</p>
+          <p className="text-sm text-muted">Participa en foro, reseñas y listas para desbloquear insignias.</p>
         ) : (
           <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {badges.map((b, i) => (
               <li key={i} className="card-glass p-3">
-                <p className="font-semibold text-text text-sm">{b.badges?.name}</p>
+                <p className="font-semibold text-text text-sm">🏅 {b.badges?.name}</p>
                 <p className="text-xs text-muted mt-1">{b.badges?.description}</p>
               </li>
             ))}
@@ -91,7 +107,7 @@ export default function GamificationPanel() {
       </section>
 
       <section>
-        <h3 className="font-display font-semibold text-text mb-3">Título (nivel {level})</h3>
+        <h3 className="font-display font-semibold text-text mb-3">Título equipado (nivel {level})</h3>
         <div className="flex flex-wrap gap-2">
           {titles.map((t) => (
             <button
@@ -107,10 +123,46 @@ export default function GamificationPanel() {
       </section>
 
       <section>
-        <h3 className="font-display font-semibold text-text mb-3">Tienda Animédula · 🪙 {coins}</h3>
+        <h3 className="font-display font-semibold text-text mb-3">Marcos de avatar</h3>
+        <p className="text-xs text-muted mb-3">Se ven en el foro y tu perfil público.</p>
         <ul className="space-y-3">
-          {shop.map((item) => {
-            const owned = inventory.includes(item.slug)
+          {borders.map((item) => {
+            const owned = ownedSlugs.has(item.slug)
+            const equipped = equippedSlug === item.slug
+            return (
+              <li key={item.slug} className="card-glass p-4 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <span className={`forum-author-avatar w-10 h-10 text-sm ${item.css_class || ''}`}>A</span>
+                  <div>
+                    <p className="font-semibold text-text text-sm">{item.name}</p>
+                    <p className="text-xs text-muted">{item.description}</p>
+                  </div>
+                </div>
+                {owned ? (
+                  equipped ? (
+                    <span className="tag tag-accent text-xs">Equipado</span>
+                  ) : (
+                    <button type="button" className="btn-ghost text-xs" onClick={() => equip(item.slug)}>
+                      Equipar
+                    </button>
+                  )
+                ) : (
+                  <button type="button" className="btn-primary text-xs" onClick={() => buy(item.slug)}>
+                    {item.price_coins} 🪙
+                  </button>
+                )}
+              </li>
+            )
+          })}
+        </ul>
+      </section>
+
+      <section>
+        <h3 className="font-display font-semibold text-text mb-3">Packs de stickers · 🪙 {coins}</h3>
+        <p className="text-xs text-muted mb-3">Úsalos al escribir en el foro (botón 😀 Stickers).</p>
+        <ul className="space-y-3">
+          {stickerPacks.map((item) => {
+            const owned = ownedSlugs.has(item.slug)
             return (
               <li key={item.slug} className="card-glass p-4 flex flex-wrap items-center justify-between gap-3">
                 <div>
@@ -118,7 +170,7 @@ export default function GamificationPanel() {
                   <p className="text-xs text-muted">{item.description}</p>
                 </div>
                 {owned ? (
-                  <span className="tag text-xs">En tu inventario</span>
+                  <span className="tag tag-gold text-xs">Desbloqueado</span>
                 ) : (
                   <button type="button" className="btn-primary text-xs" onClick={() => buy(item.slug)}>
                     Comprar · {item.price_coins} 🪙
