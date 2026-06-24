@@ -1,4 +1,7 @@
 import { redirect } from 'next/navigation'
+import ProfileAvatarUpload from '../../components/profile/ProfileAvatarUpload'
+import ProfileProjectsEditor from '../../components/profile/ProfileProjectsEditor'
+import ProfileShowcaseEditor from '../../components/profile/ProfileShowcaseEditor'
 import ProfileStatusForm from '../../components/ProfileStatusForm'
 import UsernameForm from '../../components/UsernameForm'
 import ProfilePrivacyForm from '../../components/ProfilePrivacyForm'
@@ -20,6 +23,7 @@ export default async function PerfilPage() {
   let isPublic = true
   let listPublic = true
   let displayName = 'Mi perfil'
+  let avatarUrl: string | null = null
   let level = 1
   let xp = 0
   let coins = 0
@@ -33,12 +37,13 @@ export default async function PerfilPage() {
     const { data } = await supabase
       .from('profiles')
       .select(
-        'username, display_name, is_public, list_public, level, xp, coins, selected_title, is_premium, premium_until, premium_plan, role',
+        'username, display_name, avatar_url, is_public, list_public, level, xp, coins, selected_title, is_premium, premium_until, premium_plan, role',
       )
       .eq('id', user.id)
       .maybeSingle()
     username = data?.username || null
     displayName = data?.display_name || displayName
+    avatarUrl = data?.avatar_url ?? null
     isPublic = data?.is_public ?? true
     listPublic = data?.list_public ?? true
     level = data?.level ?? 1
@@ -70,9 +75,20 @@ export default async function PerfilPage() {
 
   const settingsBlocks = (
     <>
+      <div className="card-glass p-6">
+        <ProfileAvatarUpload initialUrl={avatarUrl} displayName={displayName} />
+      </div>
       <div className="card-glass p-6 space-y-6">
         <UsernameForm initialUsername={username} />
         <ProfilePrivacyForm isPublic={isPublic} listPublic={listPublic} />
+      </div>
+      <div className="card-glass p-6">
+        <h3 className="font-display font-semibold text-text mb-4">Vitrina del perfil</h3>
+        <ProfileShowcaseEditor />
+      </div>
+      <div className="card-glass p-6">
+        <h3 className="font-display font-semibold text-text mb-4">Proyectos y trabajo</h3>
+        <ProfileProjectsEditor />
       </div>
       <div className="card-glass p-6">
         <ProfileStatusForm />

@@ -1,5 +1,6 @@
 import { createClient, isSupabaseAuthConfigured } from '../supabase/server'
 import { getSupabaseAdmin, isSupabaseConfigured } from '../supabaseAdmin'
+import { moderateUserText } from '../security/content-moderation'
 
 export type FriendStatus = 'none' | 'pending_sent' | 'pending_received' | 'friends'
 
@@ -225,6 +226,9 @@ export async function sendMessage(senderId: string, recipientId: string, body: s
 
   const friends = await areFriends(senderId, recipientId)
   if (!friends) throw new Error('Solo puedes escribir a tus amigos')
+
+  const mod = moderateUserText(body, { minLength: 1, maxLength: 2000 })
+  if (mod.ok === false) throw new Error(mod.reason)
 
   const supabase = await createClient()
   const { data, error } = await supabase

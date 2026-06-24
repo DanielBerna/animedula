@@ -3,6 +3,7 @@ import { getAuthUser } from '../../../lib/auth'
 import { createClient, isSupabaseAuthConfigured } from '../../../lib/supabase/server'
 import { getEquippedBordersForUsers } from '../../../lib/gamification/cosmetics'
 import { requireRateLimit } from '../../../lib/security/api'
+import { moderateUserText } from '../../../lib/security/content-moderation'
 
 const VALID_TAGS = ['manga', 'gaming', 'spoilers', 'tecnologia', 'anime'] as const
 
@@ -109,6 +110,12 @@ export async function POST(req: NextRequest) {
       return Response.json({ error: 'El cuerpo debe tener entre 10 y 8000 caracteres' }, { status: 400 })
     }
   }
+
+  const mod = moderateUserText(parent_id ? text : `${title}\n${text}`, {
+    minLength: parent_id ? 10 : 15,
+    maxLength: 8000,
+  })
+  if (mod.ok === false) return Response.json({ error: mod.reason }, { status: 400 })
 
   const supabase = await createClient()
   const { data, error } = await supabase

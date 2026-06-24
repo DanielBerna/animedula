@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { getAuthUser } from '../../../lib/auth'
 import { createClient, isSupabaseAuthConfigured } from '../../../lib/supabase/server'
 import { requireRateLimit } from '../../../lib/security/api'
+import { moderateUserText } from '../../../lib/security/content-moderation'
 
 export async function GET(req: NextRequest) {
   if (!isSupabaseAuthConfigured()) {
@@ -46,6 +47,9 @@ export async function POST(req: NextRequest) {
   }
 
   const text = String(body).trim().slice(0, 2000)
+  const mod = moderateUserText(text, { minLength: 2, maxLength: 2000 })
+  if (mod.ok === false) return Response.json({ error: mod.reason }, { status: 400 })
+
   const supabase = await createClient()
 
   const { data, error } = await supabase
