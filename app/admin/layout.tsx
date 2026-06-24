@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
-import { isEditorRole, requireEditor } from '../../lib/auth'
+import AdminShell from '../../components/admin/AdminShell'
+import { requireEditor } from '../../lib/auth'
 import { isSupabaseAuthConfigured } from '../../lib/supabase/server'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -12,9 +13,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     redirect('/login?next=/admin')
   }
 
+  const displayName = profile.display_name || profile.username || 'Staff'
+
   return (
-    <div data-admin-role={profile.role}>
+    <AdminShell role={profile.role} displayName={displayName}>
       {children}
-    </div>
+    </AdminShell>
   )
 }

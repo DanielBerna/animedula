@@ -265,3 +265,66 @@ export async function saveDraftReview(
   if (error) throw error
   return data?.id as string
 }
+
+export async function getEditorialReviewById(reviewId: string) {
+  if (!isSupabaseAuthConfigured()) return null
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('editorial_reviews')
+    .select(
+      'id, kind, mal_id, status, gancho, por_que, para_quien, no_para, contexto_practico, veredicto, display_title, updated_at',
+    )
+    .eq('id', reviewId)
+    .maybeSingle()
+  if (!data) return null
+  return {
+    id: data.id as string,
+    kind: data.kind as MediaKind,
+    mal_id: data.mal_id as number,
+    status: data.status as string,
+    display_title: (data.display_title as string | null) || null,
+    review: rowToReview(data as ReviewRow),
+  }
+}
+
+export async function updateEditorialReview(
+  reviewId: string,
+  review: EditorialReview,
+  actorId: string,
+  opts?: { publish?: boolean },
+) {
+  if (!isSupabaseConfigured()) throw new Error('Supabase no configurado')
+  const admin = getSupabaseAdmin()
+  const fields = reviewToRow(review)
+  const now = new Date().toISOString()
+  const patch: Record<string, unknown> = { ...fields, updated_at: now }
+  if (opts?.publish) {
+    patch.status = 'published'
+    patch.published_at = now
+    patch.reviewer_id = actorId
+  }
+  const { error } = await admin.from('editorial_reviews').update(patch).eq('id', reviewId)
+  if (error) throw error
+  await admin.from('review_moderation_log').insert({
+    review_id: reviewId,
+    actor_id: actorId,
+    action: 'edit',
+  })
+}
+
+export async function listPublishedEditorial(limit = 40): Promise<ModerationItem[]> {
+  if (!isSupabaseAuthConfigured()) return []
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('editorial_reviews')
+    .select(
+      'id, kind, mal_id, status, gancho, veredicto, updated_at, display_title, published_at',
+    )
+    .eq('status', 'published')
+    .order('published_at', { ascending: false })
+    .limit(limit)
+  return (data || []).map((row) => ({
+    ...(row as ModerationItem),
+    title: row.display_title || undefined,
+  }))
+}

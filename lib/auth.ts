@@ -37,8 +37,18 @@ export function isEditorRole(role?: string | null) {
   return role === 'editor' || role === 'admin'
 }
 
+export function isAdminRole(role?: string | null) {
+  return role === 'admin'
+}
+
 export async function requireEditor(): Promise<Profile | null> {
   const profile = await getProfile()
   if (!profile || !isEditorRole(profile.role)) return null
+  return profile
+}
+
+export async function requireAdmin(): Promise<Profile | null> {
+  const profile = await getProfile()
+  if (!profile || !isAdminRole(profile.role)) return null
   return profile
 }

@@ -1,6 +1,4 @@
-import AdminNav from '../../../components/AdminNav'
 import AdminSubmissionCard from '../../../components/AdminSubmissionCard'
-import PageHeader from '../../../components/PageHeader'
 import { listPendingSubmissions } from '../../../lib/editorial/submissions'
 import { isSupabaseAuthConfigured } from '../../../lib/supabase/server'
 
@@ -8,15 +6,12 @@ export default async function AdminAportesPage() {
   const pending = isSupabaseAuthConfigured() ? await listPendingSubmissions() : []
 
   return (
-    <div className="section-anime space-y-8">
-      <PageHeader
-        variant="default"
-        eyebrow="Admin"
-        title="Aportes editoriales"
-        description="Mejoras de texto enviadas por la comunidad para reseñas"
-      />
-
-      <AdminNav active="/admin/aportes" />
+    <div className="admin-page space-y-8">
+      <header>
+        <p className="eyebrow mb-1">Contenido</p>
+        <h1 className="page-title">Aportes editoriales</h1>
+        <p className="text-sm text-muted mt-2">Mejoras de texto enviadas por la comunidad</p>
+      </header>
 
       <section>
         <div className="section-head">

@@ -1,6 +1,4 @@
 import Link from 'next/link'
-import AdminNav from '../../../components/AdminNav'
-import PageHeader from '../../../components/PageHeader'
 import { listEditorialCalendar } from '../../../lib/editorial/db'
 import {
   calendarStatus,
@@ -23,15 +21,14 @@ export default async function AdminCalendarioPage() {
   const pending = items.filter((i) => i.status === 'pending' || i.status === 'draft')
 
   return (
-    <div className="section-anime space-y-8">
-      <PageHeader
-        variant="default"
-        eyebrow="Administración"
-        title="Calendario editorial"
-        description={`Temporada actual: ${season.label}. Las reseñas rotan y se programan cada 2 días dentro de la temporada.`}
-      />
-
-      <AdminNav active="/admin/calendario" />
+    <div className="admin-page space-y-8">
+      <header>
+        <p className="eyebrow mb-1">Contenido</p>
+        <h1 className="page-title">Calendario editorial</h1>
+        <p className="text-sm text-muted mt-2">
+          Temporada actual: {season.label}. Las reseñas rotan cada 2 días.
+        </p>
+      </header>
 
       <div className="admin-stats-grid">
         <div className="admin-stat-card">
