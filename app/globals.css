@@ -3957,6 +3957,32 @@ html.light .home-column-block {
   color: var(--text-faint);
   font-family: var(--font-mono, monospace);
 }
+.admin-ai-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.85rem;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--border));
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+}
+.admin-field-label.mb-0 {
+  margin-bottom: 0;
+}
+.admin-ai-chip {
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s;
+}
+.admin-ai-chip:hover {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+}
 .admin-stat-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

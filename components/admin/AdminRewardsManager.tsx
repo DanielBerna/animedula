@@ -60,6 +60,13 @@ export default function AdminRewardsManager() {
   const stickerFileRef = useRef<HTMLInputElement>(null)
   const stickerTargetRef = useRef<number | null>(null)
 
+  // ── Generación con IA ──
+  const [aiEnabled, setAiEnabled] = useState(false)
+  const [aiPrompt, setAiPrompt] = useState('')
+  const [aiSketchUrl, setAiSketchUrl] = useState('')
+  const [aiLoading, setAiLoading] = useState(false)
+  const sketchFileRef = useRef<HTMLInputElement>(null)
+
   const [form, setForm] = useState({
     slug: '',
     name: '',
@@ -81,6 +88,7 @@ export default function AdminRewardsManager() {
       .then((d) => {
         setShop(d.shop || [])
         setBadges(d.badges || [])
+        setAiEnabled(!!d.aiEnabled)
       })
       .finally(() => setLoading(false))
   }
@@ -213,6 +221,67 @@ export default function AdminRewardsManager() {
     const action =
       tab === 'badges' ? saveBadge() : saveShop(tab === 'stickers' ? 'sticker_pack' : 'avatar_border')
     action.catch((err) => showToast({ title: 'Error', description: String(err) }))
+  }
+
+  // ── IA: subir boceto de referencia (image-to-image) ──
+  const uploadSketch = async (file: File) => {
+    setAiLoading(true)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      fd.append('folder', 'sketches')
+      const res = await fetch('/api/admin/rewards/upload', { method: 'POST', body: fd })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      setAiSketchUrl(data.url)
+      showToast({ title: 'Boceto listo', description: 'La IA lo usará como base' })
+    } catch (err) {
+      showToast({ title: 'Error', description: String(err) })
+    } finally {
+      setAiLoading(false)
+    }
+  }
+
+  const generateAi = async () => {
+    if (aiPrompt.trim().length < 3) {
+      showToast({ title: 'Falta descripción', description: 'Describe el diseño que quieres' })
+      return
+    }
+    setAiLoading(true)
+    try {
+      const type = tab === 'stickers' ? 'sticker' : tab === 'borders' ? 'border' : 'badge'
+      const res = await fetch('/api/admin/rewards/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: aiPrompt, type, sketchUrl: aiSketchUrl || null }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      if (tab === 'stickers') {
+        setStickers((rows) => [
+          ...rows.filter((r) => r.label || r.emoji || r.image),
+          {
+            id: slugify(aiPrompt).slice(0, 24) || `sticker-${Date.now()}`,
+            emoji: '',
+            label: aiPrompt.slice(0, 24),
+            image: data.url,
+          },
+        ])
+      } else {
+        setForm((f) => ({ ...f, asset_url: data.url }))
+      }
+      showToast({ title: 'Imagen generada', description: 'Lista en la vista previa' })
+    } catch (err) {
+      showToast({ title: 'Error', description: String(err) })
+    } finally {
+      setAiLoading(false)
+    }
+  }
+
+  const aiPresets: Record<Tab, string[]> = {
+    stickers: ['gato chibi feliz', 'chica anime guiñando', 'pulgar arriba estilo manga', 'corazón kawaii'],
+    borders: ['marco circular sakura dorado', 'borde neón futurista', 'marco con llamas shonen'],
+    badges: ['medalla de oro con estrella', 'emblema de dragón', 'insignia rango legendario'],
   }
 
   const stickerPacks = shop.filter((s) => s.item_type === 'sticker_pack')
@@ -450,6 +519,83 @@ export default function AdminRewardsManager() {
                 </button>
                 {form.asset_url ? <span className="text-[10px] text-faint">✓ imagen cargada</span> : null}
               </div>
+            </div>
+          ) : null}
+
+          {aiEnabled ? (
+            <div className="admin-ai-box">
+              <div className="flex items-center justify-between gap-2">
+                <span className="admin-field-label mb-0">✨ Generar con IA</span>
+                <span className="text-[10px] text-faint">flux · ~$0.003/img</span>
+              </div>
+              <textarea
+                className="input w-full text-sm"
+                rows={2}
+                placeholder={
+                  tab === 'badges'
+                    ? 'Ej. medalla de oro con una estrella'
+                    : tab === 'borders'
+                      ? 'Ej. marco circular con pétalos de sakura'
+                      : 'Ej. gato chibi saludando feliz'
+                }
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+              />
+              <div className="flex flex-wrap gap-1.5">
+                {aiPresets[tab].map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    className="admin-ai-chip"
+                    onClick={() => setAiPrompt(p)}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+              <input
+                ref={sketchFileRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0]
+                  if (f) uploadSketch(f)
+                  e.target.value = ''
+                }}
+              />
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  className="btn-ghost text-[11px]"
+                  disabled={aiLoading}
+                  onClick={() => sketchFileRef.current?.click()}
+                >
+                  {aiSketchUrl ? '✓ Boceto base' : 'Subir boceto (opcional)'}
+                </button>
+                {aiSketchUrl ? (
+                  <button
+                    type="button"
+                    className="text-[10px] text-faint underline"
+                    onClick={() => setAiSketchUrl('')}
+                  >
+                    quitar
+                  </button>
+                ) : null}
+              </div>
+              <button
+                type="button"
+                className="btn-primary text-sm w-full"
+                disabled={aiLoading}
+                onClick={generateAi}
+              >
+                {aiLoading ? 'Generando…' : 'Generar imagen'}
+              </button>
+              <p className="text-[10px] text-faint">
+                {tab === 'stickers'
+                  ? 'Se añade como nuevo sticker con imagen.'
+                  : 'Reemplaza la imagen del premio actual.'}
+              </p>
             </div>
           ) : null}
 

@@ -2,11 +2,13 @@ import { NextRequest } from 'next/server'
 import { requireEditor } from '../../../../lib/auth'
 import { getSupabaseAdmin, isSupabaseConfigured } from '../../../../lib/supabaseAdmin'
 import { requireRateLimit } from '../../../../lib/security/api'
+import { isAiDesignEnabled } from '../../../../lib/design/generate'
 
 export async function GET() {
   const editor = await requireEditor()
   if (!editor) return Response.json({ error: 'No autorizado' }, { status: 403 })
-  if (!isSupabaseConfigured()) return Response.json({ shop: [], badges: [] })
+  const aiEnabled = isAiDesignEnabled()
+  if (!isSupabaseConfigured()) return Response.json({ shop: [], badges: [], aiEnabled })
 
   const admin = getSupabaseAdmin()
   const [shop, badges] = await Promise.all([
@@ -17,7 +19,7 @@ export async function GET() {
     admin.from('badges').select('id, slug, name, description, category, icon_url, is_active').order('slug'),
   ])
 
-  return Response.json({ shop: shop.data || [], badges: badges.data || [] })
+  return Response.json({ shop: shop.data || [], badges: badges.data || [], aiEnabled })
 }
 
 export async function POST(req: NextRequest) {
