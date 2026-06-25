@@ -170,7 +170,9 @@ export default function Header() {
 
         <div className="header-actions">
           <NotificationBell variant="inline" />
-          <UserMenu variant="inline" />
+          <div className="header-user-inline">
+            <UserMenu variant="inline" />
+          </div>
           <div className="header-theme-wrap">
             <ThemeToggle />
           </div>

@@ -210,3 +210,84 @@ export async function fetchLocalizedGame(id: number): Promise<FreeGame | null> {
   if (!game) return null
   return localizeGame(game)
 }
+
+export type GameSearchResult = {
+  id: string
+  title: string
+  image_url: string | null
+}
+
+type RawgGame = {
+  id: number
+  slug?: string
+  name: string
+  background_image?: string | null
+  released?: string | null
+}
+
+// Búsqueda en RAWG (catálogo amplio: ~870k juegos, no solo free-to-play).
+// Requiere RAWG_API_KEY (gratis en https://rawg.io/apidocs).
+async function searchRawg(query: string, limit: number): Promise<GameSearchResult[]> {
+  const key = process.env.RAWG_API_KEY
+  if (!key) return []
+  try {
+    const url = `https://api.rawg.io/api/games?key=${key}&search=${encodeURIComponent(
+      query,
+    )}&page_size=${limit}&search_precise=true`
+    const res = await fetch(url, {
+      headers: { Accept: 'application/json' },
+      next: { revalidate: 86400 },
+    })
+    if (!res.ok) {
+      console.warn(`[games] rawg ${res.status}`)
+      return []
+    }
+    const data = (await res.json()) as { results?: RawgGame[] }
+    if (!Array.isArray(data?.results)) return []
+    return data.results
+      .filter((g) => g?.id && g?.name)
+      .map((g) => ({
+        id: `rawg:${g.id}`,
+        title: g.released ? `${g.name} (${g.released.slice(0, 4)})` : g.name,
+        image_url: g.background_image || null,
+      }))
+  } catch (err) {
+    console.warn('[games] rawg error', err)
+    return []
+  }
+}
+
+// Coincidencias dentro del catálogo free-to-play (fallback / complemento).
+async function searchFreeToGame(query: string, limit: number): Promise<GameSearchResult[]> {
+  const q = query.toLowerCase()
+  const all = await fetchFreeGames()
+  return all
+    .filter((g) => g.title.toLowerCase().includes(q))
+    .slice(0, limit)
+    .map((g) => ({
+      id: String(g.id),
+      title: g.title,
+      image_url: g.thumbnail || null,
+    }))
+}
+
+export async function searchGames(query: string, limit = 12): Promise<GameSearchResult[]> {
+  const q = query.trim()
+  if (q.length < 2) return []
+
+  const [rawg, free] = await Promise.all([
+    searchRawg(q, limit),
+    searchFreeToGame(q, limit),
+  ])
+
+  // RAWG primero (catálogo completo); luego agregamos free-to-play que no estén ya.
+  const seen = new Set(rawg.map((r) => r.title.toLowerCase()))
+  const merged = [...rawg]
+  for (const g of free) {
+    if (!seen.has(g.title.toLowerCase())) {
+      merged.push(g)
+      seen.add(g.title.toLowerCase())
+    }
+  }
+  return merged.slice(0, limit)
+}

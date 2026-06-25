@@ -143,7 +143,7 @@ export default function ProfileShowcaseEditor() {
         Elige hasta 5 títulos por sección con el buscador. Se guardan nombre e imagen automáticamente.
       </p>
       {error ? <p className="text-xs text-red-400">{error}</p> : null}
-      <div className="space-y-4">
+      <div className="showcase-slot-grid">
         {[1, 2, 3, 4, 5].map((slot) => {
           const d = getDraft(slot)
           const filled = sectionItems.some((i) => i.slot === slot)
@@ -153,8 +153,8 @@ export default function ProfileShowcaseEditor() {
               : null
 
           return (
-            <div key={slot} className="rounded-lg border border-white/8 bg-surface-3/40 p-4 space-y-3">
-              <p className="text-xs font-semibold text-faint">Espacio {slot}</p>
+            <div key={slot} className="showcase-slot-card">
+              <p className="text-[11px] font-semibold text-faint">Espacio {slot}</p>
               <ContentSearchPicker
                 section={section}
                 value={selected}
@@ -176,7 +176,7 @@ export default function ProfileShowcaseEditor() {
                 }
               />
               <select
-                className="input w-full text-sm"
+                className="input w-full text-xs"
                 value={d.list_status}
                 onChange={(e) => setDraft(slot, { list_status: e.target.value })}
               >
