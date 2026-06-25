@@ -14,7 +14,7 @@ export async function GET() {
   const supabase = await createClient()
   const [{ data: profile }, { data: titles }, { data: badges }, { data: inventory }, { data: shop }] =
     await Promise.all([
-      supabase.from('profiles').select('level, selected_title, coins').eq('id', user.id).maybeSingle(),
+      supabase.from('profiles').select('level, selected_title, coins, is_premium').eq('id', user.id).maybeSingle(),
       supabase.from('selectable_titles').select('slug, name, min_level').order('min_level'),
       supabase
         .from('user_badges')
@@ -24,7 +24,10 @@ export async function GET() {
         .from('user_inventory')
         .select('equipped, shop_items(slug, name, css_class, item_type)')
         .eq('user_id', user.id),
-      supabase.from('shop_items').select('id, slug, name, description, price_coins, item_type, css_class'),
+      supabase
+        .from('shop_items')
+        .select('id, slug, name, description, price_coins, item_type, css_class, asset_url, metadata, sort_order')
+        .order('sort_order'),
     ])
 
   const level = profile?.level ?? 1
@@ -36,14 +39,20 @@ export async function GET() {
       ? (equipped.shop_items as { slug?: string }).slug ?? null
       : null
 
+  // Solo mostrar items publicados (metadata.active !== false)
+  const visibleShop = (shop || []).filter(
+    (s) => (s.metadata as { active?: boolean } | null)?.active !== false,
+  )
+
   return Response.json({
     level,
     coins: profile?.coins ?? 0,
+    is_premium: profile?.is_premium ?? false,
     selected_title: profile?.selected_title,
     titles: availableTitles,
     badges: badges || [],
     inventory: inventory || [],
-    shop: shop || [],
+    shop: visibleShop,
     equipped_slug: equippedSlug,
   })
 }
@@ -101,6 +110,41 @@ export async function POST(req: NextRequest) {
     }
 
     return Response.json({ ok: true, ...((data as object) || {}) })
+  }
+
+  if (body.action === 'claim') {
+    const slug = String(body.slug || '').slice(0, 80)
+    const { data: item } = await supabase
+      .from('shop_items')
+      .select('id, metadata')
+      .eq('slug', slug)
+      .maybeSingle()
+    if (!item) return Response.json({ error: 'Artículo no encontrado' }, { status: 404 })
+
+    const meta = (item.metadata as { acquisition?: string; active?: boolean }) || {}
+    if (meta.active === false) return Response.json({ error: 'No disponible' }, { status: 403 })
+
+    // Solo se pueden reclamar items "premium" (si eres premium). Los de logro los otorga el sistema/staff.
+    if (meta.acquisition !== 'premium') {
+      return Response.json({ error: 'Este premio no se reclama aquí' }, { status: 400 })
+    }
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('is_premium')
+      .eq('id', user.id)
+      .maybeSingle()
+    if (!profile?.is_premium) {
+      return Response.json({ error: 'Necesitas ser Premium' }, { status: 403 })
+    }
+
+    const { error: insErr } = await supabase
+      .from('user_inventory')
+      .insert({ user_id: user.id, item_id: item.id })
+    if (insErr) {
+      if (insErr.message.includes('duplicate')) return Response.json({ error: 'Ya lo tienes' }, { status: 409 })
+      return Response.json({ error: 'No se pudo reclamar' }, { status: 500 })
+    }
+    return Response.json({ ok: true })
   }
 
   if (body.action === 'equip') {

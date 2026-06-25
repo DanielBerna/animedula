@@ -92,6 +92,17 @@ export async function generateRewardImage(opts: {
 
     return { ok: true, buffer, mime: 'image/png' }
   } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : 'Error generando la imagen' }
+    const raw = err instanceof Error ? err.message : 'Error generando la imagen'
+    if (/402|insufficient credit|payment required/i.test(raw)) {
+      return {
+        ok: false,
+        error:
+          'Replicate sin saldo. Agrega crédito en replicate.com/account/billing y espera unos minutos.',
+      }
+    }
+    if (/401|unauthor|invalid token|authentication/i.test(raw)) {
+      return { ok: false, error: 'Token de Replicate inválido. Revisa REPLICATE_API_TOKEN.' }
+    }
+    return { ok: false, error: raw }
   }
 }

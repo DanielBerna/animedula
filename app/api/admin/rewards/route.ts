@@ -14,9 +14,14 @@ export async function GET() {
   const [shop, badges] = await Promise.all([
     admin
       .from('shop_items')
-      .select('id, slug, name, description, price_coins, item_type, css_class, asset_url, metadata')
+      .select('id, slug, name, description, price_coins, item_type, css_class, asset_url, metadata, sort_order')
+      .order('sort_order')
       .order('price_coins'),
-    admin.from('badges').select('id, slug, name, description, category, icon_url, is_active').order('slug'),
+    admin
+      .from('badges')
+      .select('id, slug, name, description, category, icon_url, is_active, metadata, sort_order')
+      .order('sort_order')
+      .order('slug'),
   ])
 
   return Response.json({ shop: shop.data || [], badges: badges.data || [], aiEnabled })
@@ -48,6 +53,7 @@ export async function POST(req: NextRequest) {
       css_class: body.css_class ? String(body.css_class).slice(0, 80) : null,
       asset_url: body.asset_url ? String(body.asset_url) : '',
       metadata: body.metadata && typeof body.metadata === 'object' ? body.metadata : {},
+      sort_order: Number.isFinite(Number(body.sort_order)) ? Number(body.sort_order) : 0,
     }
     if (!slug || !payload.name) return Response.json({ error: 'Slug y nombre requeridos' }, { status: 400 })
 
@@ -68,6 +74,8 @@ export async function POST(req: NextRequest) {
       category: String(body.category || 'general').slice(0, 40),
       icon_url: body.icon_url ? String(body.icon_url) : '',
       is_active: body.is_active !== false,
+      metadata: body.metadata && typeof body.metadata === 'object' ? body.metadata : {},
+      sort_order: Number.isFinite(Number(body.sort_order)) ? Number(body.sort_order) : 0,
     }
     if (!slug || !payload.name) return Response.json({ error: 'Slug y nombre requeridos' }, { status: 400 })
 
@@ -77,4 +85,24 @@ export async function POST(req: NextRequest) {
   }
 
   return Response.json({ error: 'kind inválido' }, { status: 400 })
+}
+
+export async function DELETE(req: NextRequest) {
+  const limited = await requireRateLimit(req, 'mutation', 'admin-rewards-delete')
+  if (limited) return limited
+
+  const editor = await requireEditor()
+  if (!editor) return Response.json({ error: 'No autorizado' }, { status: 403 })
+  if (!isSupabaseConfigured()) return Response.json({ error: 'No disponible' }, { status: 503 })
+
+  const url = new URL(req.url)
+  const kind = url.searchParams.get('kind')
+  const slug = url.searchParams.get('slug')
+  if (!slug) return Response.json({ error: 'Falta slug' }, { status: 400 })
+
+  const admin = getSupabaseAdmin()
+  const table = kind === 'badge' ? 'badges' : 'shop_items'
+  const { error } = await admin.from(table).delete().eq('slug', slug)
+  if (error) return Response.json({ error: error.message }, { status: 500 })
+  return Response.json({ ok: true })
 }

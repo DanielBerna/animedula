@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { DAILY_MISSIONS } from '../lib/gamification/missions'
+import MeduCoin from './MeduCoin'
 
 type MissionState = {
   key: string
@@ -48,7 +49,7 @@ export default function DailyMissions() {
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <h3 className="font-display font-semibold text-text">Misiones diarias</h3>
-        <span className="tag tag-gold">🪙 {coins} monedas</span>
+        <span className="tag tag-gold"><MeduCoin amount={coins} size={14} /> MéduCoins</span>
       </div>
       <ul className="space-y-2">
         {missions.map((m) => (

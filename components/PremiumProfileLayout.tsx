@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { PREMIUM_PERKS, premiumLabel, type PremiumProfileFields } from '../lib/premium'
+import MeduCoin from './MeduCoin'
 
 type Props = {
   displayName: string
@@ -50,8 +51,11 @@ export default function PremiumProfileLayout({
                 <small>XP</small>
               </span>
               <span className="premium-stat">
-                <strong>{profile.coins ?? 0}</strong>
-                <small>Monedas</small>
+                <strong className="inline-flex items-center gap-1">
+                  <MeduCoin size={16} />
+                  {profile.coins ?? 0}
+                </strong>
+                <small>MéduCoins</small>
               </span>
             </div>
             {profile.selected_title ? (

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import MeduCoin from './MeduCoin'
 
 type Badge = {
   unlocked_at: string
@@ -15,6 +16,13 @@ type ShopItem = {
   price_coins: number
   item_type: string
   css_class: string | null
+  asset_url?: string | null
+  metadata?: {
+    acquisition?: 'purchase' | 'reward' | 'premium' | 'gift'
+    unlock_condition?: string
+    premium_only?: boolean
+    rarity?: string
+  }
 }
 
 type InventoryRow = {
@@ -33,6 +41,7 @@ export default function GamificationPanel() {
   const [equippedSlug, setEquippedSlug] = useState<string | null>(null)
   const [level, setLevel] = useState(1)
   const [coins, setCoins] = useState(0)
+  const [isPremium, setIsPremium] = useState(false)
   const [loading, setLoading] = useState(true)
 
   const load = async () => {
@@ -46,6 +55,7 @@ export default function GamificationPanel() {
     setSelectedTitle(data.selected_title || 'Novato')
     setLevel(data.level ?? 1)
     setCoins(data.coins ?? 0)
+    setIsPremium(!!data.is_premium)
     setLoading(false)
   }
 
@@ -80,6 +90,46 @@ export default function GamificationPanel() {
       body: JSON.stringify({ action: 'equip', slug }),
     })
     await load()
+  }
+
+  const claim = async (slug: string) => {
+    const res = await fetch('/api/gamification', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'claim', slug }),
+    })
+    const data = await res.json()
+    if (!res.ok) alert(data.error || 'No se pudo reclamar')
+    await load()
+  }
+
+  // Acción de adquisición según el modo configurado en el CMS
+  const acquireAction = (item: ShopItem) => {
+    const acq = item.metadata?.acquisition || 'purchase'
+    if (acq === 'reward') {
+      return (
+        <span className="tag tag-gold text-xs">
+          🎯 {item.metadata?.unlock_condition || 'Por logro'}
+        </span>
+      )
+    }
+    if (acq === 'gift') {
+      return <span className="tag text-xs">🎁 Evento / regalo</span>
+    }
+    if (acq === 'premium') {
+      return isPremium ? (
+        <button type="button" className="btn-primary text-xs" onClick={() => claim(item.slug)}>
+          💎 Reclamar Premium
+        </button>
+      ) : (
+        <span className="tag tag-accent text-xs">💎 Solo Premium</span>
+      )
+    }
+    return (
+      <button type="button" className="btn-primary text-xs flex items-center gap-1" onClick={() => buy(item.slug)}>
+        <MeduCoin amount={item.price_coins} size={13} />
+      </button>
+    )
   }
 
   const ownedSlugs = new Set(inventory.map((i) => i.shop_items?.slug).filter(Boolean))
@@ -147,9 +197,7 @@ export default function GamificationPanel() {
                     </button>
                   )
                 ) : (
-                  <button type="button" className="btn-primary text-xs" onClick={() => buy(item.slug)}>
-                    {item.price_coins} 🪙
-                  </button>
+                  acquireAction(item)
                 )}
               </li>
             )
@@ -158,7 +206,9 @@ export default function GamificationPanel() {
       </section>
 
       <section>
-        <h3 className="font-display font-semibold text-text mb-3">Packs de stickers · 🪙 {coins}</h3>
+        <h3 className="font-display font-semibold text-text mb-3 flex items-center gap-2">
+          Packs de stickers · <MeduCoin amount={coins} size={15} />
+        </h3>
         <p className="text-xs text-muted mb-3">Úsalos al escribir en el foro (botón 😀 Stickers).</p>
         <ul className="space-y-3">
           {stickerPacks.map((item) => {
@@ -172,9 +222,7 @@ export default function GamificationPanel() {
                 {owned ? (
                   <span className="tag tag-gold text-xs">Desbloqueado</span>
                 ) : (
-                  <button type="button" className="btn-primary text-xs" onClick={() => buy(item.slug)}>
-                    Comprar · {item.price_coins} 🪙
-                  </button>
+                  acquireAction(item)
                 )}
               </li>
             )

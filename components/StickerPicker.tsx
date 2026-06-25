@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { FREE_STICKERS, insertStickerToken, stickersForOwnedPacks } from '../lib/gamification/stickers'
+import { insertStickerToken } from '../lib/gamification/stickers'
+import { loadStickers, type RuntimeSticker } from '../lib/gamification/sticker-runtime'
 
 type Props = {
   value: string
@@ -11,9 +12,11 @@ type Props = {
 
 export default function StickerPicker({ value, onChange, disabled }: Props) {
   const [ownedPacks, setOwnedPacks] = useState<string[]>([])
+  const [all, setAll] = useState<RuntimeSticker[]>([])
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
+    loadStickers().then(setAll)
     fetch('/api/gamification')
       .then((r) => r.json())
       .then((data) => {
@@ -27,7 +30,10 @@ export default function StickerPicker({ value, onChange, disabled }: Props) {
       .catch(() => {})
   }, [])
 
-  const stickers = stickersForOwnedPacks(ownedPacks)
+  // Stickers disponibles: gratis + packs comprados (dedupe por id)
+  const owned = new Set(ownedPacks)
+  const available = all.filter((s) => s.free || owned.has(s.pack))
+  const hasOnlyFree = available.every((s) => s.free)
 
   const add = (id: string) => {
     onChange(insertStickerToken(value, id))
@@ -46,21 +52,24 @@ export default function StickerPicker({ value, onChange, disabled }: Props) {
       </button>
       {open && (
         <div className="sticker-picker-panel mt-2 flex flex-wrap gap-1.5 p-2 rounded-lg border border-white/8 bg-surface-3">
-          {stickers.map((s) => (
+          {available.map((s) => (
             <button
-              key={s.id}
+              key={`${s.pack}-${s.id}`}
               type="button"
               title={s.label}
               className="sticker-picker-btn"
               onClick={() => add(s.id)}
             >
-              {s.emoji}
+              {s.image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={s.image} alt={s.label} className="sticker-picker-img" />
+              ) : (
+                s.emoji
+              )}
             </button>
           ))}
-          {ownedPacks.length === 0 && stickers.length === FREE_STICKERS.length ? (
-            <p className="text-[10px] text-faint w-full mt-1">
-              Compra packs en /perfil para más stickers.
-            </p>
+          {hasOnlyFree ? (
+            <p className="text-[10px] text-faint w-full mt-1">Compra packs en /perfil para más stickers.</p>
           ) : null}
         </div>
       )}
