@@ -28,6 +28,7 @@ type RewardMeta = {
   unlock_condition?: string
   premium_only?: boolean
   active?: boolean
+  border_style?: 'css' | 'image'
   emoji?: string
 }
 
@@ -83,6 +84,7 @@ type FormState = {
   unlock_condition: string
   premium_only: boolean
   active: boolean
+  border_style: 'css' | 'image'
 }
 
 const initialForm: FormState = {
@@ -99,6 +101,7 @@ const initialForm: FormState = {
   unlock_condition: '',
   premium_only: false,
   active: true,
+  border_style: 'css',
 }
 
 function RarityTag({ rarity }: { rarity?: Rarity }) {
@@ -192,6 +195,7 @@ export default function AdminRewardsManager() {
       unlock_condition: item.metadata?.unlock_condition || '',
       premium_only: !!item.metadata?.premium_only,
       active: item.metadata?.active !== false,
+      border_style: item.metadata?.border_style || (item.asset_url && !item.css_class ? 'image' : 'css'),
     })
     if (item.item_type === 'sticker_pack') {
       const rows = (item.metadata?.stickers || []).map((s) => ({
@@ -221,6 +225,7 @@ export default function AdminRewardsManager() {
       unlock_condition: b.metadata?.unlock_condition || '',
       premium_only: !!b.metadata?.premium_only,
       active: b.is_active !== false,
+      border_style: 'css',
     })
   }
 
@@ -370,10 +375,10 @@ export default function AdminRewardsManager() {
           name: form.name,
           description: form.description,
           price_coins: Math.max(1, form.price_coins),
-          css_class: form.css_class,
+          css_class: form.border_style === 'image' ? '' : form.css_class,
           asset_url: form.asset_url,
           sort_order: form.sort_order,
-          metadata: baseMeta,
+          metadata: { ...baseMeta, border_style: form.border_style },
         }
       }
 
@@ -394,6 +399,43 @@ export default function AdminRewardsManager() {
       showToast({ title: 'Error al guardar', description: String(err) })
     } finally {
       setSaving(false)
+    }
+  }
+
+  // Guardar UN sticker como su propio pack individual (no todo el pack)
+  const saveSingleSticker = async (row: StickerRow) => {
+    const label = row.label.trim()
+    const id = (row.id.trim() || slugify(label)).trim()
+    if (!id || !label || (!row.emoji.trim() && !row.image.trim())) {
+      showToast({ title: 'Sticker incompleto', description: 'Necesita nombre y emoji o imagen' })
+      return
+    }
+    try {
+      const res = await fetch('/api/admin/rewards', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          kind: 'shop_item',
+          item_type: 'sticker_pack',
+          slug: `sticker-${id}`,
+          name: label,
+          description: `Sticker ${label}`,
+          price_coins: Math.max(1, form.price_coins),
+          sort_order: form.sort_order,
+          metadata: {
+            rarity: form.rarity,
+            acquisition: form.acquisition,
+            active: form.active,
+            stickers: [{ id, label, emoji: row.emoji.trim() || undefined, image: row.image.trim() || undefined }],
+          },
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      showToast({ title: 'Sticker guardado', description: `${label} (individual)` })
+      load()
+    } catch (err) {
+      showToast({ title: 'Error', description: String(err) })
     }
   }
 
@@ -550,8 +592,31 @@ export default function AdminRewardsManager() {
             </div>
           )}
 
-          {/* Galería de marcos */}
+          {/* Tipo de marco: CSS o Imagen */}
           {tab === 'borders' && (
+            <div className="admin-field">
+              <span className="admin-field-label">Tipo de marco</span>
+              <div className="admin-acq-grid">
+                <button
+                  type="button"
+                  className={`admin-acq-option${form.border_style === 'css' ? ' is-active' : ''}`}
+                  onClick={() => setField('border_style', 'css')}
+                >
+                  🎨 Diseño CSS
+                </button>
+                <button
+                  type="button"
+                  className={`admin-acq-option${form.border_style === 'image' ? ' is-active' : ''}`}
+                  onClick={() => setField('border_style', 'image')}
+                >
+                  🖼️ Imagen (formas/diseño)
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Galería de marcos (solo CSS) */}
+          {tab === 'borders' && form.border_style === 'css' && (
             <div className="admin-field">
               <span className="admin-field-label">Galería de marcos</span>
               <div className="admin-border-gallery">
@@ -728,7 +793,7 @@ export default function AdminRewardsManager() {
             </div>
           </div>
 
-          {tab === 'borders' && (
+          {tab === 'borders' && form.border_style === 'css' && (
             <label className="admin-field">
               <span className="admin-field-label">Clase CSS</span>
               <input
@@ -737,6 +802,11 @@ export default function AdminRewardsManager() {
                 onChange={(e) => setField('css_class', e.target.value)}
               />
             </label>
+          )}
+          {tab === 'borders' && form.border_style === 'image' && (
+            <p className="text-[11px] text-faint">
+              Sube un PNG con el centro transparente (forma/diseño del marco). Se mostrará alrededor del avatar.
+            </p>
           )}
 
           {/* Editor de stickers */}
@@ -783,10 +853,19 @@ export default function AdminRewardsManager() {
                           stickerTargetRef.current = i
                           stickerFileRef.current?.click()
                         }}
+                        title="Subir imagen personalizada"
                       >
                         {stickerUploading === i ? '…' : 'IMG'}
                       </button>
-                      <button type="button" className="btn-ghost text-[10px] px-2" onClick={() => removeSticker(i)}>
+                      <button
+                        type="button"
+                        className="btn-ghost text-[10px] px-2"
+                        onClick={() => saveSingleSticker(s)}
+                        title="Guardar este sticker como individual"
+                      >
+                        💾
+                      </button>
+                      <button type="button" className="btn-ghost text-[10px] px-2" onClick={() => removeSticker(i)} title="Quitar">
                         ✕
                       </button>
                     </div>
@@ -912,14 +991,22 @@ export default function AdminRewardsManager() {
 
           {tab === 'borders' && (
             <div className="flex flex-col items-center gap-3 py-4">
-              <div className={`profile-avatar-ring ${form.css_class}`}>
-                <span className="profile-avatar">A</span>
-              </div>
+              {form.border_style === 'image' ? (
+                <div className="avatar-frame">
+                  <span className="profile-avatar avatar-frame-base">A</span>
+                  {form.asset_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={form.asset_url} alt="" className="avatar-frame-img" />
+                  ) : (
+                    <span className="avatar-frame-empty">Sube una imagen</span>
+                  )}
+                </div>
+              ) : (
+                <div className={`profile-avatar-ring ${form.css_class}`}>
+                  <span className="profile-avatar">A</span>
+                </div>
+              )}
               <p className="text-sm font-semibold text-text">{form.name || 'Marco sin nombre'}</p>
-              {form.asset_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={form.asset_url} alt="" className="max-h-24 rounded-lg object-contain" />
-              ) : null}
             </div>
           )}
 
@@ -1009,9 +1096,17 @@ export default function AdminRewardsManager() {
                 borders.map((s) => (
                   <li key={s.id} className="admin-catalog-row">
                     <button type="button" className="admin-catalog-main" onClick={() => editShopItem(s)}>
-                      <span className={`profile-avatar-ring ${s.css_class} admin-catalog-ring`}>
-                        <span className="profile-avatar">A</span>
-                      </span>
+                      {s.metadata?.border_style === 'image' && s.asset_url ? (
+                        <span className="avatar-frame admin-catalog-ring">
+                          <span className="profile-avatar avatar-frame-base">A</span>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={s.asset_url} alt="" className="avatar-frame-img" />
+                        </span>
+                      ) : (
+                        <span className={`profile-avatar-ring ${s.css_class} admin-catalog-ring`}>
+                          <span className="profile-avatar">A</span>
+                        </span>
+                      )}
                       <span className="admin-catalog-name">{s.name}</span>
                       <RarityTag rarity={s.metadata?.rarity} />
                       {(s.metadata?.acquisition || 'purchase') === 'purchase' ? (

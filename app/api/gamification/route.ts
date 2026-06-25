@@ -124,17 +124,19 @@ export async function POST(req: NextRequest) {
     const meta = (item.metadata as { acquisition?: string; active?: boolean }) || {}
     if (meta.active === false) return Response.json({ error: 'No disponible' }, { status: 403 })
 
-    // Solo se pueden reclamar items "premium" (si eres premium). Los de logro los otorga el sistema/staff.
-    if (meta.acquisition !== 'premium') {
+    // Se pueden reclamar items "gratis" (todos) o "premium" (si eres premium).
+    // Los de logro los otorga el sistema/staff.
+    if (meta.acquisition === 'premium') {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_premium')
+        .eq('id', user.id)
+        .maybeSingle()
+      if (!profile?.is_premium) {
+        return Response.json({ error: 'Necesitas ser Premium' }, { status: 403 })
+      }
+    } else if (meta.acquisition !== 'free') {
       return Response.json({ error: 'Este premio no se reclama aquí' }, { status: 400 })
-    }
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('is_premium')
-      .eq('id', user.id)
-      .maybeSingle()
-    if (!profile?.is_premium) {
-      return Response.json({ error: 'Necesitas ser Premium' }, { status: 403 })
     }
 
     const { error: insErr } = await supabase

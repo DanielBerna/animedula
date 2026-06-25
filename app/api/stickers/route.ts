@@ -34,7 +34,14 @@ export async function GET() {
   const seen = new Set(base.map((s) => s.id))
 
   for (const item of data || []) {
-    const meta = (item.metadata as { stickers?: { id: string; emoji?: string; image?: string; label: string }[] }) || {}
+    const meta =
+      (item.metadata as {
+        stickers?: { id: string; emoji?: string; image?: string; label: string }[]
+        acquisition?: string
+        active?: boolean
+      }) || {}
+    if (meta.active === false) continue
+    const isFreePack = meta.acquisition === 'free'
     for (const s of meta.stickers || []) {
       if (!s.id || seen.has(s.id)) continue
       seen.add(s.id)
@@ -44,7 +51,7 @@ export async function GET() {
         image: s.image || null,
         label: s.label || s.id,
         pack: item.slug,
-        free: false,
+        free: isFreePack,
       })
     }
   }

@@ -223,6 +223,7 @@ export const BADGE_TEMPLATES: BadgeTemplate[] = [
 
 export const BADGE_CATEGORIES = [
   'general',
+  'gratis',
   'comunidad',
   'reseñas',
   'anime',

@@ -18,7 +18,7 @@ type ShopItem = {
   css_class: string | null
   asset_url?: string | null
   metadata?: {
-    acquisition?: 'purchase' | 'reward' | 'premium' | 'gift'
+    acquisition?: 'free' | 'purchase' | 'reward' | 'premium' | 'gift'
     unlock_condition?: string
     premium_only?: boolean
     rarity?: string
@@ -106,6 +106,13 @@ export default function GamificationPanel() {
   // Acción de adquisición según el modo configurado en el CMS
   const acquireAction = (item: ShopItem) => {
     const acq = item.metadata?.acquisition || 'purchase'
+    if (acq === 'free') {
+      return (
+        <button type="button" className="btn-primary text-xs" onClick={() => claim(item.slug)}>
+          🆓 Obtener gratis
+        </button>
+      )
+    }
     if (acq === 'reward') {
       return (
         <span className="tag tag-gold text-xs">
@@ -182,7 +189,15 @@ export default function GamificationPanel() {
             return (
               <li key={item.slug} className="card-glass p-4 flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <span className={`forum-author-avatar w-10 h-10 text-sm ${item.css_class || ''}`}>A</span>
+                  {item.metadata?.acquisition && item.asset_url && item.css_class === '' ? (
+                    <span className="avatar-frame shop-frame-mini">
+                      <span className="profile-avatar avatar-frame-base">A</span>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={item.asset_url} alt="" className="avatar-frame-img" />
+                    </span>
+                  ) : (
+                    <span className={`forum-author-avatar w-10 h-10 text-sm ${item.css_class || ''}`}>A</span>
+                  )}
                   <div>
                     <p className="font-semibold text-text text-sm">{item.name}</p>
                     <p className="text-xs text-muted">{item.description}</p>

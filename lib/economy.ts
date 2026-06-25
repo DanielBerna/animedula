@@ -10,9 +10,10 @@ export const CURRENCY = {
   short: 'MC',
 }
 
-export type Acquisition = 'purchase' | 'reward' | 'premium' | 'gift'
+export type Acquisition = 'free' | 'purchase' | 'reward' | 'premium' | 'gift'
 
 export const ACQUISITIONS: { id: Acquisition; label: string; help: string; icon: string }[] = [
+  { id: 'free', label: 'Gratis', help: 'Disponible para todos sin costo', icon: '🆓' },
   { id: 'purchase', label: 'Comprable', help: 'Se compra con MéduCoins en la tienda', icon: '🛒' },
   { id: 'reward', label: 'Por logro / actividad', help: 'Se gana al cumplir una actividad', icon: '🎯' },
   { id: 'premium', label: 'Solo Premium', help: 'Exclusivo para miembros premium', icon: '💎' },
