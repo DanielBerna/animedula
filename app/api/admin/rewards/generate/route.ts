@@ -23,12 +23,13 @@ export async function POST(req: NextRequest) {
   const prompt = String(body.prompt || '').trim()
   const type = (TYPES.includes(body.type) ? body.type : 'sticker') as RewardType
   const sketchUrl = body.sketchUrl ? String(body.sketchUrl) : null
+  const removeBg = body.removeBg === true
 
   if (prompt.length < 3) {
     return Response.json({ error: 'Escribe una descripción más larga' }, { status: 400 })
   }
 
-  const gen = await generateRewardImage({ prompt, type, sketchUrl })
+  const gen = await generateRewardImage({ prompt, type, sketchUrl, removeBg })
   if (gen.ok === false) return Response.json({ error: gen.error }, { status: 502 })
 
   const validated = validateImageBuffer(gen.buffer, gen.mime)
@@ -53,5 +54,5 @@ export async function POST(req: NextRequest) {
 
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL
   const url = base ? `${base}/storage/v1/object/public/rewards/${name}` : name
-  return Response.json({ ok: true, url })
+  return Response.json({ ok: true, url, removedBg: gen.removedBg === true, wantedBg: removeBg })
 }

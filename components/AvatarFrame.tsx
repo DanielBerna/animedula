@@ -24,6 +24,7 @@ export default function AvatarFrame({ avatarUrl, label = '?', border, size = 36,
     <span style={{ fontWeight: 700, fontSize }}>{initial}</span>
   )
 
+  // Marco-imagen (PNG transparente): se dibuja por encima, un poco más grande.
   if (border?.image) {
     const frame = Math.round(size * 1.4)
     return (
@@ -36,15 +37,25 @@ export default function AvatarFrame({ avatarUrl, label = '?', border, size = 36,
     )
   }
 
-  return (
-    <span
-      className={`profile-avatar-ring ${border?.cssClass || ''} ${className}`}
-      style={{ width: size, height: size, padding: Math.max(2, Math.round(size * 0.07)) }}
-      aria-hidden
-    >
-      <span className="profile-avatar" style={{ fontSize }}>
-        {photo}
+  // Marco CSS: anillo con degradado.
+  if (border?.cssClass) {
+    return (
+      <span
+        className={`profile-avatar-ring ${border.cssClass} ${className}`}
+        style={{ width: size, height: size, padding: Math.max(2, Math.round(size * 0.07)) }}
+        aria-hidden
+      >
+        <span className="profile-avatar" style={{ fontSize }}>
+          {photo}
+        </span>
       </span>
+    )
+  }
+
+  // Sin marco: avatar limpio (sin anillo gris).
+  return (
+    <span className={`profile-avatar af-plain ${className}`} style={{ width: size, height: size, fontSize }} aria-hidden>
+      {photo}
     </span>
   )
 }

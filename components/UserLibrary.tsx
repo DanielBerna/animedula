@@ -209,7 +209,7 @@ export default function UserLibrary({
                   const equipped = equippedSlug === item.slug
                   return (
                     <li key={item.slug} className="lib-card">
-                      <AvatarFrame avatarUrl={avatarUrl} label={displayName} border={itemBorder(item)} size={56} />
+                      <AvatarFrame avatarUrl={avatarUrl} label={displayName} border={itemBorder(item)} size={56} className="lib-card-avatar" />
                       <div className="lib-card-body">
                         <p className="lib-card-name">{item.name}</p>
                         <p className="lib-card-desc">{item.description}</p>
@@ -237,7 +237,7 @@ export default function UserLibrary({
               <ul className="lib-grid">
                 {storeBorders.map((item) => (
                   <li key={item.slug} className="lib-card">
-                    <AvatarFrame avatarUrl={avatarUrl} label={displayName} border={itemBorder(item)} size={56} />
+                    <AvatarFrame avatarUrl={avatarUrl} label={displayName} border={itemBorder(item)} size={56} className="lib-card-avatar" />
                     <div className="lib-card-body">
                       <p className="lib-card-name">{item.name}</p>
                       <p className="lib-card-desc">{item.description}</p>

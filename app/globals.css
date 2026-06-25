@@ -4322,6 +4322,11 @@ html.light .home-column-block {
   border: 1px dashed var(--border);
   border-radius: 9999px;
 }
+/* Avatar sin marco (limpio) — usado por AvatarFrame cuando no hay borde equipado */
+.af-plain {
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
 .shop-frame-mini {
   width: 2.6rem;
   height: 2.6rem;
@@ -4684,6 +4689,18 @@ html.light .home-column-block {
 .lib-card:hover {
   border-color: color-mix(in srgb, var(--accent) 40%, transparent);
 }
+.lib-card-avatar {
+  flex-shrink: 0;
+}
+.lib-card > button {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.lib-card > span:last-child {
+  flex-shrink: 0;
+  max-width: 50%;
+  text-align: right;
+}
 .lib-card-body {
   flex: 1;
   min-width: 0;
@@ -4692,6 +4709,9 @@ html.light .home-column-block {
   font-weight: 600;
   font-size: 0.9rem;
   color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .lib-card-desc {
   font-size: 0.75rem;

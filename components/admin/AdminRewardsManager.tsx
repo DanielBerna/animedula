@@ -138,6 +138,7 @@ export default function AdminRewardsManager() {
   const [aiPrompt, setAiPrompt] = useState('')
   const [aiSketchUrl, setAiSketchUrl] = useState('')
   const [aiLoading, setAiLoading] = useState(false)
+  const [aiRemoveBg, setAiRemoveBg] = useState(true)
 
   const [form, setForm] = useState<FormState>(initialForm)
   const [stickers, setStickers] = useState<StickerRow[]>([
@@ -552,7 +553,7 @@ export default function AdminRewardsManager() {
       const res = await fetch('/api/admin/rewards/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: aiPrompt, type, sketchUrl: aiSketchUrl || null }),
+        body: JSON.stringify({ prompt: aiPrompt, type, sketchUrl: aiSketchUrl || null, removeBg: aiRemoveBg }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
@@ -563,8 +564,14 @@ export default function AdminRewardsManager() {
         ])
       } else {
         setField('asset_url', data.url)
+        if (tab === 'borders') setField('border_style', 'image')
       }
-      showToast({ title: 'Imagen generada', description: 'Lista en la vista previa' })
+      const bgNote = data.wantedBg && !data.removedBg
+        ? 'No se pudo quitar el fondo; quedó con fondo.'
+        : data.removedBg
+          ? 'Fondo eliminado (PNG transparente).'
+          : 'Lista en la vista previa'
+      showToast({ title: 'Imagen generada', description: bgNote })
     } catch (err) {
       showToast({ title: 'Error', description: String(err) })
     } finally {
@@ -1201,7 +1208,7 @@ export default function AdminRewardsManager() {
             <div className="admin-ai-box">
               <div className="flex items-center justify-between gap-2">
                 <span className="admin-field-label mb-0">✨ Generar con IA</span>
-                <span className="text-[10px] text-faint">flux · ~$0.003/img</span>
+                <span className="text-[10px] text-faint">flux{aiRemoveBg ? ' + sin fondo' : ''} · ~$0.0{aiRemoveBg ? '1' : '03'}/img</span>
               </div>
               <textarea
                 className="input w-full text-sm"
@@ -1238,8 +1245,12 @@ export default function AdminRewardsManager() {
                   </button>
                 ) : null}
               </div>
+              <label className="admin-check text-xs">
+                <input type="checkbox" checked={aiRemoveBg} onChange={(e) => setAiRemoveBg(e.target.checked)} />
+                <span>Quitar fondo (PNG transparente)</span>
+              </label>
               <button type="button" className="btn-primary text-sm w-full" disabled={aiLoading} onClick={generateAi}>
-                {aiLoading ? 'Generando…' : 'Generar imagen'}
+                {aiLoading ? (aiRemoveBg ? 'Generando y quitando fondo…' : 'Generando…') : 'Generar imagen'}
               </button>
             </div>
           )}

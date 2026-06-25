@@ -1,8 +1,36 @@
 import { NextRequest } from 'next/server'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { requireEditor } from '../../../../lib/auth'
 import { getSupabaseAdmin, isSupabaseConfigured } from '../../../../lib/supabaseAdmin'
 import { requireRateLimit } from '../../../../lib/security/api'
 import { isAiDesignEnabled } from '../../../../lib/design/generate'
+
+/**
+ * Upsert que se auto-repara con esquemas legacy: si una columna antigua
+ * (p. ej. `price`, `category`) es NOT NULL y el payload nuevo no la incluye,
+ * la rellena con un valor sensato y reintenta. Así funciona tanto en BDs
+ * nuevas como en las que vienen de migraciones antiguas.
+ */
+async function upsertWithLegacy(
+  admin: SupabaseClient,
+  table: 'shop_items' | 'badges',
+  base: Record<string, unknown>,
+): Promise<{ message: string } | null> {
+  let payload: Record<string, unknown> = { ...base }
+  for (let i = 0; i < 6; i++) {
+    const { error } = await admin.from(table).upsert(payload, { onConflict: 'slug' })
+    if (!error) return null
+    const match = error.message.match(/null value in column "([^"]+)"/)
+    if (!match || match[1] in payload) return { message: error.message }
+    const col = match[1]
+    const priceCoins = typeof base.price_coins === 'number' ? base.price_coins : 50
+    payload = {
+      ...payload,
+      [col]: col === 'price' ? priceCoins : col === 'category' ? 'cosmetic' : '',
+    }
+  }
+  return { message: 'No se pudo guardar: columnas legacy no resueltas' }
+}
 
 export async function GET() {
   const editor = await requireEditor()
@@ -57,7 +85,7 @@ export async function POST(req: NextRequest) {
     }
     if (!slug || !payload.name) return Response.json({ error: 'Slug y nombre requeridos' }, { status: 400 })
 
-    const { error } = await admin.from('shop_items').upsert(payload, { onConflict: 'slug' })
+    const error = await upsertWithLegacy(admin, 'shop_items', payload)
     if (error) return Response.json({ error: error.message }, { status: 500 })
     return Response.json({ ok: true, slug })
   }
@@ -79,7 +107,7 @@ export async function POST(req: NextRequest) {
     }
     if (!slug || !payload.name) return Response.json({ error: 'Slug y nombre requeridos' }, { status: 400 })
 
-    const { error } = await admin.from('badges').upsert(payload, { onConflict: 'slug' })
+    const error = await upsertWithLegacy(admin, 'badges', payload)
     if (error) return Response.json({ error: error.message }, { status: 500 })
     return Response.json({ ok: true, slug })
   }

@@ -28,6 +28,26 @@ export function isAiDesignEnabled(): boolean {
   return !!process.env.REPLICATE_API_TOKEN
 }
 
+/**
+ * Quita el fondo de una imagen usando un modelo de Replicate (rembg / birefnet).
+ * Configurable con REPLICATE_REMOVEBG_MODEL. Devuelve la URL del PNG con
+ * transparencia o null si falla (el llamador puede usar la imagen original).
+ */
+async function removeBackground(imageUrl: string): Promise<string | null> {
+  const token = process.env.REPLICATE_API_TOKEN
+  if (!token) return null
+  try {
+    const { default: Replicate } = await import('replicate')
+    const replicate = new Replicate({ auth: token })
+    const model = (process.env.REPLICATE_REMOVEBG_MODEL ||
+      '851-labs/background-remover') as `${string}/${string}`
+    const output = await replicate.run(model, { input: { image: imageUrl } })
+    return extractUrl(output)
+  } catch {
+    return null
+  }
+}
+
 function extractUrl(output: unknown): string | null {
   const first = Array.isArray(output) ? output[0] : output
   if (!first) return null
@@ -47,7 +67,8 @@ export async function generateRewardImage(opts: {
   prompt: string
   type: RewardType
   sketchUrl?: string | null
-}): Promise<GenerateResult> {
+  removeBg?: boolean
+}): Promise<GenerateResult & { removedBg?: boolean }> {
   const token = process.env.REPLICATE_API_TOKEN
   if (!token) return { ok: false, error: 'IA no configurada (falta REPLICATE_API_TOKEN)' }
 
@@ -84,13 +105,24 @@ export async function generateRewardImage(opts: {
     const url = extractUrl(output)
     if (!url) return { ok: false, error: 'La IA no devolvió ninguna imagen' }
 
-    const res = await fetch(url)
+    // Quitar fondo (opcional). Si falla, usamos la imagen original con fondo.
+    let finalUrl = url
+    let removedBg = false
+    if (opts.removeBg) {
+      const noBgUrl = await removeBackground(url)
+      if (noBgUrl) {
+        finalUrl = noBgUrl
+        removedBg = true
+      }
+    }
+
+    const res = await fetch(finalUrl)
     if (!res.ok) return { ok: false, error: 'No se pudo descargar la imagen generada' }
 
     const buffer = Buffer.from(await res.arrayBuffer())
     if (buffer.length === 0) return { ok: false, error: 'La imagen generada está vacía' }
 
-    return { ok: true, buffer, mime: 'image/png' }
+    return { ok: true, buffer, mime: 'image/png', removedBg }
   } catch (err) {
     const raw = err instanceof Error ? err.message : 'Error generando la imagen'
     if (/402|insufficient credit|payment required/i.test(raw)) {
