@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
   }
 
   const gen = await generateRewardImage({ prompt, type, sketchUrl })
-  if (!gen.ok) return Response.json({ error: gen.error }, { status: 502 })
+  if (gen.ok === false) return Response.json({ error: gen.error }, { status: 502 })
 
   const validated = validateImageBuffer(gen.buffer, gen.mime)
   if (!validated.ok) return Response.json({ error: 'La imagen generada no es válida' }, { status: 502 })
