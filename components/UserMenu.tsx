@@ -5,14 +5,18 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient, isSupabaseBrowserConfigured } from '../lib/supabase/client'
 import type { Profile } from '../lib/auth'
+import AvatarFrame from './AvatarFrame'
 
 type Props = {
   variant?: 'inline' | 'drawer'
 }
 
+type Border = { cssClass?: string | null; image?: string | null } | null
+
 export default function UserMenu({ variant = 'inline' }: Props) {
   const router = useRouter()
   const [profile, setProfile] = useState<Profile | null>(null)
+  const [border, setBorder] = useState<Border>(null)
   const [ready, setReady] = useState(false)
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -39,6 +43,13 @@ export default function UserMenu({ variant = 'inline' }: Props) {
         .maybeSingle()
       setProfile((data as Profile) || null)
       setReady(true)
+      try {
+        const res = await fetch('/api/me/cosmetic')
+        const json = await res.json()
+        setBorder(json.border || null)
+      } catch {
+        setBorder(null)
+      }
     }
 
     load()
@@ -82,7 +93,6 @@ export default function UserMenu({ variant = 'inline' }: Props) {
 
   const isDrawer = variant === 'drawer'
   const isStaff = profile?.role === 'editor' || profile?.role === 'admin'
-  const label = profile?.display_name?.[0]?.toUpperCase() || '?'
   const profileHref = profile?.username ? `/u/${profile.username}` : '/perfil'
 
   // ── Drawer (hamburguesa móvil): lista vertical sin desplegable ──
@@ -97,13 +107,16 @@ export default function UserMenu({ variant = 'inline' }: Props) {
     return (
       <div className="user-menu-drawer">
         <div className="user-menu-profile user-menu-profile-drawer">
-          <Link href={profileHref} className="user-avatar" title={profile.display_name || 'Mi perfil'}>
-            {label}
+          <Link href={profileHref} title={profile.display_name || 'Mi perfil'} className="shrink-0">
+            <AvatarFrame avatarUrl={profile.avatar_url} label={profile.display_name || '?'} border={border} size={36} />
           </Link>
           {profile.display_name && (
             <span className="text-sm text-text truncate">{profile.display_name}</span>
           )}
         </div>
+        <Link href="/biblioteca" className="btn-ghost w-full text-center py-2 text-xs">
+          Mi biblioteca
+        </Link>
         <Link href="/perfil" className="btn-ghost w-full text-center py-2 text-xs">
           Mi cuenta
         </Link>
@@ -138,13 +151,13 @@ export default function UserMenu({ variant = 'inline' }: Props) {
         aria-expanded={open}
         aria-label="Menú de cuenta"
       >
-        <span className="user-avatar">{label}</span>
+        <AvatarFrame avatarUrl={profile.avatar_url} label={profile.display_name || '?'} border={border} size={32} />
       </button>
 
       {open && (
         <div className="user-menu-panel" role="menu">
           <div className="user-menu-panel-head">
-            <span className="user-avatar">{label}</span>
+            <AvatarFrame avatarUrl={profile.avatar_url} label={profile.display_name || '?'} border={border} size={40} />
             <div className="min-w-0">
               <p className="text-sm font-semibold text-text truncate">
                 {profile.display_name || 'Mi perfil'}
@@ -157,6 +170,9 @@ export default function UserMenu({ variant = 'inline' }: Props) {
           <div className="user-menu-panel-list">
             <Link href={profileHref} className="user-menu-item" role="menuitem" onClick={() => setOpen(false)}>
               Ver mi perfil
+            </Link>
+            <Link href="/biblioteca" className="user-menu-item" role="menuitem" onClick={() => setOpen(false)}>
+              Mi biblioteca
             </Link>
             <Link href="/perfil" className="user-menu-item" role="menuitem" onClick={() => setOpen(false)}>
               Mi cuenta

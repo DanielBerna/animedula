@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import AvatarFrame from './AvatarFrame'
 
 const ACTION_LABELS: Record<string, string> = {
   idle: 'En línea',
@@ -18,32 +19,29 @@ type Profile = {
   avatar_url?: string | null
 }
 
+type Border = { cssClass?: string | null; image?: string | null } | null
+
 type Props = {
   profile?: Profile | null
-  authorBorder?: string | null
+  authorBorder?: Border
   compact?: boolean
 }
 
 export default function ForumAuthor({ profile, authorBorder, compact }: Props) {
   const name = profile?.display_name || profile?.username || 'Fan'
-  const initial = name[0]?.toUpperCase() || '?'
   const action =
     profile?.current_action && profile.current_action !== 'idle'
       ? ACTION_LABELS[profile.current_action] || profile.current_action
       : null
 
   const avatar = (
-    <span
-      className={`forum-author-avatar shrink-0 ${authorBorder || ''}`}
-      aria-hidden
-    >
-      {profile?.avatar_url ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={profile.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
-      ) : (
-        initial
-      )}
-    </span>
+    <AvatarFrame
+      avatarUrl={profile?.avatar_url}
+      label={name}
+      border={authorBorder}
+      size={36}
+      className="shrink-0"
+    />
   )
 
   const nameEl = profile?.username ? (

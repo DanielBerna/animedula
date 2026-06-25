@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import ProfileAvatarUpload from '../../components/profile/ProfileAvatarUpload'
 import ProfileProjectsEditor from '../../components/profile/ProfileProjectsEditor'
@@ -6,7 +7,6 @@ import ProfileStatusForm from '../../components/ProfileStatusForm'
 import UsernameForm from '../../components/UsernameForm'
 import ProfilePrivacyForm from '../../components/ProfilePrivacyForm'
 import DailyMissions from '../../components/DailyMissions'
-import GamificationPanel from '../../components/GamificationPanel'
 import PremiumProfileLayout from '../../components/PremiumProfileLayout'
 import PremiumUpsell from '../../components/PremiumUpsell'
 import { getAuthUser, getProfile } from '../../lib/auth'
@@ -96,9 +96,17 @@ export default async function PerfilPage() {
       <div className="card-glass p-6">
         <DailyMissions />
       </div>
-      <div className="card-glass p-6">
-        <GamificationPanel />
-      </div>
+      <Link href="/biblioteca" className="card-glass p-6 flex items-center justify-between gap-4 hover:border-accent transition group">
+        <div>
+          <h3 className="font-display font-semibold text-text mb-1 flex items-center gap-2">
+            🎒 Mi biblioteca
+          </h3>
+          <p className="text-sm text-muted">
+            Marcos, stickers, insignias y títulos. Equipa lo que tienes y consigue más en la tienda.
+          </p>
+        </div>
+        <span className="text-accent text-xl group-hover:translate-x-1 transition" aria-hidden>→</span>
+      </Link>
     </>
   )
 

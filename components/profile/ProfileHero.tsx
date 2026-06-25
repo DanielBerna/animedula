@@ -1,11 +1,14 @@
 import type { ReactNode } from 'react'
 import { formatAction } from '../../lib/profiles/public'
+import AvatarFrame from '../AvatarFrame'
+
+type Border = { cssClass?: string | null; image?: string | null } | null
 
 type Props = {
   displayName: string
   username: string
   avatarUrl: string | null
-  avatarBorder: string | null
+  avatarBorder: Border
   level: number
   xp: number
   selectedTitle: string | null
@@ -34,24 +37,15 @@ export default function ProfileHero({
   memberSince,
   actions,
 }: Props) {
-  const initial = displayName[0]?.toUpperCase() || '?'
   const action = formatAction(currentAction)
-  const borderClass = avatarBorder || (isPremium ? 'cosmetic-border-legendary' : '')
+  const border: Border =
+    avatarBorder || (isPremium ? { cssClass: 'cosmetic-border-legendary', image: null } : null)
 
   return (
     <header className={`profile-hero card-glass ${isPremium ? 'profile-hero-premium' : ''}`}>
       <div className="profile-hero-glow" aria-hidden />
       <div className="profile-hero-inner">
-        <div className={`profile-avatar-ring ${borderClass}`}>
-          <span className="profile-avatar">
-            {avatarUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={avatarUrl} alt="" className="profile-avatar-img" />
-            ) : (
-              initial
-            )}
-          </span>
-        </div>
+        <AvatarFrame avatarUrl={avatarUrl} label={displayName} border={border} size={104} />
         <div className="profile-hero-body">
           <p className="eyebrow mb-1">Perfil público</p>
           <h1 className="page-title">{displayName}</h1>

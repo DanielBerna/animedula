@@ -31,7 +31,7 @@ export type ForumPost = {
     selected_title?: string | null
     avatar_url?: string | null
   } | null
-  author_border?: string | null
+  author_border?: import('../gamification/cosmetics').EquippedBorder | null
   reactions?: Record<string, number>
   user_reactions?: string[]
 }

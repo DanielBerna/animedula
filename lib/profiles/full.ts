@@ -33,7 +33,7 @@ export type FullPublicProfile = {
   username: string
   display_name: string | null
   avatar_url: string | null
-  avatar_border: string | null
+  avatar_border: import('../gamification/cosmetics').EquippedBorder | null
   xp: number
   level: number
   selected_title: string | null

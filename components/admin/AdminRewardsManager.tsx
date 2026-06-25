@@ -1,4 +1,5 @@
 'use client'
+/* eslint-disable @next/next/no-img-element */
 
 import { useEffect, useRef, useState } from 'react'
 import { useToast } from '../ToastProvider'
@@ -131,6 +132,7 @@ export default function AdminRewardsManager() {
   const [justSaved, setJustSaved] = useState(false)
   const [editingSlug, setEditingSlug] = useState<string | null>(null)
   const [stickerUploading, setStickerUploading] = useState<number | null>(null)
+  const [modalOpen, setModalOpen] = useState(false)
 
   const [aiEnabled, setAiEnabled] = useState(false)
   const [aiPrompt, setAiPrompt] = useState('')
@@ -161,12 +163,19 @@ export default function AdminRewardsManager() {
     setForm((f) => ({ ...f, [key]: value }))
 
   const resetForm = () => {
-    setForm(initialForm)
+    setForm({ ...initialForm, acquisition: tab === 'badges' ? 'reward' : 'purchase' })
     setStickers([emptySticker()])
     setEditingSlug(null)
     setAiPrompt('')
     setAiSketchUrl('')
   }
+
+  const openNew = () => {
+    resetForm()
+    setModalOpen(true)
+  }
+
+  const closeModal = () => setModalOpen(false)
 
   const switchTab = (next: Tab) => {
     setTab(next)
@@ -175,6 +184,7 @@ export default function AdminRewardsManager() {
     setEditingSlug(null)
     setAiPrompt('')
     setAiSketchUrl('')
+    setModalOpen(false)
   }
 
   // ── Cargar un item existente para editar ──
@@ -206,6 +216,7 @@ export default function AdminRewardsManager() {
       }))
       setStickers(rows.length ? rows : [emptySticker()])
     }
+    setModalOpen(true)
   }
 
   const editBadge = (b: Badge) => {
@@ -227,6 +238,7 @@ export default function AdminRewardsManager() {
       active: b.is_active !== false,
       border_style: 'css',
     })
+    setModalOpen(true)
   }
 
   // ── Plantillas curadas ──
@@ -439,6 +451,60 @@ export default function AdminRewardsManager() {
     }
   }
 
+  // Habilitar / deshabilitar sin abrir el modal
+  const toggleShopActive = async (item: ShopItem, active: boolean) => {
+    try {
+      const res = await fetch('/api/admin/rewards', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          kind: 'shop_item',
+          item_type: item.item_type,
+          slug: item.slug,
+          name: item.name,
+          description: item.description,
+          price_coins: Math.max(1, item.price_coins),
+          css_class: item.css_class,
+          asset_url: item.asset_url,
+          sort_order: item.sort_order || 0,
+          metadata: { ...item.metadata, active },
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      showToast({ title: active ? 'Habilitado' : 'Deshabilitado', description: item.name })
+      load()
+    } catch (err) {
+      showToast({ title: 'Error', description: String(err) })
+    }
+  }
+
+  const toggleBadgeActive = async (b: Badge, active: boolean) => {
+    try {
+      const res = await fetch('/api/admin/rewards', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          kind: 'badge',
+          slug: b.slug,
+          name: b.name,
+          description: b.description,
+          category: b.category,
+          icon_url: b.icon_url,
+          sort_order: b.sort_order || 0,
+          is_active: active,
+          metadata: { ...b.metadata },
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      showToast({ title: active ? 'Habilitada' : 'Deshabilitada', description: b.name })
+      load()
+    } catch (err) {
+      showToast({ title: 'Error', description: String(err) })
+    }
+  }
+
   const remove = async (kind: 'shop_item' | 'badge', slug: string, name: string) => {
     if (!window.confirm(`¿Eliminar "${name}"? Esta acción no se puede deshacer.`)) return
     try {
@@ -516,10 +582,147 @@ export default function AdminRewardsManager() {
   const borders = shop.filter((s) => s.item_type === 'avatar_border')
   const previewStickers = buildStickerMeta()
 
+  // Individual = pack con un solo sticker
+  const isIndividual = (s: ShopItem) => (s.metadata?.stickers?.length || 0) <= 1
+  const stickerMultiPacks = stickerPacks.filter((s) => !isIndividual(s))
+  const stickerSingles = stickerPacks.filter((s) => isIndividual(s))
+
+  // Agrupar por rareza (orden de RARITIES)
+  const groupByRarity = <T extends { metadata?: RewardMeta }>(items: T[]) => {
+    const groups: { rarity: Rarity; items: T[] }[] = []
+    for (const r of RARITIES) {
+      const list = items.filter((i) => (i.metadata?.rarity || 'comun') === r.id)
+      if (list.length) groups.push({ rarity: r.id, items: list })
+    }
+    return groups
+  }
+
+  // Agrupar insignias por categoría
+  const badgesByCategory = (() => {
+    const map = new Map<string, Badge[]>()
+    for (const b of badges) {
+      const cat = b.category || 'general'
+      if (!map.has(cat)) map.set(cat, [])
+      map.get(cat)!.push(b)
+    }
+    return [...map.entries()]
+  })()
+
+  const currentCount =
+    tab === 'stickers' ? stickerPacks.length : tab === 'borders' ? borders.length : badges.length
+
   const tabMeta: Record<Tab, { title: string; help: string }> = {
     stickers: { title: 'Pack de stickers / emojis', help: 'Define emojis o sube imágenes. Se usan en el foro con :id:.' },
     borders: { title: 'Marco de avatar', help: 'Elige un marco de la galería o crea uno con clase CSS.' },
     badges: { title: 'Insignia', help: 'Sube un icono, agrega descripción y rareza.' },
+  }
+
+  const acqDisplay = (meta?: RewardMeta, price?: number) => {
+    const acq = meta?.acquisition || 'purchase'
+    if (acq === 'purchase') return <MeduCoin amount={price ?? 0} size={13} />
+    return (
+      <span className="text-faint text-xs">
+        {acquisitionById(acq).icon} {acquisitionById(acq).label}
+      </span>
+    )
+  }
+
+  const shopVisual = (s: ShopItem) => {
+    if (s.item_type === 'avatar_border') {
+      if (s.metadata?.border_style === 'image' && s.asset_url) {
+        return (
+          <span className="avatar-frame admin-catalog-ring">
+            <span className="profile-avatar avatar-frame-base">A</span>
+            <img src={s.asset_url} alt="" className="avatar-frame-img" />
+          </span>
+        )
+      }
+      return (
+        <span className={`profile-avatar-ring ${s.css_class || ''} admin-catalog-ring`}>
+          <span className="profile-avatar">A</span>
+        </span>
+      )
+    }
+    const first = s.metadata?.stickers?.[0]
+    return (
+      <span className="admin-cat-glyph">
+        {first?.image ? <img src={first.image} alt="" /> : <span>{first?.emoji || '😀'}</span>}
+      </span>
+    )
+  }
+
+  const renderShopRow = (s: ShopItem) => {
+    const off = s.metadata?.active === false
+    return (
+      <li key={s.id} className={`admin-cat-item${off ? ' is-disabled' : ''}`}>
+        <div className="admin-cat-info">
+          {shopVisual(s)}
+          <div className="admin-cat-text">
+            <p className="admin-cat-name">{s.name}</p>
+            <div className="admin-cat-meta">
+              <RarityTag rarity={s.metadata?.rarity} />
+              {acqDisplay(s.metadata, s.price_coins)}
+              {off ? <span className="admin-cat-off">Oculto</span> : null}
+            </div>
+            {s.item_type === 'sticker_pack' && (s.metadata?.stickers?.length || 0) > 0 ? (
+              <div className="admin-cat-stickers">
+                {(s.metadata?.stickers || []).map((st, i) => (
+                  <span key={i} className="admin-cat-chip" title={st.label}>
+                    {st.image ? <img src={st.image} alt="" /> : st.emoji}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        </div>
+        <div className="admin-cat-actions">
+          <button type="button" className="admin-act-btn" onClick={() => editShopItem(s)}>
+            Editar
+          </button>
+          <button type="button" className="admin-act-btn" onClick={() => toggleShopActive(s, off)}>
+            {off ? 'Habilitar' : 'Deshabilitar'}
+          </button>
+          <button type="button" className="admin-act-btn admin-act-del" onClick={() => remove('shop_item', s.slug, s.name)}>
+            Eliminar
+          </button>
+        </div>
+      </li>
+    )
+  }
+
+  const renderBadgeRow = (b: Badge) => {
+    const off = b.is_active === false
+    return (
+      <li key={b.id} className={`admin-cat-item${off ? ' is-disabled' : ''}`}>
+        <div className="admin-cat-info">
+          <span className="admin-cat-glyph">
+            {b.icon_url ? <img src={b.icon_url} alt="" /> : <span>{b.metadata?.emoji || '🏅'}</span>}
+          </span>
+          <div className="admin-cat-text">
+            <p className="admin-cat-name">{b.name}</p>
+            <div className="admin-cat-meta">
+              <RarityTag rarity={b.metadata?.rarity} />
+              <span className="text-faint text-xs">
+                {acquisitionById(b.metadata?.acquisition || 'reward').icon} {b.category}
+              </span>
+              {off ? <span className="admin-cat-off">Oculta</span> : null}
+            </div>
+            {b.description ? <p className="admin-cat-desc">{b.description}</p> : null}
+          </div>
+        </div>
+        <div className="admin-cat-actions">
+          <button type="button" className="admin-act-btn" onClick={() => editBadge(b)}>
+            Editar
+          </button>
+          <button type="button" className="admin-act-btn" onClick={() => toggleBadgeActive(b, off)}>
+            {off ? 'Habilitar' : 'Deshabilitar'}
+          </button>
+          <button type="button" className="admin-act-btn admin-act-del" onClick={() => remove('badge', b.slug, b.name)}>
+            Eliminar
+          </button>
+        </div>
+      </li>
+    )
   }
 
   return (
@@ -548,7 +751,88 @@ export default function AdminRewardsManager() {
         )}
       </div>
 
-      <div className="admin-reward-grid">
+      {/* Toolbar */}
+      <div className="admin-reward-toolbar">
+        <p className="text-sm text-muted">{currentCount} elemento(s) en catálogo</p>
+        <button type="button" className="btn-primary text-sm" onClick={openNew}>
+          + Agregar nuevo
+        </button>
+      </div>
+
+      {/* Catálogo agrupado */}
+      {loading ? (
+        <p className="text-sm text-muted">Cargando…</p>
+      ) : tab === 'stickers' ? (
+        <div className="space-y-6">
+          <div>
+            <h3 className="admin-cat-section">Packs ({stickerMultiPacks.length})</h3>
+            {stickerMultiPacks.length === 0 ? (
+              <p className="text-xs text-faint">Aún no hay packs. Crea uno con “Agregar nuevo”.</p>
+            ) : (
+              groupByRarity(stickerMultiPacks).map((g) => (
+                <div key={g.rarity} className="admin-cat-group">
+                  <p className="admin-cat-group-label">{rarityById(g.rarity).label}</p>
+                  <ul className="admin-cat-list">{g.items.map(renderShopRow)}</ul>
+                </div>
+              ))
+            )}
+          </div>
+          <div>
+            <h3 className="admin-cat-section">Stickers individuales ({stickerSingles.length})</h3>
+            {stickerSingles.length === 0 ? (
+              <p className="text-xs text-faint">Sin stickers individuales todavía.</p>
+            ) : (
+              groupByRarity(stickerSingles).map((g) => (
+                <div key={g.rarity} className="admin-cat-group">
+                  <p className="admin-cat-group-label">{rarityById(g.rarity).label}</p>
+                  <ul className="admin-cat-list">{g.items.map(renderShopRow)}</ul>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      ) : tab === 'borders' ? (
+        <div className="space-y-4">
+          {borders.length === 0 ? (
+            <p className="text-xs text-faint">Aún no hay marcos. Crea uno con “Agregar nuevo”.</p>
+          ) : (
+            groupByRarity(borders).map((g) => (
+              <div key={g.rarity} className="admin-cat-group">
+                <p className="admin-cat-group-label">{rarityById(g.rarity).label}</p>
+                <ul className="admin-cat-list">{g.items.map(renderShopRow)}</ul>
+              </div>
+            ))
+          )}
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {badges.length === 0 ? (
+            <p className="text-xs text-faint">Aún no hay insignias. Crea una con “Agregar nuevo”.</p>
+          ) : (
+            badgesByCategory.map(([cat, list]) => (
+              <div key={cat} className="admin-cat-group">
+                <p className="admin-cat-group-label">{cat}</p>
+                <ul className="admin-cat-list">{list.map(renderBadgeRow)}</ul>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {/* Modal crear / editar */}
+      {modalOpen && (
+        <div className="admin-modal-overlay" role="dialog" aria-modal="true" onClick={closeModal}>
+          <div className="admin-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="admin-modal-head">
+              <h2 className="font-display font-semibold text-text text-base">
+                {editingSlug ? `Editar · ${editingSlug}` : `Crear · ${tabMeta[tab].title}`}
+              </h2>
+              <button type="button" className="admin-modal-close" onClick={closeModal} aria-label="Cerrar">
+                ✕
+              </button>
+            </div>
+            <div className="admin-modal-body">
+              <div className="admin-reward-grid">
         {/* ─── Formulario ─── */}
         <section className="card-glass p-4 sm:p-6 space-y-4">
           <div className="flex items-center justify-between gap-2">
@@ -1047,111 +1331,10 @@ export default function AdminRewardsManager() {
             </div>
           )}
         </section>
-      </div>
-
-      {/* ─── Catálogo actual (click para editar) ─── */}
-      {!loading && (
-        <section className="card-glass p-4 sm:p-6">
-          <h2 className="font-display font-semibold text-text mb-4">
-            Catálogo actual {tab === 'stickers' ? `(${stickerPacks.length})` : tab === 'borders' ? `(${borders.length})` : `(${badges.length})`}
-          </h2>
-
-          {tab === 'stickers' && (
-            <ul className="admin-catalog-list">
-              {stickerPacks.length === 0 ? (
-                <li className="text-xs text-faint">Aún no hay packs.</li>
-              ) : (
-                stickerPacks.map((s) => (
-                  <li key={s.id} className="admin-catalog-row">
-                    <button type="button" className="admin-catalog-main" onClick={() => editShopItem(s)}>
-                      <span className="admin-catalog-emojis">
-                        {(s.metadata?.stickers || []).slice(0, 4).map((st) =>
-                          st.image ? '🖼️' : st.emoji,
-                        ).join(' ') || '—'}
-                      </span>
-                      <span className="admin-catalog-name">{s.name}</span>
-                      <RarityTag rarity={s.metadata?.rarity} />
-                      {(s.metadata?.acquisition || 'purchase') === 'purchase' ? (
-                        <MeduCoin amount={s.price_coins} size={13} />
-                      ) : (
-                        <span className="text-faint text-xs">
-                          {acquisitionById(s.metadata?.acquisition).icon} {acquisitionById(s.metadata?.acquisition).label}
-                        </span>
-                      )}
-                    </button>
-                    <button type="button" className="admin-catalog-del" onClick={() => remove('shop_item', s.slug, s.name)}>
-                      ✕
-                    </button>
-                  </li>
-                ))
-              )}
-            </ul>
-          )}
-
-          {tab === 'borders' && (
-            <ul className="admin-catalog-list">
-              {borders.length === 0 ? (
-                <li className="text-xs text-faint">Aún no hay marcos.</li>
-              ) : (
-                borders.map((s) => (
-                  <li key={s.id} className="admin-catalog-row">
-                    <button type="button" className="admin-catalog-main" onClick={() => editShopItem(s)}>
-                      {s.metadata?.border_style === 'image' && s.asset_url ? (
-                        <span className="avatar-frame admin-catalog-ring">
-                          <span className="profile-avatar avatar-frame-base">A</span>
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={s.asset_url} alt="" className="avatar-frame-img" />
-                        </span>
-                      ) : (
-                        <span className={`profile-avatar-ring ${s.css_class} admin-catalog-ring`}>
-                          <span className="profile-avatar">A</span>
-                        </span>
-                      )}
-                      <span className="admin-catalog-name">{s.name}</span>
-                      <RarityTag rarity={s.metadata?.rarity} />
-                      {(s.metadata?.acquisition || 'purchase') === 'purchase' ? (
-                        <MeduCoin amount={s.price_coins} size={13} />
-                      ) : (
-                        <span className="text-faint text-xs">
-                          {acquisitionById(s.metadata?.acquisition).icon} {acquisitionById(s.metadata?.acquisition).label}
-                        </span>
-                      )}
-                    </button>
-                    <button type="button" className="admin-catalog-del" onClick={() => remove('shop_item', s.slug, s.name)}>
-                      ✕
-                    </button>
-                  </li>
-                ))
-              )}
-            </ul>
-          )}
-
-          {tab === 'badges' && (
-            <ul className="admin-badge-grid">
-              {badges.length === 0 ? (
-                <li className="text-xs text-faint">Aún no hay insignias.</li>
-              ) : (
-                badges.map((b) => (
-                  <li key={b.id} className="admin-badge-card">
-                    <button type="button" className="admin-badge-main" onClick={() => editBadge(b)}>
-                      {b.icon_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={b.icon_url} alt="" className="w-12 h-12 mx-auto object-contain mb-1" />
-                      ) : (
-                        <span className="text-2xl block mb-1">{b.metadata?.emoji || '🏅'}</span>
-                      )}
-                      <p className="text-xs font-semibold">{b.name}</p>
-                      <RarityTag rarity={b.metadata?.rarity} />
-                    </button>
-                    <button type="button" className="admin-catalog-del admin-badge-del" onClick={() => remove('badge', b.slug, b.name)}>
-                      ✕
-                    </button>
-                  </li>
-                ))
-              )}
-            </ul>
-          )}
-        </section>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
