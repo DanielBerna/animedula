@@ -10,25 +10,47 @@ type Props = {
   disabled?: boolean
 }
 
+type InvShopItem = { slug?: string; item_type?: string }
+
+function invSlug(raw: unknown): InvShopItem | null {
+  // El join de Supabase puede venir como objeto o como array según el esquema.
+  if (Array.isArray(raw)) return (raw[0] as InvShopItem) ?? null
+  return (raw as InvShopItem) ?? null
+}
+
 export default function StickerPicker({ value, onChange, disabled }: Props) {
   const [ownedPacks, setOwnedPacks] = useState<string[]>([])
   const [all, setAll] = useState<RuntimeSticker[]>([])
   const [open, setOpen] = useState(false)
 
-  useEffect(() => {
-    loadStickers().then(setAll)
-    fetch('/api/gamification')
+  const refresh = (force = false) => {
+    loadStickers(force).then(setAll)
+    fetch('/api/gamification', { cache: 'no-store' })
       .then((r) => r.json())
       .then((data) => {
         const slugs = (data.inventory || [])
-          .map((i: { shop_items?: { slug?: string; item_type?: string } | null }) => i.shop_items)
-          .filter((s: { item_type?: string } | null) => s?.item_type === 'sticker_pack')
-          .map((s: { slug?: string }) => s?.slug)
+          .map((i: { shop_items?: unknown }) => invSlug(i.shop_items))
+          .filter((s: InvShopItem | null) => s?.item_type === 'sticker_pack')
+          .map((s: InvShopItem | null) => s?.slug)
           .filter(Boolean) as string[]
         setOwnedPacks(slugs)
       })
       .catch(() => {})
+  }
+
+  useEffect(() => {
+    refresh()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Al abrir el panel, refresca para mostrar stickers recién adquiridos/creados.
+  const toggle = () => {
+    setOpen((o) => {
+      const next = !o
+      if (next) refresh(true)
+      return next
+    })
+  }
 
   // Stickers disponibles: gratis + packs comprados (dedupe por id)
   const owned = new Set(ownedPacks)
@@ -46,7 +68,7 @@ export default function StickerPicker({ value, onChange, disabled }: Props) {
         type="button"
         disabled={disabled}
         className="btn-ghost text-xs py-1 px-2"
-        onClick={() => setOpen((o) => !o)}
+        onClick={toggle}
       >
         😀 Stickers
       </button>
@@ -68,8 +90,10 @@ export default function StickerPicker({ value, onChange, disabled }: Props) {
               )}
             </button>
           ))}
-          {hasOnlyFree ? (
-            <p className="text-[10px] text-faint w-full mt-1">Compra packs en /perfil para más stickers.</p>
+          {available.length === 0 ? (
+            <p className="text-[10px] text-faint w-full mt-1">No hay stickers disponibles aún.</p>
+          ) : hasOnlyFree ? (
+            <p className="text-[10px] text-faint w-full mt-1">Consigue más packs en tu biblioteca.</p>
           ) : null}
         </div>
       )}

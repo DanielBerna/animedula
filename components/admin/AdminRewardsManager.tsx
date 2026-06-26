@@ -326,7 +326,8 @@ export default function AdminRewardsManager() {
     stickers
       .map((s) => {
         const label = s.label.trim()
-        const id = (s.id.trim() || slugify(label)).trim()
+        // El id se usa como token :id: en el foro, así que debe ser slug válido.
+        const id = slugify(s.id.trim() || label)
         if (!id || !label || (!s.emoji.trim() && !s.image.trim())) return null
         return { id, label, emoji: s.emoji.trim() || undefined, image: s.image.trim() || undefined }
       })

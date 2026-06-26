@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { DAILY_MISSIONS } from '../lib/gamification/missions'
 import MeduCoin from './MeduCoin'
+import { useToast } from './ToastProvider'
 
 type MissionState = {
   key: string
@@ -15,9 +16,11 @@ export default function DailyMissions() {
   const [missions, setMissions] = useState<MissionState[]>([])
   const [coins, setCoins] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [busy, setBusy] = useState<string | null>(null)
+  const { showToast } = useToast()
 
   const load = async () => {
-    const res = await fetch('/api/missions')
+    const res = await fetch('/api/missions', { cache: 'no-store' })
     const data = await res.json()
     setMissions(data.missions?.length ? data.missions : DAILY_MISSIONS.map((m) => ({ ...m, completed: false })))
     setCoins(data.coins ?? 0)
@@ -35,12 +38,30 @@ export default function DailyMissions() {
   }, [])
 
   const claim = async (key: string) => {
-    await fetch('/api/missions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mission_key: key }),
-    })
-    await load()
+    setBusy(key)
+    try {
+      const res = await fetch('/api/missions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mission_key: key }),
+      })
+      const data = await res.json()
+      if (res.ok && data.completed) {
+        showToast({ title: '¡Misión completada!', description: `+${data.coins} MéduCoins` })
+      } else if (res.ok && data.already) {
+        showToast({ title: 'Ya reclamada', description: 'Esta misión ya estaba completada hoy.' })
+      } else if (res.status === 403) {
+        showToast({
+          title: 'Aún no completas la misión',
+          description: 'Haz la acción (comentar, reseñar, foro, lista) y vuelve a reclamar.',
+        })
+      } else {
+        showToast({ title: 'No se pudo reclamar', description: data.error || 'Intenta de nuevo.' })
+      }
+      await load()
+    } finally {
+      setBusy(null)
+    }
   }
 
   if (loading) return <p className="text-sm text-muted">Cargando misiones…</p>
@@ -58,8 +79,13 @@ export default function DailyMissions() {
             {m.completed ? (
               <span className="text-xs text-faint">✓ +{m.coins}</span>
             ) : (
-              <button type="button" className="btn-ghost text-xs py-1 px-2" onClick={() => claim(m.key)}>
-                Reclamar +{m.coins}
+              <button
+                type="button"
+                className="btn-ghost text-xs py-1 px-2"
+                disabled={busy === m.key}
+                onClick={() => claim(m.key)}
+              >
+                {busy === m.key ? '…' : `Reclamar +${m.coins}`}
               </button>
             )}
           </li>

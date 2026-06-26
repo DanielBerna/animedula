@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import MeduCoin from './MeduCoin'
 import AvatarFrame from './AvatarFrame'
+import { useToast } from './ToastProvider'
 
 type Acquisition = 'free' | 'purchase' | 'reward' | 'premium' | 'gift'
 
@@ -65,9 +66,10 @@ export default function UserLibrary({
   const [isPremium, setIsPremium] = useState(false)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState<string | null>(null)
+  const { showToast } = useToast()
 
   const load = async () => {
-    const res = await fetch('/api/gamification')
+    const res = await fetch('/api/gamification', { cache: 'no-store' })
     const data = await res.json()
     setBadges(data.badges || [])
     setTitles(data.titles || [])
@@ -85,7 +87,7 @@ export default function UserLibrary({
     load()
   }, [])
 
-  const act = async (body: Record<string, unknown>, key: string) => {
+  const act = async (body: Record<string, unknown>, key: string, okMsg?: string) => {
     setBusy(key)
     try {
       const res = await fetch('/api/gamification', {
@@ -94,19 +96,26 @@ export default function UserLibrary({
         body: JSON.stringify(body),
       })
       const data = await res.json()
-      if (!res.ok) alert(data.error || 'No se pudo completar la acción')
+      if (!res.ok) {
+        showToast({ title: 'No se pudo completar', description: data.error || 'Intenta de nuevo.' })
+      } else if (okMsg) {
+        showToast({ title: okMsg, description: 'Disponible en tu biblioteca.' })
+      }
       await load()
     } finally {
       setBusy(null)
     }
   }
 
-  const buy = (slug: string) => act({ action: 'buy', slug }, `buy-${slug}`)
-  const claim = (slug: string) => act({ action: 'claim', slug }, `claim-${slug}`)
-  const equip = (slug: string) => act({ action: 'equip', slug }, `equip-${slug}`)
+  const buy = (slug: string) => act({ action: 'buy', slug }, `buy-${slug}`, '¡Comprado!')
+  const claim = (slug: string) => act({ action: 'claim', slug }, `claim-${slug}`, '¡Obtenido!')
+  const equip = (slug: string) => act({ action: 'equip', slug }, `equip-${slug}`, 'Equipado')
   const selectTitle = (slug: string) => act({ action: 'select_title', slug }, `title-${slug}`)
 
-  const ownedSlugs = new Set(inventory.map((i) => i.shop_items?.slug).filter(Boolean))
+  // El join de Supabase puede venir como objeto o como array según el esquema.
+  const invShop = (i: InventoryRow) =>
+    (Array.isArray(i.shop_items) ? i.shop_items[0] : i.shop_items) as InventoryRow['shop_items']
+  const ownedSlugs = new Set(inventory.map((i) => invShop(i)?.slug).filter(Boolean))
   const borders = shop.filter((s) => s.item_type === 'avatar_border')
   const stickerPacks = shop.filter((s) => s.item_type === 'sticker_pack')
 

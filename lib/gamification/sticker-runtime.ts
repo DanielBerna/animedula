@@ -13,20 +13,33 @@ export type RuntimeSticker = {
 }
 
 let cache: RuntimeSticker[] | null = null
+let cachedAt = 0
 let inflight: Promise<RuntimeSticker[]> | null = null
 
-export async function loadStickers(): Promise<RuntimeSticker[]> {
-  if (cache) return cache
+const TTL_MS = 30_000
+
+/**
+ * Carga las definiciones de stickers. Usa caché con TTL corto para que los
+ * stickers recién creados/adquiridos aparezcan sin recargar a fondo.
+ * Pasa `force = true` para ignorar la caché (p. ej. al abrir el picker).
+ */
+export async function loadStickers(force = false): Promise<RuntimeSticker[]> {
+  const fresh = cache && Date.now() - cachedAt < TTL_MS
+  if (!force && fresh) return cache as RuntimeSticker[]
+  if (force) inflight = null
   if (!inflight) {
-    inflight = fetch('/api/stickers')
+    inflight = fetch('/api/stickers', { cache: 'no-store' })
       .then((r) => r.json())
       .then((d) => {
         cache = (d.stickers || []) as RuntimeSticker[]
+        cachedAt = Date.now()
+        inflight = null
         return cache
       })
       .catch(() => {
-        cache = []
-        return cache
+        inflight = null
+        cache = cache || []
+        return cache as RuntimeSticker[]
       })
   }
   return inflight

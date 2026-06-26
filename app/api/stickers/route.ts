@@ -1,7 +1,7 @@
 import { FREE_STICKERS } from '../../../lib/gamification/stickers'
 import { getSupabaseAdmin, isSupabaseConfigured } from '../../../lib/supabaseAdmin'
 
-export const revalidate = 60
+export const revalidate = 10
 
 type StickerDef = { id: string; emoji: string | null; image: string | null; label: string; pack: string; free: boolean }
 
