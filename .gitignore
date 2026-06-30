@@ -9,6 +9,7 @@ out/
 .env.local
 .env.production
 .env.*.local
+deploy/vercel.env
 
 # logs y sistema
 *.log

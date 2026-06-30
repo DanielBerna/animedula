@@ -69,6 +69,22 @@ const DEFAULT_PROVIDERS: WatchProvider[] = [
 
 const LANG_PREF_KEY = 'animedula-watch-lang'
 
+const LOCAL_HOST_RE = /localhost|127\.0\.0\.1|0\.0\.0\.0|192\.168\.|10\.\d+\./i
+
+function templateLooksLocal(template: string): boolean {
+  return LOCAL_HOST_RE.test(template)
+}
+
+function filterUnsafeProviders(list: WatchProvider[]): WatchProvider[] {
+  if (process.env.NODE_ENV !== 'production') return list
+  return list.filter(
+    (p) =>
+      !templateLooksLocal(p.template) &&
+      !(p.anilistTemplate && templateLooksLocal(p.anilistTemplate)) &&
+      !(p.kitsuTemplate && templateLooksLocal(p.kitsuTemplate)),
+  )
+}
+
 export function langToEmbedType(lang: WatchLang): 'sub' | 'dub' {
   return lang === 'dub' ? 'dub' : 'sub'
 }
@@ -105,13 +121,16 @@ export function getWatchProviders(): WatchProvider[] {
     }
   } else {
     const single = process.env.NEXT_PUBLIC_ANIME_EMBED_TEMPLATE
-    if (single) {
+    if (single && !templateLooksLocal(single)) {
       list = [{ id: 'custom', name: 'Servidor 1', template: single, dub: true }, ...DEFAULT_PROVIDERS]
     } else {
       list = DEFAULT_PROVIDERS
     }
   }
-  return [...list].sort((a, b) => (b.priority ?? 50) - (a.priority ?? 50))
+  const safe = filterUnsafeProviders(list)
+  return [...(safe.length ? safe : DEFAULT_PROVIDERS)].sort(
+    (a, b) => (b.priority ?? 50) - (a.priority ?? 50),
+  )
 }
 
 function pickTemplate(provider: WatchProvider, idKind: WatchIdKind): string | null {
