@@ -131,7 +131,7 @@ export default async function CalendarioPage({ searchParams }: Props) {
                       <span>{group.label}</span>
                       <span className="text-faint font-normal">{group.items.length} títulos</span>
                     </h3>
-                    <div className="space-y-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
                       {group.items.map((a) => (
                         <CalendarRow key={a.mal_id} anime={a} label={group.label} />
                       ))}
@@ -140,7 +140,7 @@ export default async function CalendarioPage({ searchParams }: Props) {
                 ))}
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
                 {upcoming.map((a) => (
                   <CalendarRow key={a.mal_id} anime={a} label="Por estrenar" />
                 ))}
