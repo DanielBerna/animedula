@@ -12,6 +12,7 @@ import {
 } from '../../lib/watch/progress'
 import type { EmbedPlaybackSource, MirrorSource, PlaybackSource, WatchLang } from '../../lib/watch/types'
 import HlsPlayer from './HlsPlayer'
+import WatchEpisodeList, { type EpisodeListItem } from './WatchEpisodeList'
 
 type Props = {
   malId: number
@@ -28,6 +29,18 @@ type MirrorsPayload = {
   hasLatino: boolean
   langsAvailable: WatchLang[]
   anilistId: number | null
+  subtitleUrl?: string | null
+  subtitlesConfigured?: boolean
+}
+
+type EpisodeCatalogPayload = {
+  maxEpisode: number
+  totalEpisodes: number | null
+  airedEpisodes: number
+  isAiring: boolean
+  episodes: EpisodeListItem[]
+  embedProviders: { id: string; name: string; template: string }[]
+  latEpisodes: number[]
 }
 
 const SERVER_PREF_KEY = 'animedula-watch-source'
@@ -48,7 +61,7 @@ export default function AnimePlayer({
   const router = useRouter()
 
   const [episode, setEpisode] = useState(initialEpisode)
-  const [lang, setLang] = useState<WatchLang>('lat')
+  const [lang, setLang] = useState<WatchLang>('sub')
   const [sourceId, setSourceId] = useState('')
   const [payload, setPayload] = useState<MirrorsPayload | null>(null)
   const [loadingSources, setLoadingSources] = useState(true)
@@ -59,6 +72,7 @@ export default function AnimePlayer({
   const [submitUrl, setSubmitUrl] = useState('')
   const [submitOpen, setSubmitOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [catalog, setCatalog] = useState<EpisodeCatalogPayload | null>(null)
 
   const refreshWatched = useCallback(() => {
     setWatched(new Set(getWatchEntry(malId).watched))
@@ -79,6 +93,21 @@ export default function AnimePlayer({
     document.body.classList.toggle('watch-cinema-on', cinema)
     return () => document.body.classList.remove('watch-cinema-on')
   }, [cinema])
+
+  useEffect(() => {
+    let cancelled = false
+    fetch(`/api/watch/episodes?malId=${malId}`)
+      .then((r) => r.json())
+      .then((data: EpisodeCatalogPayload) => {
+        if (!cancelled) setCatalog(data)
+      })
+      .catch(() => {
+        if (!cancelled) setCatalog(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [malId])
 
   useEffect(() => {
     let cancelled = false
@@ -200,13 +229,26 @@ export default function AnimePlayer({
     refreshWatched()
   }, [malId, episode, refreshWatched])
 
-  const maxEp = episodeCount && episodeCount > 0 ? episodeCount : 24
-  const episodeButtons = Math.min(maxEp, 120)
+  const maxEp = useMemo(() => {
+    if (catalog?.maxEpisode && catalog.maxEpisode > 0) return catalog.maxEpisode
+    if (episodeCount && episodeCount > 0) return episodeCount
+    return 1
+  }, [catalog, episodeCount])
+
+  const epCountLabel = useMemo(() => {
+    if (catalog?.totalEpisodes) return catalog.totalEpisodes
+    if (catalog?.isAiring && catalog.airedEpisodes > 0) return catalog.airedEpisodes
+    if (episodeCount) return episodeCount
+    return null
+  }, [catalog, episodeCount])
+
   const watchedCount = watched.size
   const currentWatched = isEpisodeWatched(malId, episode)
   const langLabel = WATCH_LANG_LABELS[lang]
   const hasLatinoMirror = payload?.hasLatino ?? false
   const showLatNotice = lang === 'lat' && !hasLatinoMirror && !loadingSources
+  const showSubNotice = lang === 'sub' && !loadingSources
+  const subtitleUrl = payload?.subtitleUrl ?? null
 
   const submitMirror = async () => {
     if (!submitUrl.trim()) return
@@ -257,6 +299,7 @@ export default function AnimePlayer({
         <HlsPlayer
           sources={[{ url: currentSource.url, quality: currentSource.quality || 'Auto', isM3U8: true }]}
           referer={currentSource.referer || undefined}
+          subtitleUrl={lang === 'sub' ? subtitleUrl || undefined : undefined}
         />
       )
     }
@@ -327,14 +370,26 @@ export default function AnimePlayer({
         <div className="watch-lang-notice watch-lang-notice-ok" role="status">
           <strong>Doblaje latino</strong> disponible en servidores Animédula para este capítulo.
         </div>
+      ) : showSubNotice ? (
+        <div className="watch-lang-notice" role="note">
+          <strong>Audio en japonés.</strong> En <strong>Vidlink</strong> intentamos cargar subtítulos en español
+          {payload?.subtitlesConfigured ? ' (OpenSubtitles)' : ''}.
+          Los espejos ★ tipo Mega / RapidVideo suelen traer subs integrados si los agregas en admin.
+          {!payload?.subtitlesConfigured ? (
+            <span className="block mt-1 text-faint">
+              Configura <code className="text-[10px]">OPENSUBTITLES_API_KEY</code> para subs ES automáticos en Vidlink.
+            </span>
+          ) : null}
+        </div>
       ) : null}
 
       <div className="watch-toolbar">
         <span className="watch-now-playing">
           Episodio <strong>{episode}</strong>
-          {episodeCount ? ` de ${episodeCount}` : ''} · {langLabel}
+          {epCountLabel ? ` de ${epCountLabel}` : ''}
+          {catalog?.isAiring && !catalog.totalEpisodes ? ' · en emisión' : ''} · {langLabel}
         </span>
-        {episodeCount ? (
+        {epCountLabel ? (
           <span className="watch-progress-pill">
             {watchedCount} visto{watchedCount === 1 ? '' : 's'}
           </span>
@@ -395,7 +450,22 @@ export default function AnimePlayer({
       </div>
 
       <div className="watch-controls">
-        <div className="watch-server-tabs" role="group" aria-label="Servidor">
+        <div className="watch-server-block">
+          <p className="watch-server-block-label text-xs text-faint mb-1">
+            Servidores · cap. {episode}
+            {playbackSources.length > 0 ? (
+              <>
+                {' '}
+                ({payload?.mirrors.length ?? 0} propio
+                {(payload?.mirrors.length ?? 0) === 1 ? '' : 's'}
+                {(payload?.embeds.length ?? 0) > 0
+                  ? ` + ${payload?.embeds.length} externo${(payload?.embeds.length ?? 0) === 1 ? '' : 's'}`
+                  : ''}
+                )
+              </>
+            ) : null}
+          </p>
+          <div className="watch-server-tabs" role="group" aria-label="Servidor">
           {playbackSources.map((s) => {
             const key = sourceKey(s)
             const isMirror = s.tier === 'mirror'
@@ -412,9 +482,13 @@ export default function AnimePlayer({
                 {s.tier === 'embed' && s.idKind === 'anilist' ? (
                   <span className="watch-server-badge watch-server-badge-alt">AL</span>
                 ) : null}
+                {s.tier === 'embed' && s.idKind === 'kitsu' ? (
+                  <span className="watch-server-badge watch-server-badge-alt">K</span>
+                ) : null}
               </button>
             )
           })}
+          </div>
         </div>
 
         <div className="watch-type-toggle" role="group" aria-label="Idioma del audio">
@@ -430,7 +504,7 @@ export default function AnimePlayer({
             type="button"
             className={`watch-type-btn${lang === 'sub' ? ' is-active' : ''}`}
             onClick={() => setLangAndSave('sub')}
-            title="Audio original en japonés con subtítulos"
+            title="Audio original en japonés con subtítulos en español"
           >
             {WATCH_LANG_LABELS.sub}
           </button>
@@ -463,27 +537,22 @@ export default function AnimePlayer({
         </label>
       </div>
 
-      <div className="watch-episodes" role="group" aria-label="Episodios">
-        {Array.from({ length: episodeButtons }, (_, i) => i + 1).map((n) => {
-          const seen = watched.has(n)
-          return (
-            <button
-              type="button"
-              key={n}
-              className={`watch-ep${n === episode ? ' is-active' : ''}${seen ? ' is-watched' : ''}`}
-              onClick={() => setEpisodeAndUrl(n)}
-              title={seen ? `Episodio ${n} · visto` : `Episodio ${n}`}
-            >
-              {seen ? '✓ ' : ''}
-              {n}
-            </button>
-          )
-        })}
-      </div>
+      <WatchEpisodeList
+        episodes={catalog?.episodes ?? []}
+        current={episode}
+        maxEpisode={maxEp}
+        totalEpisodes={catalog?.totalEpisodes ?? episodeCount ?? null}
+        airedEpisodes={catalog?.airedEpisodes ?? 0}
+        isAiring={catalog?.isAiring ?? false}
+        watched={watched}
+        onSelect={setEpisodeAndUrl}
+      />
 
       <p className="text-xs text-faint mt-3">
-        Servidores con ★ son espejos propios (latino). El resto son externos por MAL/AniList. Si no carga,
-        prueba <strong>Otro servidor</strong>.
+        <strong>★</strong> = espejo latino en nuestra BD · Externos:{' '}
+        {(catalog?.embedProviders ?? []).map((p) => p.name).join(', ') || 'MegaPlay, Vidlink…'}.
+        Agregar en <strong>/admin/espejos</strong> o variable{' '}
+        <code className="text-[10px]">NEXT_PUBLIC_ANIME_EMBED_PROVIDERS</code>.
       </p>
     </div>
   )

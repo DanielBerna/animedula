@@ -21,7 +21,7 @@ export type EmbedPlaybackSource = {
   url: string
   lang: WatchLang
   tier: 'embed'
-  idKind: 'mal' | 'anilist'
+  idKind: 'mal' | 'anilist' | 'kitsu'
 }
 
 export type PlaybackSource = MirrorSource | EmbedPlaybackSource

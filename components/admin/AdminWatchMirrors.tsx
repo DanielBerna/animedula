@@ -1,15 +1,19 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useToast } from '../ToastProvider'
+import { getWatchProviders } from '../../lib/watch/embed'
+import { previewCsvImport, WATCH_CSV_TEMPLATE, parseWatchFeedCsv } from '../../lib/watch/csv-import'
 import type { WatchEpisodeSourceRow, WatchLang, WatchMediaRow } from '../../lib/watch/types'
 import type { WatchCatalogGap, WatchSubmission } from '../../lib/watch/pipeline'
 
 const LANG_OPTIONS: { value: WatchLang; label: string }[] = [
   { value: 'lat', label: 'Latino' },
-  { value: 'sub', label: 'Sub' },
+  { value: 'sub', label: 'Sub ES' },
   { value: 'dub', label: 'Dub EN' },
 ]
+
+const SERVER_PRESETS = ['Mega', 'RapidVideo', 'MP4Upload', 'Fembed', 'Ok.ru', 'Streamtape'] as const
 
 const TYPE_OPTIONS = [
   { value: 'hls', label: 'HLS (.m3u8)' },
@@ -24,8 +28,13 @@ export default function AdminWatchMirrors() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [importJson, setImportJson] = useState('')
+  const [importCsv, setImportCsv] = useState('')
+  const [csvPreview, setCsvPreview] = useState<{ shows: number; episodes: number; sources: number } | null>(
+    null,
+  )
   const [gaps, setGaps] = useState<WatchCatalogGap[]>([])
   const [pending, setPending] = useState<WatchSubmission[]>([])
+  const embedProviders = useMemo(() => getWatchProviders(), [])
 
   const [mediaForm, setMediaForm] = useState({
     id: '' as string | number,
@@ -38,8 +47,8 @@ export default function AdminWatchMirrors() {
   const [sourceForm, setSourceForm] = useState({
     media_id: '' as string | number,
     episode: '1',
-    lang: 'lat' as WatchLang,
-    source_type: 'hls' as WatchEpisodeSourceRow['source_type'],
+    lang: 'sub' as WatchLang,
+    source_type: 'iframe' as WatchEpisodeSourceRow['source_type'],
     server_label: 'Mega',
     url: '',
     referer: '',
@@ -257,6 +266,57 @@ export default function AdminWatchMirrors() {
     }
   }
 
+  const updateCsvPreview = (text: string) => {
+    setImportCsv(text)
+    if (!text.trim()) {
+      setCsvPreview(null)
+      return
+    }
+    const parsed = parseWatchFeedCsv(text)
+    if (parsed.errors.length || !parsed.rows.length) {
+      setCsvPreview(null)
+      return
+    }
+    setCsvPreview(previewCsvImport(parsed.rows))
+  }
+
+  const runCsvImport = async () => {
+    setSaving(true)
+    try {
+      const res = await fetch('/api/admin/watch-mirrors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'import_csv', csv: importCsv }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Importación CSV fallida')
+      showToast({
+        title: 'CSV importado',
+        description: `${data.sourcesAdded} espejos · ${data.sourcesSkipped} omitidos · ${data.showsRegistered} anime`,
+      })
+      if (data.errors?.length) {
+        console.warn('[import csv espejos]', data.errors)
+      }
+      setImportCsv('')
+      setCsvPreview(null)
+      await Promise.all([loadMedia(), loadGaps(), loadPending()])
+    } catch (err: unknown) {
+      showToast({
+        title: 'Error',
+        description: err instanceof Error ? err.message : 'CSV inválido o error de red',
+      })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const onCsvFile = (file: File | null) => {
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => updateCsvPreview(String(reader.result ?? ''))
+    reader.readAsText(file)
+  }
+
   return (
     <div className="admin-page space-y-8">
       <header>
@@ -267,6 +327,27 @@ export default function AdminWatchMirrors() {
           externos solo sirven de respaldo.
         </p>
       </header>
+
+      <section className="card-glass p-6 space-y-3">
+        <h2 className="font-display font-semibold text-text">Servidores externos (respaldo)</h2>
+        <p className="text-sm text-muted">
+          Plantillas en <code className="text-xs">NEXT_PUBLIC_ANIME_EMBED_PROVIDERS</code> o valores por
+          defecto en <code className="text-xs">lib/watch/embed.ts</code>. Placeholders:{' '}
+          <code className="text-xs">{'{malId}'}</code>, <code className="text-xs">{'{anilistId}'}</code>,{' '}
+          <code className="text-xs">{'{ep}'}</code>, <code className="text-xs">{'{type}'}</code> (sub|dub).
+        </p>
+        <ul className="space-y-2 text-xs font-mono">
+          {embedProviders.map((p) => (
+            <li key={p.id} className="p-2 rounded border border-white/8 bg-black/20">
+              <span className="text-accent font-sans font-semibold">{p.name}</span> ({p.id})
+              <div className="text-muted break-all mt-1">{p.template}</div>
+              {p.anilistTemplate ? (
+                <div className="text-faint break-all mt-0.5">AL: {p.anilistTemplate}</div>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      </section>
 
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="card-glass p-6 space-y-4">
@@ -459,11 +540,23 @@ export default function AdminWatchMirrors() {
           </div>
           <div>
             <label className="eyebrow block mb-1">Etiqueta servidor</label>
+            <div className="flex flex-wrap gap-1 mb-2">
+              {SERVER_PRESETS.map((name) => (
+                <button
+                  key={name}
+                  type="button"
+                  className="btn-ghost text-[10px] py-0.5 px-2"
+                  onClick={() => setSourceForm((f) => ({ ...f, server_label: name, source_type: 'iframe' }))}
+                >
+                  {name}
+                </button>
+              ))}
+            </div>
             <input
               className="input w-full text-sm"
               value={sourceForm.server_label}
               onChange={(e) => setSourceForm((f) => ({ ...f, server_label: e.target.value }))}
-              placeholder="Mega, MP4Upload, Fembed…"
+              placeholder="Mega, RapidVideo, MP4Upload…"
             />
           </div>
           <div>
@@ -497,6 +590,55 @@ export default function AdminWatchMirrors() {
             {saving ? 'Guardando…' : 'Añadir espejo'}
           </button>
         </div>
+      </section>
+
+      <section className="card-glass p-6 space-y-4">
+        <h2 className="font-display font-semibold text-text">Importación masiva (CSV)</h2>
+        <p className="text-sm text-muted">
+          Pega un CSV o sube un archivo desde Excel. Ideal para Mega, RapidVideo y otros embeds por
+          capítulo. Usa <code className="text-xs">lang=sub</code> para japonés + subtítulos.
+        </p>
+        <div className="flex flex-wrap gap-2 items-center">
+          <label className="btn-ghost text-xs cursor-pointer">
+            Subir .csv
+            <input
+              type="file"
+              accept=".csv,text/csv,text/plain"
+              className="sr-only"
+              onChange={(e) => onCsvFile(e.target.files?.[0] ?? null)}
+            />
+          </label>
+          <button
+            type="button"
+            className="btn-ghost text-xs"
+            onClick={() => updateCsvPreview(WATCH_CSV_TEMPLATE)}
+          >
+            Cargar plantilla ejemplo
+          </button>
+        </div>
+        <textarea
+          className="input w-full text-xs font-mono min-h-[140px]"
+          value={importCsv}
+          onChange={(e) => updateCsvPreview(e.target.value)}
+          placeholder="mal_id,title,episode,lang,source_type,server_label,url"
+        />
+        {csvPreview ? (
+          <p className="text-xs text-muted">
+            Vista previa: <strong>{csvPreview.shows}</strong> anime ·{' '}
+            <strong>{csvPreview.episodes}</strong> capítulos · <strong>{csvPreview.sources}</strong>{' '}
+            espejos
+          </p>
+        ) : importCsv.trim() ? (
+          <p className="text-xs text-faint">Revisa la cabecera del CSV (mal_id, episode, lang, url…)</p>
+        ) : null}
+        <button
+          type="button"
+          className="btn-primary text-xs"
+          disabled={saving || !importCsv.trim() || !csvPreview}
+          onClick={runCsvImport}
+        >
+          {saving ? 'Importando…' : 'Importar CSV'}
+        </button>
       </section>
 
       <section className="card-glass p-6 space-y-4">

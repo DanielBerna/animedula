@@ -9,6 +9,11 @@ import {
 } from '../../../../lib/watch/mirrors'
 import { listCatalogGaps, listPendingSubmissions, reviewSubmission } from '../../../../lib/watch/pipeline'
 import { seedWatchCatalog } from '../../../../lib/watch/catalog-seed'
+import {
+  filterOfflineCandidates,
+  mapOfflineDatabaseEntries,
+  seedOfflineCatalog,
+} from '../../../../lib/watch/offline-db'
 import { requireRateLimit } from '../../../../lib/security/api'
 import type { WatchLang } from '../../../../lib/watch/types'
 
@@ -97,8 +102,43 @@ export async function POST(req: NextRequest) {
     return Response.json(result)
   }
 
+  if (action === 'import_csv') {
+    const { parseWatchFeedCsv, csvRowsToImportPayload } = await import('../../../../lib/watch/csv-import')
+    const { importWatchMirrors } = await import('../../../../lib/watch/import')
+    const csvText = String(body.csv ?? '')
+    if (!csvText.trim()) {
+      return Response.json({ error: 'CSV vacío' }, { status: 400 })
+    }
+    const parsed = parseWatchFeedCsv(csvText)
+    if (parsed.errors.length) {
+      return Response.json({ error: parsed.errors.join('; ') }, { status: 400 })
+    }
+    if (!parsed.rows.length) {
+      return Response.json({ error: 'Sin filas válidas en el CSV' }, { status: 400 })
+    }
+    const payload = csvRowsToImportPayload(parsed.rows)
+    const result = await importWatchMirrors(payload)
+    return Response.json({ ...result, csvSkipped: parsed.skipped })
+  }
+
   if (action === 'seed_catalog') {
     const result = await seedWatchCatalog()
+    return Response.json(result)
+  }
+
+  if (action === 'import_offline_catalog') {
+    const entries = mapOfflineDatabaseEntries(body.payload ?? body.entries ?? body)
+    const filtered = filterOfflineCandidates(entries, {
+      types: Array.isArray(body.types) ? body.types : undefined,
+      statuses: Array.isArray(body.statuses) ? body.statuses : undefined,
+      minEpisodes: body.minEpisodes != null ? Number(body.minEpisodes) : undefined,
+      minScore: body.minScore != null ? Number(body.minScore) : undefined,
+      limit: body.limit != null ? Number(body.limit) : undefined,
+      requireMal: body.requireMal !== false,
+    })
+    const result = await seedOfflineCatalog(filtered, {
+      priority: body.priority != null ? Number(body.priority) : 10,
+    })
     return Response.json(result)
   }
 

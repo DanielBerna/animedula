@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { getEpisodeMirrors } from '../../../../lib/watch/mirrors'
 import { buildEmbedPlaybackSources } from '../../../../lib/watch/sources'
-import { resolveAnilistId } from '../../../../lib/watch/resolve-ids'
+import { resolveAnilistId, resolveKitsuId } from '../../../../lib/watch/resolve-ids'
 import type { WatchLang } from '../../../../lib/watch/types'
 import { requireRateLimit } from '../../../../lib/security/api'
 
@@ -9,7 +9,7 @@ export const revalidate = 120
 
 function parseLang(raw: string | null): WatchLang {
   if (raw === 'sub' || raw === 'dub' || raw === 'lat') return raw
-  return 'lat'
+  return 'sub'
 }
 
 export async function GET(req: NextRequest) {
@@ -36,6 +36,7 @@ export async function GET(req: NextRequest) {
   if (!anilistNum || !Number.isFinite(anilistNum)) {
     anilistNum = await resolveAnilistId(malId)
   }
+  const kitsuNum = await resolveKitsuId(malId)
 
   const { mirrors, media, resolvedBy, langsAvailable } = await getEpisodeMirrors({
     malId,
@@ -47,20 +48,30 @@ export async function GET(req: NextRequest) {
   const embeds = buildEmbedPlaybackSources({
     malId,
     anilistId: anilistNum,
+    kitsuId: kitsuNum,
     episode,
     lang,
+    siteOrigin: url.origin,
   })
+
+  const subtitleUrl =
+    lang === 'sub' || lang === 'lat'
+      ? `${url.origin}/api/watch/subtitles?malId=${malId}&ep=${episode}`
+      : null
 
   return Response.json({
     lang,
     episode,
     malId,
     anilistId: anilistNum,
+    kitsuId: kitsuNum,
     resolvedBy,
     mediaTitle: media?.title || null,
     mirrors,
     embeds,
     langsAvailable,
     hasLatino: langsAvailable.includes('lat'),
+    subtitleUrl,
+    subtitlesConfigured: Boolean(process.env.OPENSUBTITLES_API_KEY?.trim()),
   })
 }

@@ -1,0 +1,5 @@
+mal_id,title,episode,lang,source_type,server_label,url,referer,sort_order
+21,One Piece,1,lat,iframe,Mega,https://ejemplo.com/embed/one-piece/1,,
+21,One Piece,2,lat,iframe,Mega,https://ejemplo.com/embed/one-piece/2,,
+5114,Fullmetal Alchemist Brotherhood,1,sub,iframe,RapidVideo,https://ejemplo.com/embed/fma/1,,0
+5114,Fullmetal Alchemist Brotherhood,1,sub,iframe,Mega,https://ejemplo.com/embed/fma/1-alt,,1

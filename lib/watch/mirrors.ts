@@ -46,6 +46,11 @@ async function findMedia(
   return { media: null, resolvedBy: null }
 }
 
+export async function findMediaByMalId(malId: number): Promise<WatchMediaRow | null> {
+  const { media } = await findMedia(malId, null)
+  return media
+}
+
 export async function getEpisodeMirrors(opts: {
   malId?: number | null
   anilistId?: number | null

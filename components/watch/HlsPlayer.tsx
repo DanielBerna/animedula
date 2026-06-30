@@ -7,6 +7,7 @@ export type HlsSource = { url: string; quality?: string; isM3U8?: boolean }
 type Props = {
   sources: HlsSource[]
   referer?: string
+  subtitleUrl?: string
 }
 
 function proxied(url: string, ref?: string): string {
@@ -14,7 +15,7 @@ function proxied(url: string, ref?: string): string {
   return `/api/watch/proxy?url=${encodeURIComponent(url)}${r}`
 }
 
-export default function HlsPlayer({ sources, referer }: Props) {
+export default function HlsPlayer({ sources, referer, subtitleUrl }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null)
 
   // Orden de preferencia de calidad: auto/default primero (master adaptativo).
@@ -67,7 +68,17 @@ export default function HlsPlayer({ sources, referer }: Props) {
 
   return (
     <div>
-      <video ref={videoRef} controls playsInline className="watch-video" />
+      <video ref={videoRef} controls playsInline className="watch-video" crossOrigin="anonymous">
+        {subtitleUrl ? (
+          <track
+            kind="subtitles"
+            src={subtitleUrl}
+            srcLang="es"
+            label="Español"
+            default
+          />
+        ) : null}
+      </video>
       {ordered.length > 1 ? (
         <div className="watch-quality">
           <span className="text-xs text-faint">Calidad:</span>

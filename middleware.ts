@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession } from './lib/supabase/middleware'
+import { cspForPath } from './lib/security/csp'
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -14,7 +15,10 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  return updateSession(request)
+  const response = await updateSession(request)
+  // Una sola CSP por ruta (evita que next.config duplique políticas en /ver).
+  response.headers.set('Content-Security-Policy', cspForPath(pathname))
+  return response
 }
 
 export const config = {
