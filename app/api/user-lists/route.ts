@@ -3,6 +3,7 @@ import { getAuthUser } from '../../../lib/auth'
 import { createClient, isSupabaseAuthConfigured } from '../../../lib/supabase/server'
 import { requireRateLimit } from '../../../lib/security/api'
 import { isAllowedAvatarUrl } from '../../../lib/security/urls'
+import { awardActivityCoins } from '../../../lib/gamification/award-activity'
 
 const VALID_STATUS = ['pending', 'watching', 'completed', 'dropped'] as const
 const VALID_TYPES = ['anime', 'manga', 'game', 'movie'] as const
@@ -82,5 +83,6 @@ export async function POST(req: NextRequest) {
     await supabase.rpc('award_xp', { p_user_id: user.id, p_amount: 5, p_reason: 'completed' })
   }
 
-  return Response.json({ list: data })
+  const coins = await awardActivityCoins(supabase, user.id, 'list')
+  return Response.json({ list: data, coins_awarded: coins?.awarded ?? 0 })
 }

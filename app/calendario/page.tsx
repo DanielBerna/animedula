@@ -5,6 +5,7 @@ import PageHeader from '../../components/PageHeader'
 import SeasonPicker from '../../components/SeasonPicker'
 import {
   fetchJikan,
+  fetchSeasonPages,
   getBestImageUrl,
   getSeasonLabel,
   mapJikanList,
@@ -33,15 +34,16 @@ export default async function CalendarioPage({ searchParams }: Props) {
   const calendarSeason = getSeasonLabel()
   const calendarYear = new Date().getFullYear()
 
-  const [nowRes, upcomingRes, browseRes] = await Promise.allSettled([
-    browsing ? Promise.resolve(null) : fetchJikan('/seasons/now?limit=24'),
-    browsing ? Promise.resolve(null) : fetchJikan('/seasons/upcoming?limit=24'),
-    browsing ? fetchJikan(`/seasons/${browseYear}/${browseSeason}?limit=25`) : Promise.resolve(null),
+  // Estrenos: traemos varias páginas para incluir TODOS los próximos, también los menos conocidos.
+  const [nowRes, upcomingPages, browsePages] = await Promise.allSettled([
+    browsing ? Promise.resolve(null) : fetchJikan('/seasons/now?limit=25'),
+    browsing ? Promise.resolve([]) : fetchSeasonPages('/seasons/upcoming', 4),
+    browsing ? fetchSeasonPages(`/seasons/${browseYear}/${browseSeason}`, 3) : Promise.resolve([]),
   ])
 
   const now = mapJikanList(nowRes.status === 'fulfilled' ? nowRes.value : null)
-  const upcoming = mapJikanList(upcomingRes.status === 'fulfilled' ? upcomingRes.value : null)
-  const browse = mapJikanList(browseRes.status === 'fulfilled' ? browseRes.value : null)
+  const upcoming = upcomingPages.status === 'fulfilled' ? upcomingPages.value : []
+  const browse = browsePages.status === 'fulfilled' ? browsePages.value : []
   const upcomingGroups = groupAnimeBySeasonYear(upcoming)
 
   const heroSource = browsing ? browse : [...now, ...upcoming]
@@ -129,20 +131,9 @@ export default async function CalendarioPage({ searchParams }: Props) {
                       <span>{group.label}</span>
                       <span className="text-faint font-normal">{group.items.length} títulos</span>
                     </h3>
-                    <div className="space-y-2 mb-4">
-                      {group.items.slice(0, 6).map((a) => (
-                        <CalendarRow key={a.mal_id} anime={a} label={group.label} />
-                      ))}
-                    </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <div className="space-y-2">
                       {group.items.map((a) => (
-                        <AnimeCard
-                          key={`card-${a.mal_id}`}
-                          slug={String(a.mal_id)}
-                          title={a.title}
-                          image={getBestImageUrl(a.images)}
-                          score={a.score}
-                        />
+                        <CalendarRow key={a.mal_id} anime={a} label={group.label} />
                       ))}
                     </div>
                   </div>

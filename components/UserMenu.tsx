@@ -19,6 +19,7 @@ export default function UserMenu({ variant = 'inline' }: Props) {
   const [border, setBorder] = useState<Border>(null)
   const [ready, setReady] = useState(false)
   const [open, setOpen] = useState(false)
+  const [drawerOpen, setDrawerOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -106,28 +107,37 @@ export default function UserMenu({ variant = 'inline' }: Props) {
     }
     return (
       <div className="user-menu-drawer">
-        <div className="user-menu-profile user-menu-profile-drawer">
-          <Link href={profileHref} title={profile.display_name || 'Mi perfil'} className="shrink-0">
-            <AvatarFrame avatarUrl={profile.avatar_url} label={profile.display_name || '?'} border={border} size={36} />
-          </Link>
-          {profile.display_name && (
-            <span className="text-sm text-text truncate">{profile.display_name}</span>
-          )}
-        </div>
-        <Link href="/biblioteca" className="btn-ghost w-full text-center py-2 text-xs">
-          Mi biblioteca
-        </Link>
-        <Link href="/perfil" className="btn-ghost w-full text-center py-2 text-xs">
-          Mi cuenta
-        </Link>
-        {isStaff && (
-          <Link href="/admin" className="btn-ghost w-full text-center py-2 text-xs">
-            Panel admin
-          </Link>
-        )}
-        <button type="button" onClick={signOut} className="btn-ghost w-full text-center py-2 text-xs">
-          Salir
+        <button
+          type="button"
+          className="user-menu-drawer-toggle"
+          onClick={() => setDrawerOpen((o) => !o)}
+          aria-expanded={drawerOpen}
+        >
+          <AvatarFrame avatarUrl={profile.avatar_url} label={profile.display_name || '?'} border={border} size={32} />
+          <span className="text-sm text-text truncate flex-1 text-left">{profile.display_name || 'Mi cuenta'}</span>
+          <span className={`user-menu-drawer-caret${drawerOpen ? ' is-open' : ''}`} aria-hidden>▾</span>
         </button>
+        {drawerOpen && (
+          <div className="user-menu-drawer-items">
+            <Link href={profileHref} className="btn-ghost w-full text-center py-2 text-xs">
+              Ver mi perfil
+            </Link>
+            <Link href="/biblioteca" className="btn-ghost w-full text-center py-2 text-xs">
+              Mi biblioteca
+            </Link>
+            <Link href="/perfil" className="btn-ghost w-full text-center py-2 text-xs">
+              Mi cuenta
+            </Link>
+            {isStaff && (
+              <Link href="/admin" className="btn-ghost w-full text-center py-2 text-xs">
+                Panel admin
+              </Link>
+            )}
+            <button type="button" onClick={signOut} className="btn-ghost w-full text-center py-2 text-xs">
+              Salir
+            </button>
+          </div>
+        )}
       </div>
     )
   }

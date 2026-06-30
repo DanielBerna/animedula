@@ -82,16 +82,21 @@ export function getBestImageUrl(images?: JikanImages | null): string | undefined
   )
 }
 
+export type JikanStudio = { name?: string }
+
 export type JikanAnime = {
   mal_id: number
   title: string
   synopsis?: string
   score?: number
   images?: JikanImages
-  aired?: { from?: string }
+  aired?: { from?: string; to?: string }
   status?: string
   season?: string
   year?: number
+  episodes?: number | null
+  studios?: JikanStudio[]
+  type?: string
 }
 
 export type JikanManga = {
@@ -125,8 +130,34 @@ export function mapJikanList(data: any): JikanAnime[] {
     status: it.status,
     season: it.season,
     year: it.year,
+    episodes: typeof it.episodes === 'number' ? it.episodes : null,
+    studios: Array.isArray(it.studios) ? it.studios.map((s: any) => ({ name: s?.name })) : [],
+    type: it.type,
   }))
   return dedupeByMalId(items)
+}
+
+/**
+ * Trae varias páginas de una temporada de Jikan y las combina (deduplicadas).
+ * Útil para "próximos estrenos": incluye también títulos poco conocidos.
+ * `path` debe ser la ruta base sin `page` (p. ej. `/seasons/upcoming`).
+ */
+export async function fetchSeasonPages(
+  path: string,
+  pages = 3,
+  limit = 25,
+  revalidate = 21600,
+): Promise<JikanAnime[]> {
+  const sep = path.includes('?') ? '&' : '?'
+  const reqs = Array.from({ length: pages }, (_, i) =>
+    fetchJikan(`${path}${sep}limit=${limit}&page=${i + 1}`, revalidate),
+  )
+  const results = await Promise.allSettled(reqs)
+  const all: JikanAnime[] = []
+  for (const r of results) {
+    if (r.status === 'fulfilled') all.push(...mapJikanList(r.value))
+  }
+  return dedupeByMalId(all)
 }
 
 export function mapRecommendations(data: any): JikanAnime[] {

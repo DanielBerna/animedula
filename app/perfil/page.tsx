@@ -7,6 +7,7 @@ import ProfileStatusForm from '../../components/ProfileStatusForm'
 import UsernameForm from '../../components/UsernameForm'
 import ProfilePrivacyForm from '../../components/ProfilePrivacyForm'
 import DailyMissions from '../../components/DailyMissions'
+import ProfileActivity from '../../components/profile/ProfileActivity'
 import PremiumProfileLayout from '../../components/PremiumProfileLayout'
 import PremiumUpsell from '../../components/PremiumUpsell'
 import { getAuthUser, getProfile } from '../../lib/auth'
@@ -95,6 +96,9 @@ export default async function PerfilPage() {
       </div>
       <div className="card-glass p-6">
         <DailyMissions />
+      </div>
+      <div className="card-glass p-6">
+        <ProfileActivity />
       </div>
       <Link href="/biblioteca" className="card-glass p-6 flex items-center justify-between gap-4 hover:border-accent transition group">
         <div>

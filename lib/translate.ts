@@ -40,6 +40,63 @@ export const translateToSpanish = cache(async (text: string): Promise<string> =>
   return translated || trimmed
 })
 
+/** Parte un texto en trozos de <= maxLen respetando límites de oración/palabra. */
+function chunkText(text: string, maxLen = 460): string[] {
+  const clean = text.trim()
+  if (clean.length <= maxLen) return [clean]
+
+  const chunks: string[] = []
+  // Dividir por oraciones; si una oración es muy larga, se parte por palabras.
+  const sentences = clean.split(/(?<=[.!?。])\s+/)
+  let current = ''
+  for (const sentence of sentences) {
+    if (sentence.length > maxLen) {
+      if (current) {
+        chunks.push(current)
+        current = ''
+      }
+      const words = sentence.split(/\s+/)
+      let part = ''
+      for (const w of words) {
+        if ((part + ' ' + w).trim().length > maxLen) {
+          if (part) chunks.push(part)
+          part = w
+        } else {
+          part = (part + ' ' + w).trim()
+        }
+      }
+      if (part) current = part
+      continue
+    }
+    if ((current + ' ' + sentence).trim().length > maxLen) {
+      if (current) chunks.push(current)
+      current = sentence
+    } else {
+      current = (current + ' ' + sentence).trim()
+    }
+  }
+  if (current) chunks.push(current)
+  return chunks
+}
+
+/**
+ * Traduce textos largos (p. ej. sinopsis) al español por trozos, evitando el
+ * límite de ~480 caracteres de MyMemory. Cada trozo se cachea por Next 7 días.
+ * Si algún trozo falla, conserva el original de ese trozo (no rompe el texto).
+ */
+export const translateLongToSpanish = cache(async (text: string): Promise<string> => {
+  const trimmed = text?.trim()
+  if (!trimmed) return ''
+  if (looksSpanish(trimmed)) return trimmed
+
+  const chunks = chunkText(trimmed)
+  const translated = await Promise.all(
+    chunks.map(async (c) => (await myMemoryTranslate(c)) || c),
+  )
+  const joined = translated.join(' ').trim()
+  return joined || trimmed
+})
+
 export async function translateFields<T extends Record<string, string | undefined>>(
   fields: T,
 ): Promise<T> {

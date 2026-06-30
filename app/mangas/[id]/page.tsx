@@ -16,6 +16,7 @@ import ScreenshotSection from '../../../components/ScreenshotSection'
 import { getAuthUser } from '../../../lib/auth'
 import { getEditorialReview } from '../../../lib/editorial'
 import { fetchJikan, getBestImageUrl } from '../../../lib/jikan'
+import { translateLongToSpanish } from '../../../lib/translate'
 
 type Props = { params: Promise<{ id: string }> }
 
@@ -27,6 +28,8 @@ export default async function MangaDetailPage({ params }: Props) {
   const title = m?.title || `Manga ${id}`
   const image = getBestImageUrl(m?.images)
   const synopsis = m?.synopsis || 'Sinopsis no disponible.'
+  const synopsisEs = m?.synopsis ? await translateLongToSpanish(m.synopsis) : 'Sinopsis no disponible.'
+  const synopsisTranslated = synopsisEs !== synopsis
   const genres = m?.genres?.map((g: { name: string }) => g.name) || []
 
   const user = await getAuthUser()
@@ -45,8 +48,11 @@ export default async function MangaDetailPage({ params }: Props) {
 
   const infoTab = (
     <div className="space-y-5">
-      <ContentSection eyebrow="Referencia" title="Sinopsis oficial (MAL)">
-        <p className="text-sm text-muted leading-[1.8]">{synopsis}</p>
+      <ContentSection eyebrow="Referencia" title="Sinopsis">
+        <p className="text-sm text-muted leading-[1.8]">{synopsisEs}</p>
+        <p className="text-xs text-faint mt-3">
+          {synopsisTranslated ? 'Traducción automática · ' : ''}Sinopsis de MyAnimeList. Uso informativo y de referencia.
+        </p>
       </ContentSection>
 
       <ContentSection eyebrow="Ficha" title="Datos del manga">

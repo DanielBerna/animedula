@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { getAuthUser } from '../../../lib/auth'
 import { createClient, isSupabaseAuthConfigured } from '../../../lib/supabase/server'
 import { requireRateLimit } from '../../../lib/security/api'
+import { awardActivityCoins } from '../../../lib/gamification/award-activity'
 
 const VALID_TYPES = ['anime', 'manga', 'game', 'movie'] as const
 
@@ -140,5 +141,6 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: error.message }, { status: 500 })
   }
 
-  return Response.json({ review: data, pending: data?.status === 'pending' })
+  const coins = await awardActivityCoins(supabase, user.id, 'review')
+  return Response.json({ review: data, pending: data?.status === 'pending', coins_awarded: coins?.awarded ?? 0 })
 }

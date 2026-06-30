@@ -18,6 +18,7 @@ import ScreenshotSection from '../../../components/ScreenshotSection'
 import { getAuthUser } from '../../../lib/auth'
 import { getEditorialReview } from '../../../lib/editorial'
 import { fetchJikan, getBestImageUrl, mapRecommendations } from '../../../lib/jikan'
+import { translateLongToSpanish } from '../../../lib/translate'
 
 type Props = { params: Promise<{ slug: string }> }
 
@@ -33,6 +34,10 @@ export default async function Page({ params }: Props) {
   const title = anime?.title || `Anime ${slug}`
   const image = getBestImageUrl(anime?.images)
   const synopsis = anime?.synopsis || 'Sinopsis no disponible.'
+  // Sinopsis traducida al español (cacheada). El original en inglés se mantiene
+  // como referencia para la reseña editorial.
+  const synopsisEs = anime?.synopsis ? await translateLongToSpanish(anime.synopsis) : 'Sinopsis no disponible.'
+  const synopsisTranslated = synopsisEs !== synopsis
   const malId = anime?.mal_id ?? (Number.isFinite(Number(slug)) ? Number(slug) : slug)
   const genres = anime?.genres?.map((g: { name: string }) => g.name) || []
   const streaming = anime?.streaming?.map((s: { name: string; url: string }) => ({ name: s.name, url: s.url }))
@@ -52,10 +57,10 @@ export default async function Page({ params }: Props) {
 
   const infoTab = (
     <div className="space-y-5">
-      <ContentSection eyebrow="Referencia" title="Sinopsis oficial (MAL)">
-        <p className="text-sm text-muted leading-[1.8]">{synopsis}</p>
+      <ContentSection eyebrow="Referencia" title="Sinopsis">
+        <p className="text-sm text-muted leading-[1.8]">{synopsisEs}</p>
         <p className="text-xs text-faint mt-3">
-          Metadatos e imágenes © sus respectivos titulares. Uso informativo y de referencia.
+          {synopsisTranslated ? 'Traducción automática · ' : ''}Sinopsis de MyAnimeList. Metadatos e imágenes © sus respectivos titulares. Uso informativo y de referencia.
         </p>
       </ContentSection>
 

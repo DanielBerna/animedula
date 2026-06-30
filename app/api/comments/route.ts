@@ -3,6 +3,7 @@ import { getAuthUser } from '../../../lib/auth'
 import { createClient, isSupabaseAuthConfigured } from '../../../lib/supabase/server'
 import { requireRateLimit } from '../../../lib/security/api'
 import { moderateUserText } from '../../../lib/security/content-moderation'
+import { awardActivityCoins } from '../../../lib/gamification/award-activity'
 
 export async function GET(req: NextRequest) {
   if (!isSupabaseAuthConfigured()) {
@@ -65,5 +66,7 @@ export async function POST(req: NextRequest) {
     .single()
 
   if (error) return Response.json({ error: error.message }, { status: 500 })
-  return Response.json({ comment: data })
+
+  const coins = await awardActivityCoins(supabase, user.id, 'comment')
+  return Response.json({ comment: data, coins_awarded: coins?.awarded ?? 0 })
 }

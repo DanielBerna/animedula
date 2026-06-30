@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import UserLibrary from '../../components/UserLibrary'
+import CoinShop from '../../components/CoinShop'
 import { getAuthUser } from '../../lib/auth'
 import { createClient, isSupabaseAuthConfigured } from '../../lib/supabase/server'
 
@@ -27,8 +28,9 @@ export default async function BibliotecaPage() {
   }
 
   return (
-    <div className="enter-up max-w-4xl mx-auto">
+    <div className="enter-up max-w-4xl mx-auto space-y-6">
       <UserLibrary avatarUrl={avatarUrl} displayName={displayName} />
+      <CoinShop />
     </div>
   )
 }

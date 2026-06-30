@@ -4,6 +4,7 @@ import { createClient, isSupabaseAuthConfigured } from '../../../lib/supabase/se
 import { getEquippedBordersForUsers } from '../../../lib/gamification/cosmetics'
 import { requireRateLimit } from '../../../lib/security/api'
 import { moderateUserText } from '../../../lib/security/content-moderation'
+import { awardActivityCoins } from '../../../lib/gamification/award-activity'
 
 const VALID_TAGS = ['manga', 'gaming', 'spoilers', 'tecnologia', 'anime'] as const
 
@@ -133,5 +134,7 @@ export async function POST(req: NextRequest) {
     .single()
 
   if (error) return Response.json({ error: error.message }, { status: 500 })
-  return Response.json({ post: data })
+
+  const coins = await awardActivityCoins(supabase, user.id, 'forum')
+  return Response.json({ post: data, coins_awarded: coins?.awarded ?? 0 })
 }

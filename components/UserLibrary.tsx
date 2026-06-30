@@ -275,7 +275,7 @@ export default function UserLibrary({
                       <p className="lib-card-name">{item.name}</p>
                       <p className="lib-card-desc">{item.description}</p>
                       <div className="lib-stickers">
-                        {(item.metadata?.stickers || []).slice(0, 8).map((st, i) => (
+                        {(item.metadata?.stickers || []).slice(0, 12).map((st, i) => (
                           <span key={i} className="lib-sticker" title={st.label}>
                             {st.image ? (
                               // eslint-disable-next-line @next/next/no-img-element
@@ -285,6 +285,9 @@ export default function UserLibrary({
                             )}
                           </span>
                         ))}
+                        {(item.metadata?.stickers?.length || 0) > 12 ? (
+                          <span className="lib-sticker lib-sticker-more">+{(item.metadata!.stickers!.length) - 12}</span>
+                        ) : null}
                       </div>
                     </div>
                     <span className="tag tag-gold text-xs">Desbloqueado</span>
@@ -307,7 +310,7 @@ export default function UserLibrary({
                       <p className="lib-card-name">{item.name}</p>
                       <p className="lib-card-desc">{item.description}</p>
                       <div className="lib-stickers">
-                        {(item.metadata?.stickers || []).slice(0, 8).map((st, i) => (
+                        {(item.metadata?.stickers || []).slice(0, 12).map((st, i) => (
                           <span key={i} className="lib-sticker" title={st.label}>
                             {st.image ? (
                               // eslint-disable-next-line @next/next/no-img-element
@@ -317,6 +320,9 @@ export default function UserLibrary({
                             )}
                           </span>
                         ))}
+                        {(item.metadata?.stickers?.length || 0) > 12 ? (
+                          <span className="lib-sticker lib-sticker-more">+{(item.metadata!.stickers!.length) - 12}</span>
+                        ) : null}
                       </div>
                     </div>
                     {acquireAction(item)}
