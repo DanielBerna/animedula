@@ -11,9 +11,10 @@ export async function GET(req: NextRequest) {
   const url = new URL(req.url)
   const episodeId = url.searchParams.get('episodeId')
   const provider = url.searchParams.get('provider') || undefined
+  const category = url.searchParams.get('category') === 'dub' ? 'dub' : 'sub'
   if (!episodeId) return Response.json({ error: 'episodeId requerido' }, { status: 400 })
 
-  const result = await getSources(episodeId, { provider })
+  const result = await getSources(episodeId, { provider, category })
   if (!result) return Response.json({ enabled: true, sources: [] })
 
   return Response.json({ enabled: true, ...result })

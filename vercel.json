@@ -7,6 +7,14 @@
     {
       "path": "/api/cron/publish-scheduled",
       "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/seed-watch-catalog",
+      "schedule": "0 5 * * *"
+    },
+    {
+      "path": "/api/cron/sync-watch-mirrors",
+      "schedule": "0 6 * * *"
     }
   ]
 }

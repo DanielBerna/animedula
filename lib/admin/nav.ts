@@ -24,6 +24,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
       { href: '/admin/resenas', label: 'Reseñas', icon: '✍️' },
       { href: '/admin/calendario', label: 'Calendario', icon: '📅' },
       { href: '/admin/aportes', label: 'Aportes', icon: '📥' },
+      { href: '/admin/espejos', label: 'Espejos /ver', icon: '📺' },
     ],
   },
   {

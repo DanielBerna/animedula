@@ -25,6 +25,33 @@ const securityHeaders = [
   { key: 'Content-Security-Policy', value: csp },
 ]
 
+// CSP específica de la sección /ver (aislada): permite reproductores externos
+// en iframe y media HLS (blob). El resto del sitio mantiene la CSP estricta.
+const watchCsp = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: https: blob:",
+  "font-src 'self' data:",
+  "connect-src 'self' https: wss:",
+  "media-src 'self' blob: data: https:",
+  "frame-src https:",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+  "upgrade-insecure-requests",
+].join('; ')
+
+const watchHeaders = [
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  // MegaPlay/NinjaStream exigen Referer del sitio que embebe; no-referrer rompe el iframe.
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  { key: 'X-DNS-Prefetch-Control', value: 'on' },
+  { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
+  { key: 'Content-Security-Policy', value: watchCsp },
+]
+
 const nextConfig: NextConfig = {
   output: 'standalone',
   reactStrictMode: true,
@@ -37,7 +64,13 @@ const nextConfig: NextConfig = {
     ],
   },
   async headers() {
-    return [{ source: '/(.*)', headers: securityHeaders }]
+    return [
+      // Sección de visionado: CSP relajada (iframes/HLS externos) y aislada.
+      { source: '/ver', headers: watchHeaders },
+      { source: '/ver/:path*', headers: watchHeaders },
+      // Resto del sitio: CSP estricta (excluye /ver para no duplicar cabeceras).
+      { source: '/((?!ver$|ver/).*)', headers: securityHeaders },
+    ]
   },
 }
 

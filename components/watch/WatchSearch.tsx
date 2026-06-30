@@ -69,7 +69,7 @@ export default function WatchSearch() {
       {results.length > 0 ? (
         <div className="watch-search-grid mt-4">
           {results.map((r) => (
-            <Link key={r.mal_id} href={`/ver/${r.mal_id}`} className="watch-search-card">
+            <Link key={r.mal_id} href={`/ver/${r.mal_id}/1`} className="watch-search-card">
               {r.image ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={r.image} alt="" className="watch-search-thumb" />

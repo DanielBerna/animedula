@@ -13,7 +13,7 @@ export const metadata = {
 
 function WatchCard({ malId, title, image, episodes }: { malId: number; title: string; image?: string; episodes?: number | null }) {
   return (
-    <Link href={`/ver/${malId}`} className="watch-card">
+    <Link href={`/ver/${malId}/1`} className="watch-card">
       <div className="watch-card-poster">
         {image ? (
           // eslint-disable-next-line @next/next/no-img-element

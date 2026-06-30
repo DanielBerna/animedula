@@ -81,7 +81,7 @@ export default function WatchSchedule() {
       ) : (
         <div className="watch-grid mt-4">
           {items.map((a) => (
-            <Link key={a.mal_id} href={`/ver/${a.mal_id}`} className="watch-card">
+            <Link key={a.mal_id} href={`/ver/${a.mal_id}/1`} className="watch-card">
               <div className="watch-card-poster">
                 {a.image ? (
                   // eslint-disable-next-line @next/next/no-img-element

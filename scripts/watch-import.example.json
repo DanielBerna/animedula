@@ -1,0 +1,22 @@
+{
+  "shows": [
+    {
+      "mal_id": 21,
+      "title": "One Piece",
+      "episodes": [
+        {
+          "episode": 1,
+          "sources": [
+            {
+              "lang": "lat",
+              "source_type": "iframe",
+              "server_label": "Ejemplo",
+              "url": "https://ejemplo.com/embed/one-piece/1",
+              "sort_order": 0
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
