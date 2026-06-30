@@ -1,6 +1,7 @@
 import type { NextConfig } from 'next'
+import { siteCsp, watchCsp } from './lib/security/csp'
 
-// CSP se aplica en middleware.ts (una política por ruta). Aquí solo cabeceras complementarias.
+// CSP por ruta en headers() — una sola política por página (evita mezclar AdSense con /ver).
 const securityHeaders = [
   { key: 'X-Frame-Options', value: 'DENY' },
   { key: 'X-Content-Type-Options', value: 'nosniff' },
@@ -8,14 +9,15 @@ const securityHeaders = [
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=()' },
   { key: 'X-DNS-Prefetch-Control', value: 'on' },
   { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
+  { key: 'Content-Security-Policy', value: siteCsp },
 ]
 
 const watchHeaders = [
   { key: 'X-Content-Type-Options', value: 'nosniff' },
-  // MegaPlay/NinjaStream exigen Referer del sitio que embebe; no-referrer rompe el iframe.
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   { key: 'X-DNS-Prefetch-Control', value: 'on' },
   { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
+  { key: 'Content-Security-Policy', value: watchCsp },
 ]
 
 const nextConfig: NextConfig = {
@@ -33,7 +35,8 @@ const nextConfig: NextConfig = {
     return [
       { source: '/ver', headers: watchHeaders },
       { source: '/ver/:path*', headers: watchHeaders },
-      { source: '/:path*', headers: securityHeaders },
+      // Sin /ver — si también aplicara siteCsp, el navegador intersecta frame-src y bloquea MegaPlay/Vidlink.
+      { source: '/((?!ver$)(?!ver/).*)', headers: securityHeaders },
     ]
   },
 }

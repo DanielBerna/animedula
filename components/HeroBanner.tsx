@@ -71,7 +71,7 @@ export default function HeroBanner({
               quality={92}
               priority={i === 0}
               className="hero-banner-img"
-              unoptimized={slide.soft}
+              unoptimized={slide.soft || slide.unoptimized}
             />
           </div>
         ))}

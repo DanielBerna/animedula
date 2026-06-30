@@ -4,6 +4,8 @@ export type HeroSlide = {
   url: string
   /** Posters MAL son bajos para pantalla completa — se difuminan para evitar pixelado */
   soft: boolean
+  /** Unsplash a veces falla en el optimizador de Vercel — cargar directo */
+  unoptimized?: boolean
 }
 
 const UNSPLASH = (id: string) =>
@@ -52,11 +54,12 @@ export function isPosterUrl(url: string) {
 }
 
 export function toHeroSlide(url: string): HeroSlide {
-  return { url, soft: isPosterUrl(url) }
+  const unsplash = /images\.unsplash\.com/i.test(url)
+  return { url, soft: isPosterUrl(url), unoptimized: unsplash }
 }
 
 export function pickHeroImages(variant: HeroVariant, fromApi?: (string | undefined | null)[]): HeroSlide[] {
   const api = [...new Set((fromApi || []).filter((u): u is string => Boolean(u)))]
   if (api.length >= 2) return api.slice(0, 8).map(toHeroSlide)
-  return HERO_IMAGES[variant].map(toHeroSlide)
+  return HERO_IMAGES[variant].map((url) => toHeroSlide(url))
 }
