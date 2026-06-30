@@ -1,5 +1,5 @@
 import { buildEmbedUrl, getWatchProviders } from './embed'
-import { appendSubtitleParams, buildPublicSubtitleUrl } from './subtitles'
+import { appendSubtitleParams, buildPublicSubtitleUrl } from './subtitles-url'
 import type { EmbedPlaybackSource, MirrorSource, PlaybackSource, WatchLang } from './types'
 
 export const WATCH_LANG_LABELS: Record<WatchLang, string> = {

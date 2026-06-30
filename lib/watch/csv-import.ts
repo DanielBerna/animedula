@@ -1,4 +1,4 @@
-import type { WatchImportPayload, WatchImportShow } from './import'
+import type { WatchImportShow } from './import'
 
 export type CsvImportRow = {
   mal_id: string
@@ -82,7 +82,7 @@ export function parseWatchFeedCsv(text: string): CsvParseResult {
   return { rows, errors, skipped }
 }
 
-export function csvRowsToImportPayload(rows: CsvImportRow[]): WatchImportPayload {
+export function csvRowsToImportPayload(rows: CsvImportRow[]): { shows: WatchImportShow[] } {
   const shows = new Map<string, WatchImportShow>()
 
   for (const row of rows) {

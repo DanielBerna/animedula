@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { resolveSpanishSubtitleVtt } from '../../../../lib/watch/subtitles'
+import { resolveSpanishSubtitleVtt } from '../../../../lib/watch/subtitles-server'
 import { requireRateLimit } from '../../../../lib/security/api'
 
 export const dynamic = 'force-dynamic'

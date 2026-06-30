@@ -26,27 +26,6 @@ function opensubtitlesHeaders(): Record<string, string> | null {
   }
 }
 
-export function buildPublicSubtitleUrl(origin: string, malId: number, episode: number): string {
-  const base = origin.replace(/\/$/, '')
-  const params = new URLSearchParams({
-    malId: String(malId),
-    ep: String(episode),
-  })
-  return `${base}/api/watch/subtitles?${params}`
-}
-
-export function appendSubtitleParams(embedUrl: string, subtitleUrl: string): string {
-  try {
-    const u = new URL(embedUrl)
-    u.searchParams.set('sub_file', subtitleUrl)
-    u.searchParams.set('sub_label', 'Español')
-    return u.toString()
-  } catch {
-    const sep = embedUrl.includes('?') ? '&' : '?'
-    return `${embedUrl}${sep}sub_file=${encodeURIComponent(subtitleUrl)}&sub_label=${encodeURIComponent('Español')}`
-  }
-}
-
 function srtToVtt(srt: string): string {
   const normalized = srt.replace(/\r\n/g, '\n').trim()
   if (normalized.startsWith('WEBVTT')) return normalized
@@ -124,9 +103,7 @@ async function downloadSubtitleFile(fileId: number): Promise<string | null> {
 
 type SubtitleSearchItem = {
   attributes?: {
-    language?: string
-    files?: { file_id?: number; file_name?: string }[]
-    release?: string
+    files?: { file_id?: number }[]
     download_count?: number
   }
 }
@@ -154,8 +131,7 @@ async function searchSpanishFileId(title: string, episode: number): Promise<numb
   )
 
   for (const item of sorted) {
-    const files = item.attributes?.files || []
-    for (const f of files) {
+    for (const f of item.attributes?.files || []) {
       if (f.file_id) return f.file_id
     }
   }
