@@ -21,7 +21,10 @@ const FOOTER_GROUPS = [
   },
   {
     label: NAV_GROUP.community,
-    links: [{ href: '/comunidad', label: NAV.community }],
+    links: [
+      { href: '/comunidad', label: NAV.community },
+      { href: '/ver', label: 'Ver anime' },
+    ],
   },
 ]
 

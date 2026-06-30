@@ -17,6 +17,7 @@
     "@upstash/ratelimit": "1.x",
     "@upstash/redis": "1.x",
     "autoprefixer": "10.x",
+    "hls.js": "^1.6.16",
     "next": "15.x",
     "postcss": "8.x",
     "react": "18.x",

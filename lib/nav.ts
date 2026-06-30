@@ -42,6 +42,13 @@ const ANIME_MANGA_ITEMS: NavItem[] = [
     icon: 'manga',
     match: (p) => p.startsWith('/mangas'),
   },
+  {
+    href: '/ver',
+    label: 'Ver anime',
+    description: 'Reproductor de episodios',
+    icon: 'play',
+    match: (p) => p.startsWith('/ver'),
+  },
 ]
 
 const OTAKU_ITEMS: NavItem[] = [

@@ -1,7 +1,11 @@
 import Link from 'next/link'
 import { fetchJikan, getBestImageUrl } from '../../../lib/jikan'
 import { translateLongToSpanish } from '../../../lib/translate'
+import { getAuthUser } from '../../../lib/auth'
 import AnimePlayer from '../../../components/watch/AnimePlayer'
+import CommentSection from '../../../components/CommentSection'
+import ForumThread from '../../../components/ForumThread'
+import ContentSection from '../../../components/ContentSection'
 
 export const revalidate = 3600
 
@@ -29,6 +33,9 @@ export default async function VerAnimePage({ params }: Props) {
   const studio = anime?.studios?.find((s: { name?: string }) => s?.name)?.name
   const synopsisEs = anime?.synopsis ? await translateLongToSpanish(anime.synopsis) : ''
 
+  const user = await getAuthUser()
+  const returnTo = `/ver/${malId}`
+
   return (
     <div className="space-y-6 enter-up max-w-5xl mx-auto">
       <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -51,6 +58,14 @@ export default async function VerAnimePage({ params }: Props) {
       </header>
 
       <AnimePlayer malId={malId} title={title} episodeCount={episodes} />
+
+      <ContentSection eyebrow="Comunidad" title="Comentarios del episodio">
+        <CommentSection kind="anime" malId={malId} loggedIn={Boolean(user)} returnTo={returnTo} />
+      </ContentSection>
+
+      <ContentSection eyebrow="Comunidad" title="Debate del foro">
+        <ForumThread loggedIn={Boolean(user)} returnTo={returnTo} contentType="anime" contentId={String(malId)} compact />
+      </ContentSection>
     </div>
   )
 }
