@@ -2,11 +2,11 @@ import type { NextConfig } from 'next'
 
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://pagead2.googlesyndication.com https://www.googletagmanager.com https://www.google-analytics.com",
-  "style-src 'self' 'unsafe-inline'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://pagead2.googlesyndication.com https://www.googletagmanager.com https://www.google-analytics.com https://www.google.com https://googleads.g.doubleclick.net",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "img-src 'self' data: https: blob:",
-  "font-src 'self' data:",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.jikan.moe",
+  "font-src 'self' data: https://fonts.gstatic.com",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.jikan.moe https://pagead2.googlesyndication.com https://www.google-analytics.com https://googleads.g.doubleclick.net",
   "frame-src https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://www.google.com",
   "object-src 'none'",
   "base-uri 'self'",
@@ -68,8 +68,9 @@ const nextConfig: NextConfig = {
       // Sección de visionado: CSP relajada (iframes/HLS externos) y aislada.
       { source: '/ver', headers: watchHeaders },
       { source: '/ver/:path*', headers: watchHeaders },
-      // Resto del sitio: CSP estricta (excluye /ver para no duplicar cabeceras).
-      { source: '/((?!ver$|ver/).*)', headers: securityHeaders },
+      { source: '/admin', headers: securityHeaders },
+      { source: '/admin/:path*', headers: securityHeaders },
+      { source: '/((?!ver$|ver/|admin$|admin/).*)', headers: securityHeaders },
     ]
   },
 }

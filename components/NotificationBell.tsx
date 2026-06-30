@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { createClient, isSupabaseBrowserConfigured } from '../lib/supabase/client'
+import { isSupabaseBrowserConfigured } from '../lib/supabase/client'
+import { subscribeNotificationRealtime } from '../lib/social/notification-realtime'
 
 type Notification = {
   id: number
@@ -54,46 +55,16 @@ export default function NotificationBell({ variant = 'inline' }: Props) {
 
     load()
 
-    const supabase = createClient()
-    let channel: ReturnType<typeof supabase.channel> | null = null
-
-    const setupRealtime = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-
-      channel = supabase
-        .channel(`notifications-${user.id}`)
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'notifications',
-            filter: `user_id=eq.${user.id}`,
-          },
-          () => load(),
-        )
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'direct_messages',
-            filter: `recipient_id=eq.${user.id}`,
-          },
-          () => load(),
-        )
-        .subscribe()
-    }
-
-    setupRealtime()
+    const unsubscribe = subscribeNotificationRealtime(() => {
+      void load()
+    })
 
     const onFocus = () => load()
     window.addEventListener('focus', onFocus)
 
     return () => {
       window.removeEventListener('focus', onFocus)
-      if (channel) supabase.removeChannel(channel)
+      unsubscribe()
     }
   }, [load])
 

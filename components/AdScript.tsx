@@ -9,8 +9,8 @@ const enabled = process.env.NEXT_PUBLIC_ADS_ENABLED === 'true' && Boolean(client
 export default function AdScript() {
   const pathname = usePathname()
   if (!enabled || !client) return null
-  // La sección de visionado (/ver) queda aislada de AdSense a propósito.
-  if (pathname?.startsWith('/ver')) return null
+  // Sin anuncios en visionado ni en panel staff.
+  if (pathname?.startsWith('/ver') || pathname?.startsWith('/admin')) return null
 
   return (
     <Script
