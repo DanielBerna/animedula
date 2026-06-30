@@ -25,9 +25,10 @@ export type WatchProvider = {
 }
 
 const DEFAULT_PROVIDERS: WatchProvider[] = [
-  { id: 'srv1', name: 'Servidor 1', template: 'https://vidsrc.cc/v2/embed/anime/ani{malId}/{ep}/{type}', dub: true },
-  { id: 'srv2', name: 'Servidor 2', template: 'https://vidlink.pro/anime/{malId}/{ep}/{type}', dub: true },
-  { id: 'srv3', name: 'Servidor 3', template: 'https://2anime.xyz/embed/{malId}-episode-{ep}', dub: false },
+  // Todos usan el MAL id directo y aceptan sub/dub.
+  { id: 'srv1', name: 'Servidor 1', template: 'https://vidlink.pro/anime/{malId}/{ep}/{type}?fallback=true', dub: true },
+  { id: 'srv2', name: 'Servidor 2', template: 'https://megaplay.buzz/stream/mal/{malId}/{ep}/{type}', dub: true },
+  { id: 'srv3', name: 'Servidor 3', template: 'https://movie-src.xyz/v1/embed/anime/{malId}/{ep}/{type}', dub: true },
 ]
 
 export function getWatchProviders(): WatchProvider[] {

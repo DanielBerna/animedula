@@ -144,8 +144,8 @@ export default function AnimePlayer({ malId, title, episodeCount }: Props) {
             src={embedSrc}
             title={`${title} · Episodio ${episode}`}
             allowFullScreen
-            referrerPolicy="origin"
-            sandbox="allow-same-origin allow-scripts allow-presentation allow-forms"
+            referrerPolicy="no-referrer"
+            allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
             className="watch-frame"
           />
         )}
